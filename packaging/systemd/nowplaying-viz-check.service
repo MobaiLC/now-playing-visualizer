@@ -1,0 +1,11 @@
+[Unit]
+Description=Now Playing Visualizer: check after package updates
+
+[Service]
+Type=oneshot
+# let pacman finish the whole transaction first
+ExecStartPre=/usr/bin/sleep 30
+ExecStart=/usr/bin/python3 -I %h/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/code/check.py --notify
+# a crashed helper after an update gets a fresh start
+ExecStartPost=-/usr/bin/systemctl --user try-restart nowplaying-viz.service
+SuccessExitStatus=1

@@ -1,0 +1,17 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [{ "Name": "MobaiLC" }],
+        "BugReportUrl": "https://github.com/MobaiLC/now-playing-visualizer/issues",
+        "Category": "Multimedia",
+        "Description": "Now playing card with cover art, progress and a CAVA audio visualizer that can listen to selected apps only",
+        "Description[es]": "Tarjeta con la canción actual, portada, progreso y un visualizador de audio CAVA que puede escuchar solo las aplicaciones que elijas",
+        "Icon": "view-media-visualization",
+        "Id": "com.github.mobailc.nowplayingvisualizer",
+        "License": "GPL-3.0-or-later",
+        "Name": "Now Playing Visualizer",
+        "Version": "0.1.0",
+        "Website": "https://github.com/MobaiLC/now-playing-visualizer"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

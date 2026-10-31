@@ -1,0 +1,8 @@
+[Unit]
+Description=Watch pacman updates for Now Playing Visualizer
+
+[Path]
+PathChanged=/var/lib/pacman/local
+
+[Install]
+WantedBy=default.target

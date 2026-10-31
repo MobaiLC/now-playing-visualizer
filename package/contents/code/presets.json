@@ -1,0 +1,201 @@
+{
+  "$comment": "Built-in presets. Each preset only lists what differs from the defaults in schema.json.",
+  "version": 1,
+  "presets": {
+    "lookas": {},
+    "teal": {
+      "panel": {
+        "color": "#03201ca8",
+        "borderColor": "#2de0c033"
+      },
+      "progress": {
+        "color": "#2de0c0"
+      },
+      "bars": {
+        "colors": [
+          "#00a39a",
+          "#2de0c0",
+          "#5ee7ff"
+        ],
+        "radius": 3,
+        "glow": {
+          "enabled": true,
+          "color": "#2de0c0",
+          "blur": 0.7,
+          "strength": 0.9
+        }
+      }
+    },
+    "neon": {
+      "panel": {
+        "color": "#120a1cb0",
+        "borderColor": "#ff4fd833"
+      },
+      "title": {
+        "color": "#ffd6f6"
+      },
+      "progress": {
+        "color": "#ff4fd8",
+        "trackColor": "#ff4fd833"
+      },
+      "bars": {
+        "colors": [
+          "#ff4fd8",
+          "#9b5cff",
+          "#38e8ff"
+        ],
+        "radius": 4,
+        "glow": {
+          "enabled": true,
+          "color": "#ff4fd8",
+          "blur": 0.9,
+          "strength": 1.0
+        }
+      }
+    },
+    "minimal": {
+      "panel": {
+        "color": "#00000000",
+        "borderWidth": 0
+      },
+      "header": {
+        "show": false
+      },
+      "subtitle": {
+        "showAlbum": false
+      },
+      "bars": {
+        "count": 32,
+        "gap": 2,
+        "colors": [
+          "#ffffffcc"
+        ],
+        "radius": 1
+      }
+    },
+    "mirror": {
+      "progress": {
+        "color": "#5ee7ff"
+      },
+      "bars": {
+        "align": "center",
+        "count": 32,
+        "gap": 3,
+        "radius": 2,
+        "colors": [
+          "#2de0c0",
+          "#5ee7ff"
+        ],
+        "gradient": "horizontal",
+        "glow": {
+          "enabled": true,
+          "color": "#5ee7ff",
+          "blur": 0.6,
+          "strength": 0.7
+        }
+      }
+    },
+    "rainbow": {
+      "bars": {
+        "colorMode": "hue",
+        "radius": 3,
+        "hue": {
+          "speed": 40
+        },
+        "peaks": {
+          "enabled": true,
+          "color": "#ffffff"
+        },
+        "glow": {
+          "enabled": true,
+          "color": "auto",
+          "blur": 0.5,
+          "strength": 0.6
+        }
+      }
+    },
+    "cover": {
+      "bars": {
+        "colorMode": "cover",
+        "gradient": "vertical",
+        "radius": 3,
+        "glow": {
+          "enabled": true,
+          "color": "auto",
+          "blur": 0.7,
+          "strength": 0.8
+        }
+      }
+    },
+    "retro": {
+      "bars": {
+        "style": "blocks",
+        "count": 20,
+        "gap": 3,
+        "colors": [
+          "#2de0c0",
+          "#eed49f",
+          "#ed8796"
+        ],
+        "smoothGradient": false,
+        "blocks": {
+          "height": 5,
+          "gap": 2,
+          "inactive": {
+            "show": true,
+            "color": "#ffffff14"
+          }
+        },
+        "peaks": {
+          "enabled": true,
+          "color": "#ffffff",
+          "height": 3
+        }
+      }
+    },
+    "wave": {
+      "bars": {
+        "style": "wave",
+        "count": 48,
+        "colors": [
+          "#5ee7ff",
+          "#2de0c0"
+        ],
+        "gradient": "horizontal",
+        "wave": {
+          "mode": "curve",
+          "lineWidth": 2,
+          "fill": true,
+          "fillOpacity": 0.35
+        },
+        "glow": {
+          "enabled": true,
+          "color": "#5ee7ff",
+          "blur": 0.6,
+          "strength": 0.7
+        }
+      }
+    },
+    "circle": {
+      "bars": {
+        "areaRatio": 0.35,
+        "count": 48,
+        "gap": 2,
+        "colorMode": "hue",
+        "hue": {
+          "speed": 20
+        },
+        "circle": {
+          "enabled": true,
+          "size": 0.5
+        },
+        "glow": {
+          "enabled": true,
+          "color": "auto",
+          "blur": 0.5,
+          "strength": 0.6
+        }
+      }
+    }
+  }
+}

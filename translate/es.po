@@ -1,0 +1,680 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the Now Playing Visualizer package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Now Playing Visualizer\n"
+"Report-Msgid-Bugs-To: https://github.com/MobaiLC/now-playing-visualizer/"
+"issues\n"
+"POT-Creation-Date: 2026-10-31 22:09+0100\n"
+"PO-Revision-Date: 2026-10-31 22:30+0100\n"
+"Last-Translator: MobaiLC\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: package/contents/config/config.qml:9
+msgid "Design"
+msgstr "Diseño"
+
+#: package/contents/config/config.qml:14
+msgid "Audio"
+msgstr "Audio"
+
+#: package/contents/ui/configApps.qml:60
+msgid "No app selected: the visualizer listens to the whole system."
+msgstr "Ninguna aplicación marcada: el visualizador escucha todo el sistema."
+
+#: package/contents/ui/configApps.qml:61
+msgid ""
+"The visualizer only listens to the selected apps. Apps show up here while "
+"they are playing sound."
+msgstr "El visualizador solo escucha las aplicaciones marcadas. Aparecen aquí cuando están reproduciendo sonido."
+
+#: package/contents/ui/configApps.qml:80
+msgid "%1 (not playing now)"
+msgstr "%1 (sin sonar ahora)"
+
+#: package/contents/ui/configApps.qml:88
+msgid "Connecting to the helper…"
+msgstr "Conectando con el helper…"
+
+#: package/contents/ui/configApps.qml:94
+msgid "Refresh list"
+msgstr "Actualizar lista"
+
+#: package/contents/ui/configApps.qml:99
+#: package/contents/ui/configDesign.qml:399
+msgid "Open config.json"
+msgstr "Abrir config.json"
+
+#: package/contents/ui/configDesign.qml:281
+msgid "Add color"
+msgstr "Añadir color"
+
+#: package/contents/ui/configDesign.qml:288
+msgid "Remove the last one"
+msgstr "Quitar el último"
+
+#: package/contents/ui/configDesign.qml:310
+msgid "comma separated"
+msgstr "separados por comas"
+
+#: package/contents/ui/configDesign.qml:335
+msgid "Preset:"
+msgstr "Preset:"
+
+#: package/contents/ui/configDesign.qml:345
+msgid "Reset"
+msgstr "Restablecer"
+
+#: package/contents/ui/configDesign.qml:347
+msgid "Drop your changes and use the preset as it is"
+msgstr "Quita tus cambios y deja el preset tal cual"
+
+#: package/contents/ui/configDesign.qml:354
+msgid "Delete this preset"
+msgstr "Borrar este preset"
+
+#: package/contents/ui/configDesign.qml:360
+msgid "Save as:"
+msgstr "Guardar como:"
+
+#: package/contents/ui/configDesign.qml:363
+msgid "preset name"
+msgstr "nombre del preset"
+
+#: package/contents/ui/configDesign.qml:366
+msgid "Save"
+msgstr "Guardar"
+
+#: package/contents/ui/configDesign.qml:380
+msgid "Changes apply instantly. Switching presets discards your bar settings."
+msgstr "Los cambios se aplican al instante. Al cambiar de preset se descartan tus ajustes de barras."
+
+#: package/contents/ui/configDesign.qml:398
+msgid "Advanced:"
+msgstr "Avanzado:"
+
+#: package/contents/ui/main.qml:124
+msgid "config.json has an error, the last valid settings are kept: %1"
+msgstr "config.json tiene un error, se mantiene la última configuración válida: %1"
+
+#: package/contents/ui/main.qml:125
+msgid "The preset \"%1\" does not exist, using lookas"
+msgstr "El preset «%1» no existe, se usa lookas"
+
+#: package/contents/ui/main.qml:126
+msgid "Invalid value for %1, using the default"
+msgstr "Valor no válido en %1, se usa el predeterminado"
+
+#: package/contents/ui/main.qml:127
+msgid "%1 is out of range and was adjusted"
+msgstr "%1 está fuera de rango y se ha ajustado"
+
+#: package/contents/ui/main.qml:128
+msgid "CAVA is not installed (sudo pacman -S cava)"
+msgstr "CAVA no está instalado (sudo pacman -S cava)"
+
+#: package/contents/ui/main.qml:129
+msgid "CAVA failed: %1"
+msgstr "CAVA ha fallado: %1"
+
+#: package/contents/ui/main.qml:130
+msgid "Could not create the virtual audio output: %1"
+msgstr "No se pudo crear la salida de audio virtual: %1"
+
+#: package/contents/ui/main.qml:179
+msgid "Listening to {title}"
+msgstr "Escuchando {title}"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:1
+msgid "Bars"
+msgstr "Barras"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:2
+msgid "Blocks"
+msgstr "Bloques"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:3
+msgid "Wave"
+msgstr "Onda"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:4
+msgid "Bar colors"
+msgstr "Color de las barras"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:5
+msgid "Peaks"
+msgstr "Picos"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:6
+msgid "Glow"
+msgstr "Brillo"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:7
+msgid "Motion"
+msgstr "Movimiento"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:8
+msgid "Panel and song"
+msgstr "Panel y canción"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:9
+msgid "Audio analysis"
+msgstr "Análisis de audio"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:10
+msgid "Advanced"
+msgstr "Avanzado"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:11
+msgid "Show bars"
+msgstr "Mostrar barras"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:12
+msgid "Style"
+msgstr "Estilo"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:13
+msgid "Side"
+msgstr "Lado"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:14
+msgid "Right"
+msgstr "Derecha"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:15
+msgid "Left"
+msgstr "Izquierda"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:16
+msgid "Circular"
+msgstr "Circular"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:17
+msgid "Center hole"
+msgstr "Hueco central"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:18
+msgid "Rotation"
+msgstr "Rotación"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:19
+msgid "Number of bars"
+msgstr "Número de barras"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:20
+msgid "Width of the bar area"
+msgstr "Ancho de la zona de barras"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:21
+msgid "Bar width (0 = automatic)"
+msgstr "Ancho de barra (0 = automático)"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:22
+msgid "Gap"
+msgstr "Separación"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:23
+msgid "Corner radius"
+msgstr "Redondeo"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:24
+msgid "Alignment"
+msgstr "Alineación"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:25
+msgid "Bottom"
+msgstr "Abajo"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:26
+msgid "Center (mirrored)"
+msgstr "Centro (espejo)"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:27
+msgid "Top"
+msgstr "Arriba"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:28
+msgid "Reverse order"
+msgstr "Invertir orden"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:29
+msgid "Symmetric (bass in the middle)"
+msgstr "Simétrico (graves al centro)"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:30
+msgid "Minimum height"
+msgstr "Altura mínima"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:31
+msgid "Height"
+msgstr "Altura"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:32
+msgid "Opacity"
+msgstr "Opacidad"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:33
+msgid "Block height"
+msgstr "Alto de bloque"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:34
+msgid "Block gap"
+msgstr "Separación de bloques"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:35
+msgid "Show unlit blocks"
+msgstr "Mostrar bloques apagados"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:36
+msgid "Unlit block color"
+msgstr "Color de bloques apagados"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:37
+msgid "Wave shape"
+msgstr "Forma de onda"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:38
+msgid "Curve"
+msgstr "Curva"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:39
+msgid "Square"
+msgstr "Cuadrada"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:40
+msgid "Triangle"
+msgstr "Triangular"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:41
+msgid "Line width"
+msgstr "Grosor de línea"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:42
+msgid "Fill"
+msgstr "Relleno"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:43
+msgid "Fill opacity"
+msgstr "Opacidad del relleno"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:44
+msgid "Fill colors (empty = same as line)"
+msgstr "Colores del relleno (vacío = como la línea)"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:45
+msgid "Mode"
+msgstr "Modo"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:46
+msgid "Gradient / solid"
+msgstr "Degradado / sólido"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:47
+msgid "One color per bar"
+msgstr "Un color por barra"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:48
+msgid "Rainbow"
+msgstr "Arcoíris"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:49
+msgid "Cover art colors"
+msgstr "Colores de la portada"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:50
+msgid "Plasma accent color"
+msgstr "Color de acento de Plasma"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:51
+msgid "Colors"
+msgstr "Colores"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:52
+msgid "Gradient direction"
+msgstr "Dirección del degradado"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:53
+msgid "Vertical"
+msgstr "Vertical"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:54
+msgid "Horizontal"
+msgstr "Horizontal"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:55
+msgid "Radial"
+msgstr "Radial"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:56
+msgid "Smooth gradient"
+msgstr "Degradado suave"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:57
+msgid "Reverse colors"
+msgstr "Invertir colores"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:58
+msgid "Cover colors to use"
+msgstr "Colores de la portada a usar"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:59
+msgid "Start hue"
+msgstr "Tono inicial"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:60
+msgid "End hue"
+msgstr "Tono final"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:61
+msgid "Saturation"
+msgstr "Saturación"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:62
+msgid "Lightness"
+msgstr "Luminosidad"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:63
+msgid "Rotation speed"
+msgstr "Velocidad de giro"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:64
+msgid "Peak markers"
+msgstr "Marcas de pico"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:65
+msgid "Peak color"
+msgstr "Color del pico"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:66
+msgid "Same as the bar"
+msgstr "Igual que la barra"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:67
+msgid "Peak thickness"
+msgstr "Grosor del pico"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:68
+msgid "Hold time"
+msgstr "Tiempo de espera"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:69
+msgid "Peak fall speed"
+msgstr "Velocidad de caída del pico"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:70
+msgid "Glow color"
+msgstr "Color del brillo"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:71
+msgid "Automatic"
+msgstr "Automático"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:72
+msgid "Strength"
+msgstr "Intensidad"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:73
+msgid "Blur"
+msgstr "Difuminado"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:74
+msgid "Rise speed"
+msgstr "Rapidez de subida"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:75
+msgid "Drop speed"
+msgstr "Rapidez de bajada"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:76
+msgid "Frame rate"
+msgstr "Fotogramas por segundo"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:77
+msgid "Monstercat smoothing"
+msgstr "Suavizado Monstercat"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:78
+msgid "Stereo (left and right channels)"
+msgstr "Estéreo (canal izquierdo y derecho)"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:79
+msgid "Hide when silent"
+msgstr "Ocultar en silencio"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:80
+msgid "Seconds of silence"
+msgstr "Segundos de silencio"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:81
+msgid "Background"
+msgstr "Fondo"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:82
+msgid "Background opacity"
+msgstr "Opacidad del fondo"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:83
+msgid "Border"
+msgstr "Borde"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:84
+msgid "Border width"
+msgstr "Grosor del borde"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:85
+msgid "Panel corner radius"
+msgstr "Redondeo del panel"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:86
+msgid "Inner margin"
+msgstr "Margen interior"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:87
+msgid "Spacing between song and bars"
+msgstr "Espacio entre canción y barras"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:88
+msgid "Hide when nothing is playing"
+msgstr "Ocultar cuando no suena nada"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:89
+msgid "Preferred players"
+msgstr "Reproductores preferidos"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:90
+msgid "Font (empty = system font)"
+msgstr "Fuente (vacío = la del sistema)"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:91
+msgid "Header text"
+msgstr "Texto de cabecera"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:92
+msgid "Header template (empty = \"Listening to {title}\")"
+msgstr "Plantilla de cabecera (vacío = «Escuchando {title}»)"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:93
+msgid "Header color"
+msgstr "Color de la cabecera"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:94
+msgid "Header size"
+msgstr "Tamaño de la cabecera"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:95
+msgid "Cover art"
+msgstr "Portada"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:96
+msgid "Cover corner radius"
+msgstr "Redondeo de la portada"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:97
+msgid "Title color"
+msgstr "Color del título"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:98
+msgid "Title size"
+msgstr "Tamaño del título"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:99
+msgid "Bold title"
+msgstr "Título en negrita"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:100
+msgid "Text color"
+msgstr "Color del texto"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:101
+msgid "Text size"
+msgstr "Tamaño del texto"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:102
+msgid "Show album / source"
+msgstr "Mostrar álbum / origen"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:103
+msgid "Progress bar"
+msgstr "Barra de progreso"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:104
+msgid "Progress color"
+msgstr "Color del progreso"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:105
+msgid "Progress background"
+msgstr "Fondo del progreso"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:106
+msgid "Progress thickness"
+msgstr "Grosor del progreso"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:107
+msgid "Show times"
+msgstr "Mostrar tiempos"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:108
+msgid "Time color"
+msgstr "Color de los tiempos"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:109
+msgid "Time size"
+msgstr "Tamaño de los tiempos"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:110
+msgid "Sensitivity"
+msgstr "Sensibilidad"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:111
+msgid "Noise reduction"
+msgstr "Reducción de ruido"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:112
+msgid "Lowest frequency"
+msgstr "Frecuencia mínima"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:113
+msgid "Highest frequency"
+msgstr "Frecuencia máxima"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:114
+msgid "Apps to listen to (empty = whole system)"
+msgstr "Aplicaciones a escuchar (vacío = todo el sistema)"
+
+#: /tmp/tmp.oDGLzrbvo4/schema-strings.js:115
+msgid "Read the song over D-Bus instead of Plasma's module"
+msgstr "Leer la canción por D-Bus en vez de con el módulo de Plasma"
+
+#: package/contents/code/check.py:29 package/contents/code/check.py:30
+#: package/contents/code/check.py:33 package/contents/code/check.py:34
+#: package/contents/code/check.py:35
+msgid "the whole widget"
+msgstr "todo el widget"
+
+#: package/contents/code/check.py:31
+msgid "rounded cover art and glow"
+msgstr "portada redondeada y brillo"
+
+#: package/contents/code/check.py:32
+msgid "connection to the helper (no bars)"
+msgstr "conexión con el helper (sin barras)"
+
+#: package/contents/code/check.py:36
+msgid "settings pages"
+msgstr "páginas de ajustes"
+
+#: package/contents/code/check.py:37
+msgid "color picker in Design"
+msgstr "selector de color de «Diseño»"
+
+#: package/contents/code/check.py:38
+msgid "reading the song (D-Bus is used instead)"
+msgstr "lectura de la canción (se usa D-Bus como alternativa)"
+
+#: package/contents/code/check.py:39
+msgid "starting the helper from the widget (systemd starts it)"
+msgstr "arranque del helper desde el widget (lo arranca systemd)"
+
+#: package/contents/code/check.py:43
+msgid "audio bars"
+msgstr "barras de audio"
+
+#: package/contents/code/check.py:44
+msgid "list of audio apps"
+msgstr "lista de aplicaciones de audio"
+
+#: package/contents/code/check.py:45
+msgid "per-app audio"
+msgstr "audio por aplicación"
+
+#: package/contents/code/check.py:46
+msgid "virtual audio output"
+msgstr "salida de audio virtual"
+
+#: package/contents/code/check.py:47
+msgid "reading the song over D-Bus"
+msgstr "lectura de la canción por D-Bus"
+
+#: package/contents/code/check.py:71
+#, python-brace-format
+msgid "Missing «{cmd}» → {what}"
+msgstr "Falta «{cmd}» → {what}"
+
+#: package/contents/code/check.py:80
+msgid "Qt 6 «qml» tool not found; QML modules could not be checked"
+msgstr "No se encontró la herramienta «qml» de Qt 6; no se pudieron comprobar los módulos QML"
+
+#: package/contents/code/check.py:85
+#, python-brace-format
+msgid "QML module {module} → {what}"
+msgstr "Módulo QML {module} → {what}"
+
+#: package/contents/code/check.py:90
+msgid ""
+"The nowplaying-viz service is not running (systemctl --user status "
+"nowplaying-viz)"
+msgstr "El servicio nowplaying-viz no está activo (systemctl --user status nowplaying-viz)"
+
+#: package/contents/code/check.py:97
+msgid "OK: everything the widget uses is still available."
+msgstr "OK: todo lo que usa el widget sigue disponible."
+
+#: package/contents/code/check.py:100
+msgid "Now Playing Visualizer: something broke"
+msgstr "Now Playing Visualizer: algo se ha roto"
+
+#: package/contents/code/check.py:100
+msgid "Now Playing Visualizer: compatibility mode"
+msgstr "Now Playing Visualizer: modo compatible"
+
+#: package/contents/code/check.py:102
+msgid "Details:"
+msgstr "Detalles:"

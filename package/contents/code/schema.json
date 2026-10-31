@@ -1,0 +1,158 @@
+{
+  "$comment": "Single source of truth for every option: type, default, range, label and when it is shown. The helper builds the defaults and validates config.json from this file; the Design page is generated from it; docs/CONFIG.md is generated from it. Labels are English msgids translated through the plasmoid's gettext catalog.",
+  "version": 1,
+  "groups": [
+    { "id": "bars", "label": "Bars" },
+    { "id": "blocks", "label": "Blocks" },
+    { "id": "wave", "label": "Wave" },
+    { "id": "colors", "label": "Bar colors" },
+    { "id": "peaks", "label": "Peaks" },
+    { "id": "glow", "label": "Glow" },
+    { "id": "motion", "label": "Motion" },
+    { "id": "panel", "label": "Panel and song" },
+    { "id": "analysis", "label": "Audio analysis" },
+    { "id": "advanced", "label": "Advanced" }
+  ],
+  "options": {
+    "bars.show": { "group": "bars", "type": "bool", "default": true, "label": "Show bars" },
+    "bars.style": {
+      "group": "bars", "type": "enum", "default": "bars", "label": "Style",
+      "values": [
+        { "value": "bars", "label": "Bars" },
+        { "value": "blocks", "label": "Blocks" },
+        { "value": "wave", "label": "Wave" }
+      ]
+    },
+    "bars.side": {
+      "group": "bars", "type": "enum", "default": "right", "label": "Side",
+      "values": [
+        { "value": "right", "label": "Right" },
+        { "value": "left", "label": "Left" }
+      ]
+    },
+    "bars.circle.enabled": { "group": "bars", "type": "bool", "default": false, "label": "Circular" },
+    "bars.circle.size": { "group": "bars", "type": "real", "default": 0.45, "min": 0.1, "max": 0.9, "display": "percent", "label": "Center hole", "when": { "bars.circle.enabled": true } },
+    "bars.circle.rotation": { "group": "bars", "type": "int", "default": 0, "min": 0, "max": 360, "unit": "°", "slider": true, "label": "Rotation", "when": { "bars.circle.enabled": true } },
+    "bars.count": { "group": "bars", "type": "int", "default": 24, "min": 4, "max": 128, "label": "Number of bars" },
+    "bars.areaRatio": { "group": "bars", "type": "real", "default": 0.45, "min": 0.15, "max": 0.85, "display": "percent", "label": "Width of the bar area" },
+    "bars.width": { "group": "bars", "type": "int", "default": 0, "min": 0, "max": 60, "unit": "px", "label": "Bar width (0 = automatic)" },
+    "bars.gap": { "group": "bars", "type": "int", "default": 4, "min": 0, "max": 30, "unit": "px", "label": "Gap" },
+    "bars.radius": { "group": "bars", "type": "int", "default": 0, "min": 0, "max": 30, "unit": "px", "label": "Corner radius" },
+    "bars.align": {
+      "group": "bars", "type": "enum", "default": "bottom", "label": "Alignment", "whenNot": { "bars.circle.enabled": true },
+      "values": [
+        { "value": "bottom", "label": "Bottom" },
+        { "value": "center", "label": "Center (mirrored)" },
+        { "value": "top", "label": "Top" }
+      ]
+    },
+    "bars.reverse": { "group": "bars", "type": "bool", "default": false, "label": "Reverse order" },
+    "bars.symmetric": { "group": "bars", "type": "bool", "default": false, "label": "Symmetric (bass in the middle)" },
+    "bars.minHeight": { "group": "bars", "type": "int", "default": 2, "min": 0, "max": 20, "unit": "px", "label": "Minimum height" },
+    "bars.heightScale": { "group": "bars", "type": "real", "default": 1.0, "min": 0.3, "max": 2.5, "display": "percent", "label": "Height" },
+    "bars.alpha": { "group": "bars", "type": "real", "default": 1, "min": 0.1, "max": 1, "display": "percent", "label": "Opacity" },
+
+    "bars.blocks.height": { "group": "blocks", "type": "int", "default": 4, "min": 1, "max": 30, "unit": "px", "label": "Block height", "when": { "bars.style": ["blocks"] } },
+    "bars.blocks.gap": { "group": "blocks", "type": "int", "default": 2, "min": 0, "max": 20, "unit": "px", "label": "Block gap", "when": { "bars.style": ["blocks"] } },
+    "bars.blocks.inactive.show": { "group": "blocks", "type": "bool", "default": false, "label": "Show unlit blocks", "when": { "bars.style": ["blocks"] } },
+    "bars.blocks.inactive.color": { "group": "blocks", "type": "color", "default": "#ffffff1a", "label": "Unlit block color", "when": { "bars.style": ["blocks"], "bars.blocks.inactive.show": true } },
+
+    "bars.wave.mode": {
+      "group": "wave", "type": "enum", "default": "curve", "label": "Wave shape", "when": { "bars.style": ["wave"] },
+      "values": [
+        { "value": "curve", "label": "Curve" },
+        { "value": "square", "label": "Square" },
+        { "value": "triangle", "label": "Triangle" }
+      ]
+    },
+    "bars.wave.lineWidth": { "group": "wave", "type": "int", "default": 2, "min": 0, "max": 12, "unit": "px", "label": "Line width", "when": { "bars.style": ["wave"] } },
+    "bars.wave.fill": { "group": "wave", "type": "bool", "default": true, "label": "Fill", "when": { "bars.style": ["wave"] } },
+    "bars.wave.fillOpacity": { "group": "wave", "type": "real", "default": 0.3, "min": 0, "max": 1, "display": "percent", "label": "Fill opacity", "when": { "bars.style": ["wave"], "bars.wave.fill": true } },
+    "bars.wave.fillColors": { "group": "wave", "type": "colorList", "default": [], "label": "Fill colors (empty = same as line)", "when": { "bars.style": ["wave"], "bars.wave.fill": true } },
+
+    "bars.colorMode": {
+      "group": "colors", "type": "enum", "default": "gradient", "label": "Mode",
+      "values": [
+        { "value": "gradient", "label": "Gradient / solid" },
+        { "value": "perBar", "label": "One color per bar" },
+        { "value": "hue", "label": "Rainbow" },
+        { "value": "cover", "label": "Cover art colors" },
+        { "value": "accent", "label": "Plasma accent color" }
+      ]
+    },
+    "bars.colors": { "group": "colors", "type": "colorList", "default": ["#f2f2f2"], "label": "Colors", "when": { "bars.colorMode": ["gradient", "perBar"] } },
+    "bars.gradient": {
+      "group": "colors", "type": "enum", "default": "vertical", "label": "Gradient direction", "when": { "bars.colorMode": ["gradient", "cover", "accent"] },
+      "values": [
+        { "value": "vertical", "label": "Vertical" },
+        { "value": "horizontal", "label": "Horizontal" },
+        { "value": "radial", "label": "Radial" }
+      ]
+    },
+    "bars.smoothGradient": { "group": "colors", "type": "bool", "default": true, "label": "Smooth gradient", "when": { "bars.colorMode": ["gradient", "cover", "accent"] } },
+    "bars.reverseColors": { "group": "colors", "type": "bool", "default": false, "label": "Reverse colors" },
+    "bars.coverColorCount": { "group": "colors", "type": "int", "default": 3, "min": 1, "max": 6, "label": "Cover colors to use", "when": { "bars.colorMode": ["cover"] } },
+    "bars.hue.start": { "group": "colors", "type": "int", "default": 0, "min": 0, "max": 360, "unit": "°", "slider": true, "label": "Start hue", "when": { "bars.colorMode": ["hue"] } },
+    "bars.hue.end": { "group": "colors", "type": "int", "default": 360, "min": 0, "max": 360, "unit": "°", "slider": true, "label": "End hue", "when": { "bars.colorMode": ["hue"] } },
+    "bars.hue.saturation": { "group": "colors", "type": "real", "default": 0.8, "min": 0, "max": 1, "display": "percent", "label": "Saturation", "when": { "bars.colorMode": ["hue"] } },
+    "bars.hue.lightness": { "group": "colors", "type": "real", "default": 0.6, "min": 0, "max": 1, "display": "percent", "label": "Lightness", "when": { "bars.colorMode": ["hue"] } },
+    "bars.hue.speed": { "group": "colors", "type": "int", "default": 0, "min": 0, "max": 180, "unit": "°/s", "slider": true, "label": "Rotation speed", "when": { "bars.colorMode": ["hue"] } },
+
+    "bars.peaks.enabled": { "group": "peaks", "type": "bool", "default": false, "label": "Peak markers", "whenNot": { "bars.style": ["wave"], "bars.circle.enabled": true } },
+    "bars.peaks.color": { "group": "peaks", "type": "colorOrAuto", "default": "", "auto": "", "autoLabel": "Same as the bar", "label": "Peak color", "when": { "bars.peaks.enabled": true }, "whenNot": { "bars.style": ["wave"], "bars.circle.enabled": true } },
+    "bars.peaks.height": { "group": "peaks", "type": "int", "default": 2, "min": 1, "max": 10, "unit": "px", "label": "Peak thickness", "when": { "bars.peaks.enabled": true }, "whenNot": { "bars.style": ["wave"], "bars.circle.enabled": true } },
+    "bars.peaks.hold": { "group": "peaks", "type": "real", "default": 0.4, "min": 0, "max": 3, "unit": "s", "label": "Hold time", "when": { "bars.peaks.enabled": true }, "whenNot": { "bars.style": ["wave"], "bars.circle.enabled": true } },
+    "bars.peaks.fallSpeed": { "group": "peaks", "type": "int", "default": 600, "min": 100, "max": 2000, "slider": true, "label": "Peak fall speed", "when": { "bars.peaks.enabled": true }, "whenNot": { "bars.style": ["wave"], "bars.circle.enabled": true } },
+
+    "bars.glow.enabled": { "group": "glow", "type": "bool", "default": false, "label": "Glow" },
+    "bars.glow.color": { "group": "glow", "type": "colorOrAuto", "default": "#ffffff", "auto": "auto", "autoLabel": "Automatic", "label": "Glow color", "when": { "bars.glow.enabled": true } },
+    "bars.glow.strength": { "group": "glow", "type": "real", "default": 0.8, "min": 0, "max": 1, "display": "percent", "label": "Strength", "when": { "bars.glow.enabled": true } },
+    "bars.glow.blur": { "group": "glow", "type": "real", "default": 0.6, "min": 0, "max": 1, "display": "percent", "label": "Blur", "when": { "bars.glow.enabled": true } },
+
+    "bars.attack": { "group": "motion", "type": "real", "default": 0.55, "min": 0.05, "max": 1, "display": "percent", "label": "Rise speed" },
+    "bars.decay": { "group": "motion", "type": "real", "default": 0.12, "min": 0.02, "max": 1, "display": "percent", "label": "Drop speed" },
+    "bars.framerate": { "group": "motion", "type": "int", "default": 60, "min": 15, "max": 144, "unit": "fps", "label": "Frame rate" },
+    "bars.monstercat": { "group": "motion", "type": "bool", "default": false, "label": "Monstercat smoothing" },
+    "bars.stereo": { "group": "motion", "type": "bool", "default": false, "label": "Stereo (left and right channels)" },
+    "bars.hideWhenSilent": { "group": "motion", "type": "bool", "default": true, "label": "Hide when silent" },
+    "bars.silenceDelay": { "group": "motion", "type": "int", "default": 2, "min": 1, "max": 30, "unit": "s", "label": "Seconds of silence", "when": { "bars.hideWhenSilent": true } },
+
+    "panel.color": { "group": "panel", "type": "color", "default": "#1a1b26a8", "label": "Background" },
+    "panel.opacity": { "group": "panel", "type": "real", "default": 1, "min": 0, "max": 1, "display": "percent", "label": "Background opacity" },
+    "panel.borderColor": { "group": "panel", "type": "color", "default": "#ffffff1a", "label": "Border" },
+    "panel.borderWidth": { "group": "panel", "type": "int", "default": 1, "min": 0, "max": 6, "unit": "px", "label": "Border width" },
+    "panel.radius": { "group": "panel", "type": "int", "default": 14, "min": 0, "max": 40, "unit": "px", "label": "Panel corner radius" },
+    "panel.padding": { "group": "panel", "type": "int", "default": 14, "min": 0, "max": 40, "unit": "px", "label": "Inner margin" },
+    "panel.spacing": { "group": "panel", "type": "int", "default": 16, "min": 0, "max": 40, "unit": "px", "label": "Spacing between song and bars" },
+    "panel.hideWhenNoPlayer": { "group": "panel", "type": "bool", "default": true, "label": "Hide when nothing is playing" },
+    "panel.preferredPlayers": { "group": "panel", "type": "stringList", "default": [], "label": "Preferred players" },
+    "font.family": { "group": "panel", "type": "string", "default": "", "label": "Font (empty = system font)" },
+    "header.show": { "group": "panel", "type": "bool", "default": true, "label": "Header text" },
+    "header.text": { "group": "panel", "type": "string", "default": "", "label": "Header template (empty = \"Listening to {title}\")", "when": { "header.show": true } },
+    "header.color": { "group": "panel", "type": "color", "default": "#ffffffcc", "label": "Header color", "when": { "header.show": true } },
+    "header.size": { "group": "panel", "type": "int", "default": 12, "min": 8, "max": 30, "unit": "px", "label": "Header size", "when": { "header.show": true } },
+    "cover.show": { "group": "panel", "type": "bool", "default": true, "label": "Cover art" },
+    "cover.radius": { "group": "panel", "type": "int", "default": 8, "min": 0, "max": 60, "unit": "px", "label": "Cover corner radius", "when": { "cover.show": true } },
+    "title.color": { "group": "panel", "type": "color", "default": "#ffffff", "label": "Title color" },
+    "title.size": { "group": "panel", "type": "int", "default": 16, "min": 8, "max": 40, "unit": "px", "label": "Title size" },
+    "title.bold": { "group": "panel", "type": "bool", "default": true, "label": "Bold title" },
+    "subtitle.color": { "group": "panel", "type": "color", "default": "#ffffffb3", "label": "Text color" },
+    "subtitle.size": { "group": "panel", "type": "int", "default": 12, "min": 8, "max": 30, "unit": "px", "label": "Text size" },
+    "subtitle.showAlbum": { "group": "panel", "type": "bool", "default": true, "label": "Show album / source" },
+    "progress.show": { "group": "panel", "type": "bool", "default": true, "label": "Progress bar" },
+    "progress.color": { "group": "panel", "type": "color", "default": "#ffffff", "label": "Progress color", "when": { "progress.show": true } },
+    "progress.trackColor": { "group": "panel", "type": "color", "default": "#ffffff2e", "label": "Progress background", "when": { "progress.show": true } },
+    "progress.height": { "group": "panel", "type": "int", "default": 3, "min": 1, "max": 12, "unit": "px", "label": "Progress thickness", "when": { "progress.show": true } },
+    "progress.showTimes": { "group": "panel", "type": "bool", "default": true, "label": "Show times", "when": { "progress.show": true } },
+    "progress.timeColor": { "group": "panel", "type": "color", "default": "#ffffffd9", "label": "Time color", "when": { "progress.show": true, "progress.showTimes": true } },
+    "progress.timeSize": { "group": "panel", "type": "int", "default": 11, "min": 8, "max": 24, "unit": "px", "label": "Time size", "when": { "progress.show": true, "progress.showTimes": true } },
+
+    "audio.sensitivity": { "group": "analysis", "type": "int", "default": 100, "min": 10, "max": 300, "unit": "%", "slider": true, "label": "Sensitivity" },
+    "audio.noiseReduction": { "group": "analysis", "type": "int", "default": 77, "min": 0, "max": 100, "slider": true, "label": "Noise reduction" },
+    "audio.lowCutoff": { "group": "analysis", "type": "int", "default": 50, "min": 20, "max": 500, "unit": "Hz", "label": "Lowest frequency" },
+    "audio.highCutoff": { "group": "analysis", "type": "int", "default": 12000, "min": 2000, "max": 20000, "unit": "Hz", "label": "Highest frequency" },
+    "audio.apps": { "group": "analysis", "type": "stringList", "default": [], "hidden": true, "label": "Apps to listen to (empty = whole system)" },
+
+    "advanced.forceDbusMedia": { "group": "advanced", "type": "bool", "default": false, "label": "Read the song over D-Bus instead of Plasma's module" }
+  }
+}
