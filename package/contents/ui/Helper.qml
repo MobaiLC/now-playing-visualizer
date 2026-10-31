@@ -14,6 +14,8 @@ Item {
     signal barsReceived(var values)
     signal appsReceived(var apps)
     signal mediaReceived(var data)
+    signal presetsReceived(var list)
+    signal editStateReceived(var state)
 
     // empty = receive everything (the widget); settings pages pass
     // ["config", "schema"] so they don't get the 60 fps bar stream
@@ -56,6 +58,10 @@ Item {
                 root.appsReceived(m.data);
             else if (m.type === "media")
                 root.mediaReceived(m.data);
+            else if (m.type === "presets")
+                root.presetsReceived(m.data);
+            else if (m.type === "editState")
+                root.editStateReceived(m);
         }
         onStatusChanged: {
             if (socket.status === WebSocket.Error || socket.status === WebSocket.Closed) {

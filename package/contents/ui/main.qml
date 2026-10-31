@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 import QtQuick.Controls as QQC2
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
@@ -19,8 +18,6 @@ PlasmoidItem {
     readonly property bool ready: cfg.panel !== undefined
 
     readonly property var panelCfg: cfg.panel || {}
-    readonly property var barsCfg: cfg.bars || {}
-    readonly property string fontFamily: (cfg.font && cfg.font.family) || Kirigami.Theme.defaultFont.family
 
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
     preferredRepresentation: fullRepresentation
@@ -65,6 +62,10 @@ PlasmoidItem {
             root.requestFallback();
         }
     }
+
+    // Apply/OK in the Design page: keep the live-edited design (see helper.py)
+    readonly property string designCommit: Plasmoid.configuration.designCommit
+    onDesignCommitChanged: helper.send({ type: "commitEdit" })
 
     readonly property var player: useFallback ? fallbackMedia : (mprisLoader.item ? mprisLoader.item.media : null)
 
@@ -111,26 +112,6 @@ PlasmoidItem {
             if (!root.useFallback && mprisLoader.item)
                 mprisLoader.item.sync();
         }
-    }
-
-    // background-only opacity, the song info stays fully visible
-    function fade(c, o) {
-        const q = Qt.color(c);
-        return Qt.rgba(q.r, q.g, q.b, q.a * o);
-    }
-
-    function fmt(ms) {
-        const s = Math.floor(ms / 1000);
-        return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-    }
-
-    function fillTemplate(t) {
-        // split/join: QML's JS engine has no String.replaceAll
-        const m = shownMedia;
-        return t.split("{title}").join(m?.track || "")
-            .split("{artist}").join(m?.artist || "")
-            .split("{album}").join(m?.album || "")
-            .split("{player}").join(m?.identity || "");
     }
 
     function issueText(issue) {
@@ -182,212 +163,19 @@ PlasmoidItem {
 
         Component {
             id: card
-            Rectangle {
-                id: panel
+            Card {
                 anchors.fill: parent
-                color: root.fade(root.panelCfg.color, root.panelCfg.opacity)
-                radius: root.panelCfg.radius
-                border.width: root.panelCfg.borderWidth
-                border.color: root.fade(root.panelCfg.borderColor, root.panelCfg.opacity)
+                cfg: root.cfg
+                media: root.shownMedia
+                showProgress: root.hasTrack
+                positionMs: root.positionMs
+                lengthMs: root.lengthMs
+                barValues: root.barValues
                 opacity: root.hasTrack && root.isPlaying ? 1
                     : !root.hasTrack && root.whenIdle === "hide" ? 0
                     : root.panelCfg.idleOpacity
                 Behavior on opacity {
                     NumberAnimation { duration: 500 }
-                }
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: root.panelCfg.padding
-                    spacing: root.panelCfg.spacing
-                    layoutDirection: root.barsCfg.side === "left" ? Qt.RightToLeft : Qt.LeftToRight
-
-                    // song info
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.preferredWidth: 0
-                        Layout.horizontalStretchFactor: Math.round(100 * (1 - (root.barsCfg.areaRatio)))
-                        spacing: 8
-
-                        Text {
-                            Layout.fillWidth: true
-                            visible: root.cfg.header.show
-                            text: root.fillTemplate(root.cfg.header.text || i18n("Listening to {title}"))
-                            // titles come from any MPRIS player: never render them as HTML
-                            textFormat: Text.PlainText
-                            color: root.cfg.header.color
-                            font.family: root.fontFamily
-                            font.pixelSize: root.cfg.header.size
-                            elide: Text.ElideRight
-                        }
-
-                        RowLayout {
-                            id: infoRow
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            spacing: 12
-
-                            Item {
-                                id: coverBox
-                                readonly property real side: Math.max(0, Math.min(infoRow.height, infoRow.width * 0.4))
-                                visible: root.cfg.cover.show
-                                Layout.alignment: Qt.AlignVCenter
-                                Layout.preferredWidth: side
-                                Layout.preferredHeight: side
-
-                                Image {
-                                    id: cover
-                                    anchors.fill: parent
-                                    source: root.shownMedia?.artUrl ?? ""
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
-                                    sourceSize.width: 256
-                                    sourceSize.height: 256
-                                    visible: false
-                                }
-                                Kirigami.ImageColors {
-                                    id: coverPalette
-                                    // most vivid colours first
-                                    readonly property var colors: palette
-                                        .map(p => p.color)
-                                        .sort((x, y) => (y.hsvSaturation * y.hsvValue) - (x.hsvSaturation * x.hsvValue))
-                                        .map(c => c.toString())
-                                    source: coverFx
-                                }
-                                Timer {
-                                    // let the masked cover render before sampling it
-                                    id: paletteDelay
-                                    interval: 400
-                                    onTriggered: coverPalette.update()
-                                }
-                                Connections {
-                                    target: cover
-                                    function onStatusChanged() {
-                                        if (cover.status === Image.Ready)
-                                            paletteDelay.restart();
-                                    }
-                                }
-                                Rectangle {
-                                    id: coverMask
-                                    anchors.fill: parent
-                                    radius: root.cfg.cover.radius
-                                    visible: false
-                                    layer.enabled: true
-                                    layer.smooth: true
-                                }
-                                MultiEffect {
-                                    id: coverFx
-                                    anchors.fill: parent
-                                    source: cover
-                                    visible: cover.status === Image.Ready
-                                    maskEnabled: true
-                                    maskSource: coverMask
-                                    maskThresholdMin: 0.5
-                                    maskSpreadAtMin: 1.0
-                                }
-                                Rectangle {
-                                    anchors.fill: parent
-                                    visible: cover.status !== Image.Ready
-                                    radius: coverMask.radius
-                                    color: "#ffffff14"
-                                    Kirigami.Icon {
-                                        anchors.centerIn: parent
-                                        width: parent.width * 0.45
-                                        height: width
-                                        source: "media-optical-audio"
-                                        opacity: 0.6
-                                    }
-                                }
-                            }
-
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                spacing: 2
-
-                                Item { Layout.fillHeight: true }
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: root.shownMedia ? root.shownMedia.track : i18n("Nothing playing")
-                                    textFormat: Text.PlainText
-                                    color: root.cfg.title.color
-                                    font.family: root.fontFamily
-                                    font.pixelSize: root.cfg.title.size
-                                    font.bold: root.cfg.title.bold
-                                    elide: Text.ElideRight
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: root.shownMedia?.artist ?? ""
-                                    textFormat: Text.PlainText
-                                    color: root.cfg.subtitle.color
-                                    font.family: root.fontFamily
-                                    font.pixelSize: root.cfg.subtitle.size
-                                    elide: Text.ElideRight
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    visible: root.cfg.subtitle.showAlbum && text !== ""
-                                    text: root.shownMedia?.album ?? ""
-                                    textFormat: Text.PlainText
-                                    color: root.cfg.subtitle.color
-                                    font.family: root.fontFamily
-                                    font.pixelSize: root.cfg.subtitle.size
-                                    elide: Text.ElideRight
-                                }
-                                Item { Layout.preferredHeight: 4 }
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    visible: root.cfg.progress.show && root.hasTrack
-                                    spacing: 8
-
-                                    Text {
-                                        visible: root.cfg.progress.showTimes
-                                        text: root.fmt(root.positionMs)
-                                        color: root.cfg.progress.timeColor
-                                        font.family: root.fontFamily
-                                        font.pixelSize: root.cfg.progress.timeSize
-                                        font.features: { "tnum": 1 }
-                                    }
-                                    Rectangle {
-                                        Layout.fillWidth: true
-                                        implicitHeight: root.cfg.progress.height
-                                        radius: height / 2
-                                        color: root.cfg.progress.trackColor
-                                        Rectangle {
-                                            width: root.lengthMs > 0 ? parent.width * root.positionMs / root.lengthMs : 0
-                                            height: parent.height
-                                            radius: parent.radius
-                                            color: root.cfg.progress.color
-                                        }
-                                    }
-                                    Text {
-                                        visible: root.cfg.progress.showTimes
-                                        text: root.fmt(root.lengthMs)
-                                        color: root.cfg.progress.timeColor
-                                        font.family: root.fontFamily
-                                        font.pixelSize: root.cfg.progress.timeSize
-                                        font.features: { "tnum": 1 }
-                                    }
-                                }
-                                Item { Layout.fillHeight: true }
-                            }
-                        }
-                    }
-
-                    Bars {
-                        visible: root.barsCfg.show === true
-                        cfg: root.barsCfg
-                        targets: root.barValues
-                        coverColors: coverPalette.colors
-                        accentColor: Kirigami.Theme.highlightColor
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.preferredWidth: 0
-                        Layout.horizontalStretchFactor: Math.round(100 * (root.barsCfg.areaRatio))
-                    }
                 }
             }
         }

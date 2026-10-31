@@ -111,6 +111,7 @@ def schema_for_clients():
     schema = load_schema()
     return {
         "version": schema["version"],
+        "tabs": schema["tabs"],
         "groups": schema["groups"],
         "options": [dict(spec, key=key) for key, spec in schema["options"].items()],
     }
@@ -237,6 +238,13 @@ def load_config():
     eff["presetList"] = sorted(presets)
     eff["userPresets"] = sorted(user.get("presets", {}))
     state["web"] = copy.deepcopy(eff)
+    # every preset as it looks on its own, for the thumbnails in Design
+    previews = []
+    for pname in sorted(presets):
+        pe = deep_merge(schema_defaults(schema), presets[pname])
+        validate(pe, schema, [])
+        previews.append({"name": pname, "user": pname in user.get("presets", {}), "config": pe})
+    state["presets"] = previews
     state["issues"] = issues
     return to_qml_colors(eff)
 
@@ -269,6 +277,75 @@ def save_user_apps(apps):
     user = read_user()
     user.setdefault("audio", {})["apps"] = apps
     write_user(user)
+
+
+# ------------------------------------------------------------ Edit session --
+# The Design page applies changes live. While it is open the helper keeps a
+# snapshot of the design so Cancel (or closing without Apply) can put it
+# back, plus a history for Undo. Only design keys are covered: the Audio
+# page saves immediately, like a normal toggle.
+
+DESIGN_KEYS = ("preset", "overrides", "presets")
+REVERT_GRACE = 1.5  # s; lets main.qml's commit (sent via Plasma's Apply) arrive
+edit = {"owner": None, "snapshot": None, "history": [], "last_push": 0.0, "revert": None}
+
+
+def design_of(user):
+    return {k: copy.deepcopy(user.get(k)) for k in DESIGN_KEYS}
+
+
+def restore_design(design):
+    user = read_user()
+    for k, v in design.items():
+        if v is None:
+            user.pop(k, None)
+        else:
+            user[k] = v
+    write_user(user)
+
+
+def begin_edit(ws):
+    if edit["revert"]:
+        edit["revert"].cancel()
+    edit.update(owner=ws, snapshot=design_of(read_user()), history=[], last_push=0.0, revert=None)
+
+
+def commit_edit():
+    if edit["owner"] is not None:
+        edit.update(snapshot=design_of(read_user()), history=[])
+    if edit["revert"]:
+        edit["revert"].cancel()
+        edit.update(owner=None, snapshot=None, revert=None)
+
+
+def push_history(kind):
+    """Remember the design before a change; slider drags coalesce into one step."""
+    now = time.monotonic()
+    if kind == "setDesign" and now - edit["last_push"] < 0.8 and edit["history"]:
+        edit["last_push"] = now
+        return
+    edit["history"].append(design_of(read_user()))
+    del edit["history"][:-50]
+    edit["last_push"] = now
+
+
+def edit_state():
+    dirty = edit["snapshot"] is not None and design_of(read_user()) != edit["snapshot"]
+    return {"type": "editState", "dirty": dirty, "canUndo": bool(edit["history"])}
+
+
+def end_edit_later(ws):
+    """The Design page went away: revert unless the edit gets committed."""
+    if edit["owner"] is not ws:
+        return
+
+    def revert():
+        if edit["snapshot"] is not None and design_of(read_user()) != edit["snapshot"]:
+            log("settings closed without Apply: reverting the design")
+            restore_design(edit["snapshot"])
+        edit.update(owner=None, snapshot=None, history=[], revert=None)
+
+    edit["revert"] = asyncio.get_running_loop().call_later(REVERT_GRACE, revert)
 
 
 def apply_design(msg):
@@ -691,10 +768,14 @@ def restart_cava_if_needed():
 async def send_config(ws=None):
     issues = state["issues"] + [v for v in state["runtime"].values() if v]
     msg = json.dumps({"type": "config", "data": state["config"], "web": state.get("web", {}), "issues": issues})
+    previews = json.dumps({"type": "presets", "data": state.get("presets", [])})
     if ws:
         await ws.send(msg)
+        if ws.topics is not None and "presets" in ws.topics:
+            await ws.send(previews)
     else:
         await broadcast(msg, "config")
+        await broadcast(previews, "presets")
 
 
 async def config_watch_loop():
@@ -779,14 +860,30 @@ async def handler(ws):
                 stop_future.done() or stop_future.set_result(None)
             elif msg.get("type") == "subscribe":
                 ws.topics = set(msg.get("topics") or [])
+                if "presets" in ws.topics:
+                    await ws.send(json.dumps({"type": "presets", "data": state.get("presets", [])}))
             elif msg.get("type") == "wantMedia":
                 state["media_wanted"] = True
             elif msg.get("type") == "setApps":
                 save_user_apps(msg.get("apps"))
             elif msg.get("type") in ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset"):
+                if edit["owner"] is ws:
+                    push_history(msg["type"])
                 apply_design(msg)
+                await ws.send(json.dumps(edit_state()))
+            elif msg.get("type") == "beginEdit":
+                begin_edit(ws)
+                await ws.send(json.dumps(edit_state()))
+            elif msg.get("type") == "commitEdit":
+                commit_edit()
+                if edit["owner"] is ws:
+                    await ws.send(json.dumps(edit_state()))
+            elif msg.get("type") == "undo" and edit["owner"] is ws and edit["history"]:
+                restore_design(edit["history"].pop())
+                await ws.send(json.dumps(edit_state()))
     finally:
         clients.discard(ws)
+        end_edit_later(ws)
         state["last_client"] = time.monotonic()
 
 

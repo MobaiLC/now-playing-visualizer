@@ -1,17 +1,25 @@
 {
   "$comment": "Single source of truth for every option: type, default, range, label and when it is shown. The helper builds the defaults and validates config.json from this file; the Design page is generated from it; docs/CONFIG.md is generated from it. Labels are English msgids translated through the plasmoid's gettext catalog.",
   "version": 2,
-  "groups": [
-    { "id": "bars", "label": "Bars" },
-    { "id": "blocks", "label": "Blocks" },
-    { "id": "wave", "label": "Wave" },
-    { "id": "colors", "label": "Bar colors" },
-    { "id": "peaks", "label": "Peaks" },
-    { "id": "glow", "label": "Glow" },
+  "tabs": [
+    { "id": "presets", "label": "Presets" },
+    { "id": "style", "label": "Style" },
+    { "id": "colors", "label": "Colors" },
     { "id": "motion", "label": "Motion" },
-    { "id": "panel", "label": "Panel and song" },
-    { "id": "analysis", "label": "Audio analysis" },
+    { "id": "panel", "label": "Panel" },
     { "id": "advanced", "label": "Advanced" }
+  ],
+  "groups": [
+    { "id": "bars", "tab": "style", "label": "Bars" },
+    { "id": "blocks", "tab": "style", "label": "Blocks" },
+    { "id": "wave", "tab": "style", "label": "Wave" },
+    { "id": "colors", "tab": "colors", "label": "Bar colors" },
+    { "id": "peaks", "tab": "colors", "label": "Peaks" },
+    { "id": "glow", "tab": "colors", "label": "Glow" },
+    { "id": "motion", "tab": "motion", "label": "Motion" },
+    { "id": "panel", "tab": "panel", "label": "Panel and song" },
+    { "id": "analysis", "tab": "motion", "label": "Audio analysis" },
+    { "id": "advanced", "tab": "advanced", "label": "Advanced" }
   ],
   "options": {
     "bars.show": { "group": "bars", "type": "bool", "default": true, "label": "Show bars" },

@@ -11,12 +11,33 @@ import org.kde.kcmutils as KCM
 
 // Visual editor for config.json, generated from code/schema.json: every
 // option there becomes a control here, so adding an option needs no QML.
-// Changes are written to "overrides" through the helper and show up live.
+// Changes are written to "overrides" through the helper and show up live,
+// both on the widget and in the preview at the top; Cancel reverts them.
 KCM.SimpleKCM {
     id: page
 
     property var cfg_unused
     property var cfg_unusedDefault
+    property string cfg_designCommit
+    property string cfg_designCommitDefault
+
+    // Plasma's dialog reads these: Apply/OK call saveConfig(), and closing
+    // with unsaved changes asks first. Cancel needs nothing here: the helper
+    // reverts the design when this page disconnects without a commit.
+    property bool unsavedChanges: false
+    property bool canUndo: false
+    function saveConfig() {
+        flushNow();
+        helper.send({ type: "commitEdit" });
+        // also goes through Plasma's config, in case our socket closes first
+        cfg_designCommit = String(Date.now());
+    }
+
+    property string tab: "presets"
+    // size the preset thumbnails are drawn at before scaling down
+    readonly property int thumbW: 480
+    readonly property int thumbH: 150
+    property var presets: []
 
     // options arrive as an ordered list of specs, each with its "key"
     property var schema: ({ groups: [], options: [] })
@@ -52,10 +73,18 @@ KCM.SimpleKCM {
     Timer {
         id: flush
         interval: 250
-        onTriggered: {
-            helper.send({ type: "setDesign", changes: page.pending });
-            page.pending = {};
+        onTriggered: page.flushNow()
+    }
+    function flushNow() {
+        flush.stop();
+        if (Object.keys(pending).length) {
+            helper.send({ type: "setDesign", changes: pending });
+            pending = {};
         }
+    }
+    function act(msg) {
+        flushNow();
+        helper.send(msg);
     }
 
     // "when": every key must match; "whenNot": any match hides the option.
@@ -79,6 +108,8 @@ KCM.SimpleKCM {
     readonly property var rows: {
         let out = [];
         for (const grp of schema.groups) {
+            if (grp.tab !== tab)
+                continue;
             out.push({ kind: "section", group: grp.id, label: grp.label });
             for (const spec of schema.options) {
                 if (spec.group === grp.id && !spec.hidden)
@@ -111,12 +142,77 @@ KCM.SimpleKCM {
 
     Helper {
         id: helper
-        topics: ["config", "schema"]
+        topics: ["config", "schema", "presets", "bars"]
         onSchemaReceived: schema => page.schema = schema
         onDesignReceived: web => {
             if (!flush.running)
                 page.d = web;
         }
+        onPresetsReceived: list => page.presets = list
+        onEditStateReceived: st => {
+            page.unsavedChanges = st.dirty;
+            page.canUndo = st.canUndo;
+        }
+        onBarsReceived: values => {
+            page.liveBars = values;
+            page.liveBarsAt = Date.now();
+        }
+        onConnectedChanged: if (connected) send({ type: "beginEdit" })
+    }
+
+    // ---- preview data ---------------------------------------------------------
+    // the real song if one is playing, otherwise a stand-in
+    Loader {
+        id: mpris
+        source: "MprisSource.qml"
+    }
+    readonly property var demoMedia: ({ track: i18n("Song title"), artist: i18n("Artist"), album: i18n("Album"), artUrl: "" })
+    readonly property var previewMedia: mpris.item && mpris.item.media && mpris.item.media.track ? mpris.item.media : demoMedia
+
+    // live bars while music plays, a gentle synthetic wave otherwise
+    property var liveBars: []
+    property double liveBarsAt: 0
+    property bool liveFresh: false
+    property var demoBars: []
+    property real demoPhase: 0
+    Timer {
+        interval: 33
+        repeat: true
+        running: page.visible
+        onTriggered: {
+            page.liveFresh = Date.now() - page.liveBarsAt < 700 && page.liveBars.some(x => x > 15);
+            if (page.liveFresh)
+                return;
+            page.demoPhase += 0.08;
+            const n = page.g("bars.count", 24);
+            let v = [];
+            for (let i = 0; i < n; i++)
+                v.push(Math.round(220 + 520 * Math.abs(Math.sin(page.demoPhase + i * 0.45) * Math.cos(page.demoPhase * 0.6 + i * 0.13))));
+            page.demoBars = v;
+        }
+    }
+    readonly property var previewBars: liveFresh ? liveBars : demoBars
+
+    // a fixed bar shape for thumbnails, sized to each preset's bar count
+    function thumbBars(n) {
+        let v = [];
+        for (let i = 0; i < n; i++)
+            v.push(Math.round(250 + 600 * Math.abs(Math.sin(i * 0.55) * Math.cos(i * 0.21))));
+        return v;
+    }
+
+    // helper sends web colours (#RRGGBBAA); the card wants Qt's #AARRGGBB
+    function toQtDeep(v) {
+        // lists that crossed a signal are array-like QVariantLists, not Arrays
+        if (Array.isArray(v) || (v && typeof v === "object" && typeof v.length === "number"))
+            return Array.from(v, toQtDeep);
+        if (v && typeof v === "object") {
+            let o = {};
+            for (const k in v)
+                o[k] = toQtDeep(v[k]);
+            return o;
+        }
+        return typeof v === "string" && /^#[0-9a-fA-F]{8}$/.test(v) ? toQt(v) : v;
     }
 
     // ---- colour dialog shared by every swatch ------------------------------
@@ -323,58 +419,165 @@ KCM.SimpleKCM {
         }
     }
 
-    // ---- form ---------------------------------------------------------------
-    Kirigami.FormLayout {
+    // ---- header: live preview, actions and tabs ------------------------------
+    header: ColumnLayout {
+        spacing: Kirigami.Units.smallSpacing
 
-        // Presets are handled by hand: they are actions, not options.
-        RowLayout {
-            Kirigami.FormData.label: i18n("Preset:")
-            QQC2.ComboBox {
-                id: presetBox
-                model: page.g("presetList", [])
-                Binding on currentIndex {
-                    value: presetBox.find(page.g("presetName", "lookas"))
-                }
-                onActivated: helper.send({ type: "setPreset", name: currentText })
-            }
-            QQC2.Button {
-                text: i18n("Reset")
-                icon.name: "edit-undo"
-                QQC2.ToolTip.text: i18n("Drop your changes and use the preset as it is")
-                QQC2.ToolTip.visible: hovered
-                onClicked: helper.send({ type: "resetDesign" })
-            }
-            QQC2.Button {
-                visible: page.g("userPresets", []).includes(page.g("presetName", ""))
-                icon.name: "edit-delete"
-                QQC2.ToolTip.text: i18n("Delete this preset")
-                QQC2.ToolTip.visible: hovered
-                onClicked: helper.send({ type: "deletePreset", name: page.g("presetName", "") })
+        Loader {
+            Layout.fillWidth: true
+            Layout.preferredHeight: Kirigami.Units.gridUnit * 8
+            Layout.margins: Kirigami.Units.largeSpacing
+            // only once the helper has sent the config: Card needs every key
+            active: page.d.panel !== undefined
+            sourceComponent: Card {
+                cfg: page.toQtDeep(page.d)
+                media: page.previewMedia
+                showProgress: true
+                positionMs: 74000
+                lengthMs: 196000
+                barValues: page.previewBars
             }
         }
+
         RowLayout {
-            Kirigami.FormData.label: i18n("Save as:")
+            Layout.leftMargin: Kirigami.Units.largeSpacing
+            Layout.rightMargin: Kirigami.Units.largeSpacing
+            QQC2.TabBar {
+                id: tabBar
+                Layout.fillWidth: true
+                Repeater {
+                    model: page.schema.tabs || []
+                    delegate: QQC2.TabButton {
+                        required property var modelData
+                        text: i18n(modelData.label)
+                        checked: page.tab === modelData.id
+                        onClicked: page.tab = modelData.id
+                    }
+                }
+            }
+            QQC2.ToolButton {
+                icon.name: "edit-undo"
+                text: i18n("Undo")
+                enabled: page.canUndo
+                onClicked: page.act({ type: "undo" })
+            }
+            QQC2.ToolButton {
+                icon.name: "edit-reset"
+                text: i18n("Reset")
+                QQC2.ToolTip.text: i18n("Drop your changes and use the preset as it is")
+                QQC2.ToolTip.visible: hovered
+                onClicked: page.act({ type: "resetDesign" })
+            }
+        }
+    }
+
+    // ---- presets tab ----------------------------------------------------------
+    ColumnLayout {
+        visible: page.tab === "presets"
+        spacing: Kirigami.Units.largeSpacing
+
+        GridLayout {
+            Layout.fillWidth: true
+            columns: page.width > Kirigami.Units.gridUnit * 40 ? 3 : 2
+            columnSpacing: Kirigami.Units.largeSpacing
+            rowSpacing: Kirigami.Units.largeSpacing
+            uniformCellWidths: true
+
+            Repeater {
+                model: page.presets
+                delegate: QQC2.AbstractButton {
+                    id: thumb
+                    required property var modelData
+                    readonly property bool current: modelData.name === page.g("presetName", "")
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    onClicked: page.act({ type: "setPreset", name: modelData.name })
+
+                    contentItem: ColumnLayout {
+                        spacing: Kirigami.Units.smallSpacing
+                        // drawn at a real widget size, then scaled down, so the
+                        // thumbnail looks like the widget instead of a squashed copy
+                        Item {
+                            id: thumbFrame
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: width * page.thumbH / page.thumbW
+                            clip: true
+                            Card {
+                                width: page.thumbW
+                                height: page.thumbH
+                                scale: thumbFrame.width / page.thumbW
+                                transformOrigin: Item.TopLeft
+                                cfg: page.toQtDeep(thumb.modelData.config)
+                                media: page.demoMedia
+                                showProgress: true
+                                positionMs: 74000
+                                lengthMs: 196000
+                                barValues: page.thumbBars(thumb.modelData.config.bars.count)
+                                liveBars: false
+                            }
+                        }
+                        RowLayout {
+                            QQC2.Label {
+                                Layout.fillWidth: true
+                                text: thumb.modelData.name
+                                font.bold: thumb.current
+                                textFormat: Text.PlainText
+                                elide: Text.ElideRight
+                            }
+                            QQC2.ToolButton {
+                                visible: thumb.modelData.user
+                                icon.name: "edit-delete"
+                                display: QQC2.AbstractButton.IconOnly
+                                text: i18n("Delete this preset")
+                                QQC2.ToolTip.text: text
+                                QQC2.ToolTip.visible: hovered
+                                onClicked: page.act({ type: "deletePreset", name: thumb.modelData.name })
+                            }
+                        }
+                    }
+                    background: Rectangle {
+                        radius: Kirigami.Units.cornerRadius
+                        color: thumb.hovered ? Qt.alpha(Kirigami.Theme.highlightColor, 0.12) : "transparent"
+                        border.width: thumb.current ? 2 : 1
+                        border.color: thumb.current ? Kirigami.Theme.highlightColor : Qt.alpha(Kirigami.Theme.textColor, 0.15)
+                    }
+                    padding: Kirigami.Units.smallSpacing
+                }
+            }
+        }
+
+        RowLayout {
+            QQC2.Label {
+                text: i18n("Save current design as:")
+            }
             QQC2.TextField {
                 id: presetName
+                Layout.fillWidth: true
                 placeholderText: i18n("preset name")
+                maximumLength: 64
             }
             QQC2.Button {
                 text: i18n("Save")
                 icon.name: "document-save"
                 enabled: presetName.text.trim() !== ""
                 onClicked: {
-                    helper.send({ type: "savePreset", name: presetName.text.trim() });
+                    page.act({ type: "savePreset", name: presetName.text.trim() });
                     presetName.text = "";
                 }
             }
         }
         QQC2.Label {
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.fillWidth: true
             wrapMode: Text.WordWrap
             opacity: 0.7
             font.pointSize: Kirigami.Theme.smallFont.pointSize
-            text: i18n("Changes apply instantly. Switching presets discards your bar settings.")
+            text: i18n("Picking a preset replaces your bar settings; Undo brings them back. Nothing is kept until you press Apply or OK.")
         }
+    }
+
+    // ---- option tabs, generated from schema.json -------------------------------
+    Kirigami.FormLayout {
+        visible: page.tab !== "presets"
 
         Repeater {
             model: page.rows
@@ -391,7 +594,8 @@ KCM.SimpleKCM {
         }
 
         QQC2.Button {
-            Kirigami.FormData.label: i18n("Advanced:")
+            visible: page.tab === "advanced"
+            Kirigami.FormData.label: i18n("config.json:")
             text: i18n("Open config.json")
             icon.name: "document-edit"
             onClicked: Qt.openUrlExternally("file://" + StandardPaths.writableLocation(StandardPaths.ConfigLocation).toString().replace("file://", "") + "/nowplaying-viz/config.json")

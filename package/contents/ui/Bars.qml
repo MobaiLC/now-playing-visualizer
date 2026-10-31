@@ -13,6 +13,8 @@ Item {
     property var cfg: ({})
     property var targets: []
     property var coverColors: []
+    // false = draw targets as they are, once (preset thumbnails)
+    property bool live: true
     property color accentColor: "#3daee9"
 
     property var shown: []
@@ -31,7 +33,20 @@ Item {
     readonly property string colorMode: cfg.colorMode || "gradient"
     readonly property bool perBar: (colorMode === "perBar" || colorMode === "hue") && style !== "wave"
 
+    function drawStatic() {
+        shown = targets;
+        peaks = targets;
+        canvas.requestPaint();
+    }
+    // targets may be set before live is, so check again once both are known
+    onLiveChanged: if (!live) drawStatic()
+    Component.onCompleted: if (!live) drawStatic()
+
     onTargetsChanged: {
+        if (!live) {
+            drawStatic();
+            return;
+        }
         if (targets.some(v => v > 15)) {
             silent = false;
             silenceTimer.restart();
@@ -44,13 +59,13 @@ Item {
         onTriggered: root.silent = true
     }
 
-    opacity: cfg.hideWhenSilent && silent ? 0 : (cfg.alpha || 0)
+    opacity: live && cfg.hideWhenSilent && silent ? 0 : (cfg.alpha || 0)
     Behavior on opacity {
         NumberAnimation { duration: 600; easing.type: Easing.InOutQuad }
     }
 
     FrameAnimation {
-        running: root.visible && root.opacity > 0
+        running: root.live && root.visible && root.opacity > 0
         onTriggered: {
             const sec = Math.min(frameTime, 0.1);
             const dt = sec * 60;
@@ -419,10 +434,15 @@ Item {
         }
     }
 
+    onCfgChanged: if (!live) canvas.requestPaint()
+    onWidthChanged: if (!live) canvas.requestPaint()
+
     Canvas {
         id: canvas
         anchors.fill: parent
         renderStrategy: Canvas.Cooperative
+        // a paint requested before the canvas is ready is dropped
+        onAvailableChanged: if (available) requestPaint()
         layer.enabled: root.glow.enabled === true
         layer.effect: MultiEffect {
             autoPaddingEnabled: true
