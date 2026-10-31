@@ -753,6 +753,8 @@ async def accept(reader, writer):
         return
     try:
         await handler(ws)
+    except (ConnectionError, WsClosed, asyncio.IncompleteReadError):
+        pass  # the other side went away; nothing to clean up beyond close()
     finally:
         ws.close()
 
@@ -792,7 +794,7 @@ async def ask_to_quit():
     try:
         reader, writer = await asyncio.wait_for(asyncio.open_connection(HOST, PORT), 2)
         key = base64.b64encode(os.urandom(16)).decode()
-        writer.write((f"GET / HTTP/1.1\r\nHost: {HOST}\r\nUpgrade: websocket\r\n"
+        writer.write((f"GET / HTTP/1.1\r\nHost: {HOST}:{PORT}\r\nUpgrade: websocket\r\n"
                       f"Connection: Upgrade\r\nSec-WebSocket-Key: {key}\r\n"
                       "Sec-WebSocket-Version: 13\r\n\r\n").encode())
         await writer.drain()
@@ -802,6 +804,12 @@ async def ask_to_quit():
         writer.write(struct.pack("!BB", 0x81, 0x80 | len(payload)) + mask
                      + bytes(b ^ mask[i % 4] for i, b in enumerate(payload)))
         await writer.drain()
+        # stay connected until the old helper hangs up: it only reads our
+        # message after sending its greeting (schema + config)
+        try:
+            await asyncio.wait_for(reader.read(), 3)
+        except asyncio.TimeoutError:
+            pass
         writer.close()
     except Exception as e:
         log("could not ask the running helper to quit:", e)
