@@ -1,0 +1,158 @@
+# Now Playing Visualizer
+
+Un widget de escritorio para KDE Plasma 6 que muestra la canción que estás escuchando —portada, título, artista y progreso— junto a un visualizador de audio en tiempo real hecho con [CAVA](https://github.com/karlstav/cava). Puede escuchar **solo las aplicaciones que elijas** (tu reproductor, no el juego ni Discord), y todo su aspecto se cambia desde una página de ajustes visual.
+
+[Read in English](README.md)
+
+![Los diez presets incluidos](docs/images/presets.png)
+
+> **Estado: versión temprana (0.1.0).** Se usa a diario en un escritorio con CachyOS y Plasma 6.8. Todavía no se ha probado en otras distribuciones; mira [Limitaciones](#limitaciones).
+
+## Funciones
+
+- **Tarjeta de la canción** — portada, título, artista, álbum u origen y barra de progreso, leídos de cualquier reproductor compatible con MPRIS (el estándar de Linux para reproductores).
+- **Controles del reproductor** — anterior, pausa y siguiente al pasar el ratón; clic o arrastre en la barra de progreso para avanzar; clic en la portada para traer el reproductor al frente; rueda del ratón para el volumen. Cada control depende de lo que el reproductor diga que admite.
+- **Audio por aplicación** — eliges a qué aplicaciones reaccionan las barras, como en OBS. Se conectan directamente a CAVA a través de PipeWire, sin que aparezca ningún dispositivo nuevo en tu menú de sonido.
+- **Tres estilos** — barras, bloques y onda, cada uno también en modo circular, con cinco modos de color: degradado, un color por barra, arcoíris (animado si quieres), colores sacados de la portada o el color de acento de Plasma. Picos que caen y brillo opcionales.
+- **Se adapta a su forma** — horizontal, vertical (barras debajo) o compacta, según el tamaño del widget o fijada a mano.
+- **Ajustes visuales** — vista previa en vivo, presets en tarjetas, pestañas, Deshacer, y Cancelar que de verdad revierte. Por debajo, todas las opciones viven en un archivo JSON que también puedes editar a mano.
+- **Estado de reposo** — cuando no suena nada puede mostrar la última canción atenuada, una tarjeta «Nada sonando», u ocultarse.
+- **Pensado para sobrevivir a las actualizaciones** — las partes que dependen del interior de Plasma están aisladas y tienen alternativa, el helper solo usa la biblioteca estándar de Python, y una comprobación opcional se ejecuta tras cada actualización de `pacman` y te avisa si algo se rompió.
+- **Idiomas** — inglés y español.
+
+## Requisitos
+
+| Qué | Para qué |
+|---|---|
+| KDE Plasma 6 (Qt 6) | el widget |
+| PipeWire (con `pw-dump`, `pw-link`) | captura de audio y audio por aplicación |
+| `cava` | el análisis del audio |
+| Python 3 (probado con 3.14) | el helper (solo biblioteca estándar) |
+| `busctl` (systemd) | leer el reproductor por D-Bus cuando hace falta |
+| `gettext` (`msgfmt`) | compilar las traducciones al instalar |
+
+En sistemas basados en Arch: `sudo pacman -S cava pipewire python gettext`.
+
+## Instalación
+
+```bash
+git clone https://github.com/MobaiLC/now-playing-visualizer.git
+cd now-playing-visualizer
+tools/install.sh            # el widget
+tools/install.sh --systemd  # opcional: servicio del helper + comprobación tras actualizar
+```
+
+Después reinicia Plasma (`systemctl --user restart plasma-plasmashell`, o cierra sesión y vuelve a entrar), haz clic derecho en el escritorio → **Añadir elementos gráficos…** → **Now Playing Visualizer**.
+
+`--systemd` instala dos unidades de usuario:
+- `nowplaying-viz.service` mantiene el helper en marcha y lo reinicia si falla.
+- `nowplaying-viz-check.path` ejecuta una comprobación tras cada actualización de paquetes.
+
+Las dos son opcionales: sin ellas, el widget arranca el helper por su cuenta.
+
+Para actualizar, haz `git pull` y vuelve a ejecutar `tools/install.sh`.
+
+### Desinstalar
+
+```bash
+kpackagetool6 -t Plasma/Applet -r com.github.mobailc.nowplayingvisualizer
+systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path
+rm ~/.config/systemd/user/nowplaying-viz*
+rm -r ~/.config/nowplaying-viz   # tus ajustes y presets
+```
+
+## Configuración
+
+Clic derecho en el widget → **Configurar…**
+
+- **Diseño** — vista previa en vivo arriba y, debajo, pestañas: *Presets* (clic en una tarjeta para aplicarla, o guarda los tuyos), *Estilo*, *Colores*, *Movimiento*, *Panel* y *Avanzado*. Los cambios se ven al momento; **Aplicar/Aceptar** los guarda y **Cancelar** lo deja todo como estaba.
+- **Audio** — marca las aplicaciones que debe escuchar el visualizador. Si no marcas ninguna, escucha todo el sistema.
+
+Todo se guarda en `~/.config/nowplaying-viz/config.json`, que también puedes editar a mano; el widget se actualiza al guardar el archivo:
+
+```json
+{
+  "version": 2,
+  "preset": "lookas",
+  "audio": { "apps": ["liner"] },
+  "overrides": { "bars": { "side": "left", "glow": { "enabled": true } } },
+  "presets": {}
+}
+```
+
+Los colores van en formato web, `#RRGGBB` o `#RRGGBBAA`. La lista completa de opciones, con tipos, rangos y valores por defecto, está en [`schema.json`](package/contents/code/schema.json). Si un valor no es válido se corrige y el widget lo indica con un icono de aviso, en vez de romperse.
+
+## Reproductores compatibles
+
+Los controles solo aparecen si el reproductor dice que los admite.
+
+| Reproductor | Pausa | Siguiente/anterior | Avanzar | Cómo se ha probado |
+|---|---|---|---|---|
+| Liner | ✅ | ✅ | ✅ | en directo |
+| Zen / Firefox (YouTube, etc.) | ✅ | ✅ | ✅ | en directo |
+| Riff | ✅ | ✅ (si hay canción siguiente o anterior en la cola) | ✅ | solo leyendo su código |
+| Spotify (cliente oficial) | ✅ | ✅ | ⚠️ | sin probar; según informes, su MPRIS está incompleto (la posición puede quedarse en 0) |
+
+Se agradecen informes de otros reproductores.
+
+## Cómo funciona
+
+```
+ Widget de Plasma (QML)  ──WebSocket, 127.0.0.1:47811──  helper.py  ──  CAVA ── PipeWire
+   Card · Bars · página Diseño                                │
+   MprisSource ── módulo MPRIS de Plasma                      └── MPRIS por D-Bus (alternativa)
+```
+
+- **El widget** dibuja la tarjeta y las barras, y lee la canción con el módulo MPRIS de Plasma.
+- **El helper** es un pequeño programa en Python que comparten todos los widgets. Se encarga de:
+  - juntar los presets con tus ajustes y validarlos con `schema.json`;
+  - ejecutar CAVA solo mientras algún widget necesita barras;
+  - conectar a CAVA las aplicaciones elegidas;
+  - leer la canción por D-Bus si alguna vez cambia el módulo de Plasma.
+- **Su conexión** solo escucha en `127.0.0.1`, rechaza conexiones que vengan de páginas web y no se conecta a internet.
+
+## Solución de problemas
+
+- **Comprobarlo todo** — dice qué falta o está roto y a qué afecta:
+  ```bash
+  python3 ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/code/check.py
+  ```
+- **Registros del helper:** `journalctl --user -u nowplaying-viz` (servicio) o `~/.cache/nowplaying-viz.log` (arrancado por el widget).
+- **Errores del widget:** `journalctl --user -u plasma-plasmashell | grep nowplayingvisualizer`.
+- **¿No hay barras?** Comprueba que la aplicación está marcada en **Audio** (o que no hay ninguna, para todo el sistema) y que `cava` está instalado.
+
+## Limitaciones
+
+- La información de la canción viene de un **módulo privado de Plasma** (el que usa su controlador multimedia). Si una actualización lo cambia, el widget pasa solo a usar D-Bus, pero puede hacer falta algún arreglo.
+- **Hace falta PipeWire**; PulseAudio sin PipeWire no está soportado.
+- En la versión 0.1.0, el clic, el arrastre y la rueda del ratón se comprobaron dibujando la tarjeta, pero apenas se han probado a mano.
+- Solo se ha probado en CachyOS con Plasma 6.8.
+
+## Desarrollo
+
+```
+package/            el plasmoide (se instala tal cual)
+  contents/ui/        QML: main, Card, Bars, páginas Diseño y Audio, MprisSource
+  contents/code/      helper.py, schema.json, presets.json, check.py
+packaging/systemd/  unidades de usuario opcionales
+tools/              instalar, extraer textos, compilar traducciones
+translate/          plantilla de gettext y traducciones
+```
+
+- **Añadir una opción:** añade una entrada en `schema.json` (tipo, valor por defecto, rango, etiqueta y grupo) y léela en QML como `cfg.<clave>`. La página Diseño y la validación la recogen solas.
+- **Añadir un preset:** añádelo en `presets.json`, poniendo solo lo que cambia respecto a los valores por defecto.
+- **Traducciones:** ejecuta `tools/extract-messages.sh` cuando cambies textos, traduce `translate/<idioma>.po` y ejecuta `tools/install.sh`.
+- **Probar cambios:** ejecuta `tools/install.sh && systemctl --user restart plasma-plasmashell`. Plasma guarda en caché el código de los widgets, así que el reinicio hace falta.
+
+## Transparencia
+
+Este proyecto se escribe con ayuda de **Claude** (la IA de Anthropic) mediante Claude Code, bajo la dirección del autor, que decide qué se construye y revisa el resultado. Los commits hechos así llevan una línea `Co-Authored-By: Claude`. Sus mensajes explican cómo se probó cada cambio y, con la misma claridad, qué *no* se probó.
+
+## Créditos
+
+- [CAVA](https://github.com/karlstav/cava) hace el análisis del audio.
+- Inspirado en [lookas](https://github.com/rccyx/lookas) y en [Plasma Audio Visualizer](https://github.com/luisbocanegra/plasma-audio-visualizer) / Kurve. No se ha copiado código de ninguno de los dos.
+
+## Licencia
+
+[GPL-3.0-or-later](LICENSE)
