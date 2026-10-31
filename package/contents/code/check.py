@@ -43,7 +43,6 @@ COMMANDS = {
     "cava": _("audio bars"),
     "pw-dump": _("list of audio apps"),
     "pw-link": _("per-app audio"),
-    "pactl": _("virtual audio output"),
     "busctl": _("reading the song over D-Bus"),
 }
 

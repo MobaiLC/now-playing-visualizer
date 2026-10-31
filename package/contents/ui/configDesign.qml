@@ -111,6 +111,7 @@ KCM.SimpleKCM {
 
     Helper {
         id: helper
+        topics: ["config", "schema"]
         onSchemaReceived: schema => page.schema = schema
         onDesignReceived: web => {
             if (!flush.running)

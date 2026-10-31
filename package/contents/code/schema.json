@@ -1,6 +1,6 @@
 {
   "$comment": "Single source of truth for every option: type, default, range, label and when it is shown. The helper builds the defaults and validates config.json from this file; the Design page is generated from it; docs/CONFIG.md is generated from it. Labels are English msgids translated through the plasmoid's gettext catalog.",
-  "version": 1,
+  "version": 2,
   "groups": [
     { "id": "bars", "label": "Bars" },
     { "id": "blocks", "label": "Blocks" },
@@ -124,7 +124,15 @@
     "panel.radius": { "group": "panel", "type": "int", "default": 14, "min": 0, "max": 40, "unit": "px", "label": "Panel corner radius" },
     "panel.padding": { "group": "panel", "type": "int", "default": 14, "min": 0, "max": 40, "unit": "px", "label": "Inner margin" },
     "panel.spacing": { "group": "panel", "type": "int", "default": 16, "min": 0, "max": 40, "unit": "px", "label": "Spacing between song and bars" },
-    "panel.hideWhenNoPlayer": { "group": "panel", "type": "bool", "default": true, "label": "Hide when nothing is playing" },
+    "panel.whenIdle": {
+      "group": "panel", "type": "enum", "default": "last", "label": "When nothing is playing",
+      "values": [
+        { "value": "last", "label": "Show the last song, dimmed" },
+        { "value": "placeholder", "label": "Show \"Nothing playing\"" },
+        { "value": "hide", "label": "Hide the widget" }
+      ]
+    },
+    "panel.idleOpacity": { "group": "panel", "type": "real", "default": 0.45, "min": 0.1, "max": 1, "display": "percent", "label": "Opacity when idle", "whenNot": { "panel.whenIdle": ["hide"] } },
     "panel.preferredPlayers": { "group": "panel", "type": "stringList", "default": [], "label": "Preferred players" },
     "font.family": { "group": "panel", "type": "string", "default": "", "label": "Font (empty = system font)" },
     "header.show": { "group": "panel", "type": "bool", "default": true, "label": "Header text" },

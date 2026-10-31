@@ -69,6 +69,18 @@ PlasmoidItem {
     readonly property var player: useFallback ? fallbackMedia : (mprisLoader.item ? mprisLoader.item.media : null)
 
     readonly property bool hasTrack: !!player && (player.track || "") !== ""
+
+    // ---- idle state -----------------------------------------------------------
+    // Remember the last song so the card can stay visible (dimmed) between
+    // songs instead of vanishing; an invisible widget is hard to find again.
+    property var lastMedia: null
+    onPlayerChanged: {
+        if (hasTrack)
+            lastMedia = player;
+    }
+    readonly property string whenIdle: panelCfg.whenIdle || "last"
+    readonly property var shownMedia: hasTrack ? player : (whenIdle === "last" ? lastMedia : null)
+    readonly property bool idle: !hasTrack || !isPlaying
     readonly property bool isPlaying: !!player && player.playing
 
     // ---- position (MPRIS gives µs; interpolate locally between syncs) -------
@@ -114,10 +126,11 @@ PlasmoidItem {
 
     function fillTemplate(t) {
         // split/join: QML's JS engine has no String.replaceAll
-        return t.split("{title}").join(player?.track || "")
-            .split("{artist}").join(player?.artist || "")
-            .split("{album}").join(player?.album || "")
-            .split("{player}").join(player?.identity || "");
+        const m = shownMedia;
+        return t.split("{title}").join(m?.track || "")
+            .split("{artist}").join(m?.artist || "")
+            .split("{album}").join(m?.album || "")
+            .split("{player}").join(m?.identity || "");
     }
 
     function issueText(issue) {
@@ -146,6 +159,27 @@ PlasmoidItem {
             sourceComponent: card
         }
 
+        // outside the card: stays visible when the card is dimmed, hidden or
+        // not built yet (e.g. config.json could not be read)
+        Kirigami.Icon {
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 6
+            width: Kirigami.Units.iconSizes.small
+            height: width
+            visible: root.issues.length > 0
+            source: "dialog-warning"
+            HoverHandler {
+                id: issueHover
+                cursorShape: Qt.PointingHandCursor
+            }
+            TapHandler {
+                onTapped: Plasmoid.internalAction("configure").trigger()
+            }
+            QQC2.ToolTip.visible: issueHover.hovered
+            QQC2.ToolTip.text: root.issues.map(root.issueText).join("\n") + "\n\n" + i18n("Click to open the settings")
+        }
+
         Component {
             id: card
             Rectangle {
@@ -155,7 +189,9 @@ PlasmoidItem {
                 radius: root.panelCfg.radius
                 border.width: root.panelCfg.borderWidth
                 border.color: root.fade(root.panelCfg.borderColor, root.panelCfg.opacity)
-                opacity: (root.panelCfg.hideWhenNoPlayer) && !root.hasTrack ? 0 : 1
+                opacity: root.hasTrack && root.isPlaying ? 1
+                    : !root.hasTrack && root.whenIdle === "hide" ? 0
+                    : root.panelCfg.idleOpacity
                 Behavior on opacity {
                     NumberAnimation { duration: 500 }
                 }
@@ -201,7 +237,7 @@ PlasmoidItem {
                                 Image {
                                     id: cover
                                     anchors.fill: parent
-                                    source: root.player?.artUrl ?? ""
+                                    source: root.shownMedia?.artUrl ?? ""
                                     fillMode: Image.PreserveAspectCrop
                                     asynchronous: true
                                     sourceSize.width: 256
@@ -271,7 +307,7 @@ PlasmoidItem {
                                 Item { Layout.fillHeight: true }
                                 Text {
                                     Layout.fillWidth: true
-                                    text: root.player?.track ?? ""
+                                    text: root.shownMedia ? root.shownMedia.track : i18n("Nothing playing")
                                     color: root.cfg.title.color
                                     font.family: root.fontFamily
                                     font.pixelSize: root.cfg.title.size
@@ -280,7 +316,7 @@ PlasmoidItem {
                                 }
                                 Text {
                                     Layout.fillWidth: true
-                                    text: root.player?.artist ?? ""
+                                    text: root.shownMedia?.artist ?? ""
                                     color: root.cfg.subtitle.color
                                     font.family: root.fontFamily
                                     font.pixelSize: root.cfg.subtitle.size
@@ -289,7 +325,7 @@ PlasmoidItem {
                                 Text {
                                     Layout.fillWidth: true
                                     visible: root.cfg.subtitle.showAlbum && text !== ""
-                                    text: root.player?.album ?? ""
+                                    text: root.shownMedia?.album ?? ""
                                     color: root.cfg.subtitle.color
                                     font.family: root.fontFamily
                                     font.pixelSize: root.cfg.subtitle.size
@@ -299,7 +335,7 @@ PlasmoidItem {
 
                                 RowLayout {
                                     Layout.fillWidth: true
-                                    visible: root.cfg.progress.show
+                                    visible: root.cfg.progress.show && root.hasTrack
                                     spacing: 8
 
                                     Text {
@@ -347,19 +383,6 @@ PlasmoidItem {
                         Layout.preferredWidth: 0
                         Layout.horizontalStretchFactor: Math.round(100 * (root.barsCfg.areaRatio))
                     }
-                }
-
-                Kirigami.Icon {
-                    anchors.top: parent.top
-                    anchors.right: parent.right
-                    anchors.margins: 6
-                    width: Kirigami.Units.iconSizes.small
-                    height: width
-                    visible: root.issues.length > 0
-                    source: "dialog-warning"
-                    HoverHandler { id: issueHover }
-                    QQC2.ToolTip.visible: issueHover.hovered
-                    QQC2.ToolTip.text: root.issues.map(root.issueText).join("\n")
                 }
             }
         }

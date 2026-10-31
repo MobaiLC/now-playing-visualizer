@@ -15,7 +15,15 @@ Item {
     signal appsReceived(var apps)
     signal mediaReceived(var data)
 
+    // empty = receive everything (the widget); settings pages pass
+    // ["config", "schema"] so they don't get the 60 fps bar stream
+    property var topics: []
+
     readonly property bool connected: socket.status === WebSocket.Open
+    onConnectedChanged: {
+        if (connected && topics.length)
+            send({ type: "subscribe", topics: topics });
+    }
     readonly property string helperPath: decodeURIComponent(Qt.resolvedUrl("../code/helper.py").toString().replace("file://", ""))
 
     function send(obj) {

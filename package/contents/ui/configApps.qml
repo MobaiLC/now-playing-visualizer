@@ -38,6 +38,7 @@ KCM.SimpleKCM {
 
     Helper {
         id: helper
+        topics: ["config", "schema"]
         onConfigReceived: (data, issues) => page.selected = data.audio?.apps ?? []
         onAppsReceived: apps => page.running = apps
         onConnectedChanged: if (connected) send({ type: "listApps" })

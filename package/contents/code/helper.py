@@ -30,13 +30,15 @@ from pathlib import Path
 
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("NPV_PORT", "47811"))
-SINK = "nowplaying_viz"
+# CAVA asks PipeWire for this (non-existent) target in per-app mode, which
+# also lets us find its capture stream among the nodes.
+CAPTURE_TARGET = "nowplaying-viz-capture"
 HERE = Path(__file__).resolve().parent
 PRESETS_FILE = HERE / "presets.json"
 SCHEMA_FILE = HERE / "schema.json"
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "nowplaying-viz"
 CONFIG_FILE = CONFIG_DIR / "config.json"
-CONFIG_VERSION = 1
+CONFIG_VERSION = 2
 IDLE_EXIT_SECONDS = 60
 # --service: started by systemd, stays up (CAVA still only runs while needed)
 SERVICE = "--service" in sys.argv
@@ -159,11 +161,20 @@ def validate(eff, schema, issues):
 
 
 def migrate(user):
-    """Upgrades an older config.json in place. Returns True if it changed."""
+    """Upgrades an older config.json in place, one version at a time.
+    Returns True if it changed. Add a step here whenever an option is renamed
+    or its meaning changes, and bump CONFIG_VERSION."""
     version = user.get("version", 0)
     if version == CONFIG_VERSION:
         return False
-    # 0 -> 1: only the version field was added
+    if version < 2:
+        # panel.hideWhenNoPlayer (bool) became panel.whenIdle (enum). true was
+        # the old default, so only an explicit false is carried over.
+        sections = [user.get("overrides", {})] + list(user.get("presets", {}).values())
+        for sec in sections:
+            panel = sec.get("panel", {})
+            if panel.pop("hideWhenNoPlayer", True) is False:
+                panel["whenIdle"] = "last"
     user["version"] = CONFIG_VERSION
     return True
 
@@ -291,6 +302,8 @@ class WsConn:
         self.writer = writer
         self.closed = False
         self.lock = asyncio.Lock()
+        # None = everything; the settings pages only ask for config/schema
+        self.topics = None
 
     async def handshake(self):
         head = await asyncio.wait_for(self.reader.readuntil(b"\r\n\r\n"), 5)
@@ -406,32 +419,21 @@ def list_audio_apps(objs):
     return list(apps.values())
 
 
-def ensure_sink(objs):
-    for o in objs:
-        p = (o.get("info") or {}).get("props") or {}
-        if o.get("type") == "PipeWire:Interface:Node" and p.get("node.name") == SINK:
-            return
-    r = run(["pactl", "load-module", "module-null-sink", f"sink_name={SINK}",
-             "sink_properties=device.description=Visualizador"])
-    if r.returncode != 0:
-        state["runtime"]["sink"] = {"code": "sink_error", "detail": r.stderr.strip()}
-    log("sink created", r.stdout.strip())
-
-
-def unload_sink():
+def remove_legacy_sink():
+    """Versions before 0.2 routed audio through a null sink that showed up in
+    the system sound menu; unload it if it is still around."""
     r = run(["pactl", "list", "short", "modules"])
     for line in r.stdout.splitlines():
-        if "module-null-sink" in line and f"sink_name={SINK}" in line:
+        if "module-null-sink" in line and "sink_name=nowplaying_viz" in line:
             run(["pactl", "unload-module", line.split()[0]])
 
 
 def sync_links(apps):
-    """Link the selected apps to our sink; unlink anything else."""
+    """Per-app audio: link the selected apps straight into CAVA's capture
+    stream and drop every other link into it (WirePlumber's fallback link to
+    the default microphone included). No virtual device is created."""
     objs = pw_dump()
     wanted = {a.lower() for a in apps}
-    if wanted:
-        ensure_sink(objs)
-        objs = pw_dump()
     nodes, ports, links = {}, {}, []
     for o in objs:
         t, info = o.get("type"), o.get("info") or {}
@@ -442,34 +444,36 @@ def sync_links(apps):
             ports[o["id"]] = (info.get("direction"), p)
         elif t == "PipeWire:Interface:Link":
             links.append((info.get("output-port-id"), info.get("input-port-id")))
-    sink_id = next((i for i, p in nodes.items() if p.get("node.name") == SINK), None)
-    if sink_id is None:
+    capture = {i for i, p in nodes.items() if p.get("target.object") == CAPTURE_TARGET}
+    if not capture:
         return
-    sink_in = {}
+    cava_in = {}
     for pid, (d, p) in ports.items():
-        if d == "input" and p.get("node.id") == sink_id:
-            sink_in[p.get("audio.channel")] = pid
-    existing = set(links)
+        if d == "input" and p.get("node.id") in capture:
+            cava_in.setdefault(p.get("audio.channel"), []).append(pid)
     desired = set()
     for pid, (d, p) in ports.items():
         if d != "output":
             continue
         node = nodes.get(p.get("node.id"))
-        if not node or node.get("media.class") != "Stream/Output/Audio":
-            continue
-        if app_key(node) not in wanted:
+        if not node or node.get("media.class") != "Stream/Output/Audio" or app_key(node) not in wanted:
             continue
         ch = p.get("audio.channel")
-        targets = [sink_in.get(ch)] if ch in sink_in else list(sink_in.values()) if ch == "MONO" else []
+        if ch in cava_in:
+            targets = cava_in[ch]
+        elif ch == "MONO":
+            targets = [t for ts in cava_in.values() for t in ts]
+        else:
+            targets = []
         for t in targets:
-            if t is not None:
-                desired.add((pid, t))
+            desired.add((pid, t))
+    existing = set(links)
+    capture_ports = {t for ts in cava_in.values() for t in ts}
+    for out, inp in existing - desired:
+        if inp in capture_ports:
+            run(["pw-link", "-d", str(out), str(inp)])
     for out, inp in desired - existing:
         run(["pw-link", str(out), str(inp)])
-    sink_ports = set(sink_in.values())
-    for out, inp in existing - desired:
-        if inp in sink_ports:
-            run(["pw-link", "-d", str(out), str(inp)])
 
 
 # ------------------------------------------------------------ MPRIS (D-Bus) --
@@ -529,7 +533,7 @@ async def media_loop():
     while True:
         if state.get("media_wanted") and clients and state["config"]:
             data = await asyncio.to_thread(read_media)
-            await broadcast(json.dumps({"type": "media", "data": data}))
+            await broadcast(json.dumps({"type": "media", "data": data}), "media")
         await asyncio.sleep(1)
 
 
@@ -537,7 +541,7 @@ async def media_loop():
 
 def cava_config(cfg):
     a, b = cfg.get("audio", {}), cfg.get("bars", {})
-    source = f"{SINK}.monitor" if a.get("apps") else "auto"
+    source = CAPTURE_TARGET if a.get("apps") else "auto"
     lines = [
         "[general]",
         f"framerate={int(b.get('framerate', 60))}",
@@ -548,8 +552,10 @@ def cava_config(cfg):
         f"sensitivity={int(a.get('sensitivity', 100))}",
         "sleep_timer=0",
         "[input]",
-        "method=pulse",
+        "method=pipewire",
         f"source={source}",
+        # no "recording" indicator in the system tray for our capture stream
+        "virtual=1",
         "[output]",
         "method=raw",
         "raw_target=/dev/stdout",
@@ -564,9 +570,15 @@ def cava_config(cfg):
     return "\n".join(lines) + "\n"
 
 
-async def broadcast(msg):
+def bar_clients():
+    return [ws for ws in clients if ws.topics is None or "bars" in ws.topics]
+
+
+async def broadcast(msg, topic):
     dead = []
     for ws in list(clients):
+        if ws.topics is not None and topic not in ws.topics:
+            continue
         try:
             await asyncio.wait_for(ws.send(msg), 1)
         except Exception:
@@ -587,8 +599,8 @@ async def cava_loop():
     global cava_proc, cava_key
     while True:
         cfg = state["config"]
-        # CAVA only runs while some widget is listening
-        if not cfg or not clients:
+        # CAVA only runs while some widget wants bars
+        if not cfg or not bar_clients():
             await asyncio.sleep(0.5)
             continue
         conf = cava_config(cfg)
@@ -604,15 +616,19 @@ async def cava_loop():
             await set_error("cava_missing")
             await asyncio.sleep(10)
             continue
+        if selected_apps():
+            # drop WirePlumber's fallback link (the default mic) right away
+            asyncio.get_running_loop().call_later(
+                0.3, lambda: asyncio.ensure_future(asyncio.to_thread(sync_links, selected_apps())))
         got_data = False
         try:
             async for line in cava_proc.stdout:
-                if not clients:
+                if not bar_clients():
                     break
                 if not got_data:
                     got_data = True
                     await set_error(None)
-                await broadcast("B" + line.decode().strip().rstrip(";"))
+                await broadcast("B" + line.decode().strip().rstrip(";"), "bars")
         finally:
             if cava_proc.returncode is None:
                 cava_proc.kill()
@@ -637,7 +653,7 @@ async def send_config(ws=None):
     if ws:
         await ws.send(msg)
     else:
-        await broadcast(msg)
+        await broadcast(msg, "config")
 
 
 async def config_watch_loop():
@@ -658,11 +674,16 @@ async def config_watch_loop():
         await asyncio.sleep(0.5)
 
 
+def selected_apps():
+    return state["config"].get("audio", {}).get("apps", []) if state["config"] else []
+
+
 async def link_loop():
+    # only does work while CAVA runs in per-app mode (i.e. a widget is open)
     while True:
-        apps = state["config"].get("audio", {}).get("apps", []) if state["config"] else []
-        await asyncio.to_thread(sync_links, apps)
-        await asyncio.sleep(2)
+        if cava_proc and cava_proc.returncode is None and selected_apps():
+            await asyncio.to_thread(sync_links, selected_apps())
+        await asyncio.sleep(1)
 
 
 async def idle_loop(stop):
@@ -705,6 +726,8 @@ async def handler(ws):
             elif msg.get("type") == "quit" and not SERVICE:
                 log("handing over to the systemd service")
                 stop_future.done() or stop_future.set_result(None)
+            elif msg.get("type") == "subscribe":
+                ws.topics = set(msg.get("topics") or [])
             elif msg.get("type") == "wantMedia":
                 state["media_wanted"] = True
             elif msg.get("type") == "setApps":
@@ -737,6 +760,7 @@ async def ask_to_quit():
 
 async def main():
     global stop_future
+    await asyncio.to_thread(remove_legacy_sink)
     loop = asyncio.get_running_loop()
     stop = stop_future = loop.create_future()
     for sig in (signal.SIGTERM, signal.SIGINT):
@@ -764,7 +788,6 @@ async def main():
         t.cancel()
     if cava_proc and cava_proc.returncode is None:
         cava_proc.kill()
-    unload_sink()
 
 
 if __name__ == "__main__":
