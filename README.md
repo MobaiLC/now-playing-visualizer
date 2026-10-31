@@ -27,7 +27,7 @@ A KDE Plasma 6 desktop widget that shows the song you're listening to — cover 
 | KDE Plasma 6 (Qt 6) | the widget itself |
 | PipeWire (with `pw-dump`, `pw-link`) | audio capture and per-app routing |
 | `cava` | the audio analysis |
-| Python 3.10+ (tested on 3.10–3.14) | the helper (standard library only) |
+| Python 3.10+ (tested on 3.10, 3.12, 3.13 and 3.14) | the helper (standard library only) |
 | `busctl` (systemd) | reading the player over D-Bus when needed |
 | `gettext` (`msgfmt`) | building the translations at install time |
 
