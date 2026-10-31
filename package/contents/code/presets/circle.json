@@ -1,0 +1,21 @@
+{
+  "bars": {
+    "areaRatio": 0.35,
+    "count": 48,
+    "gap": 2,
+    "colorMode": "hue",
+    "hue": {
+      "speed": 20
+    },
+    "circle": {
+      "enabled": true,
+      "size": 0.5
+    },
+    "glow": {
+      "enabled": true,
+      "color": "auto",
+      "blur": 0.5,
+      "strength": 0.6
+    }
+  }
+}

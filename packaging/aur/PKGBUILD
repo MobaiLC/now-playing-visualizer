@@ -1,0 +1,55 @@
+# Maintainer: MobaiLC <https://github.com/MobaiLC>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+pkgname=plasma6-applets-now-playing-visualizer-git
+_pkgname=now-playing-visualizer
+_id=com.github.mobailc.nowplayingvisualizer
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Plasma 6 widget: now playing card with cover art, progress and a CAVA audio visualizer that can listen to selected apps only"
+arch=('any')
+url="https://github.com/MobaiLC/now-playing-visualizer"
+license=('GPL-3.0-or-later')
+depends=('plasma-workspace' 'plasma5support' 'kirigami' 'kcmutils' 'qt6-declarative' 'qt6-websockets'
+         'cava' 'pipewire' 'python' 'systemd')
+makedepends=('git' 'gettext')
+provides=("plasma6-applets-now-playing-visualizer")
+conflicts=("plasma6-applets-now-playing-visualizer")
+source=("git+${url}.git")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "$_pkgname"
+    if git describe --tags --long >/dev/null 2>&1; then
+        git describe --tags --long --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+    else
+        printf "0.1.0.r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+    fi
+}
+
+build() {
+    cd "$_pkgname"
+    tools/build-translations.sh
+}
+
+check() {
+    cd "$_pkgname"
+    python -m unittest discover -s tests
+}
+
+package() {
+    cd "$_pkgname"
+    install -d "$pkgdir/usr/share/plasma/plasmoids/$_id"
+    cp -r package/. "$pkgdir/usr/share/plasma/plasmoids/$_id/"
+    find "$pkgdir" -name __pycache__ -type d -prune -exec rm -rf {} +
+
+    # the units in the repo point at a per-user install; point them here instead
+    local unit
+    for unit in packaging/systemd/*; do
+        sed "s|%h/.local/share/plasma/plasmoids|/usr/share/plasma/plasmoids|" "$unit" \
+            | install -Dm644 /dev/stdin "$pkgdir/usr/lib/systemd/user/$(basename "$unit")"
+    done
+
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

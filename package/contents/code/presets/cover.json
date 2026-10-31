@@ -1,0 +1,13 @@
+{
+  "bars": {
+    "colorMode": "cover",
+    "gradient": "vertical",
+    "radius": 3,
+    "glow": {
+      "enabled": true,
+      "color": "auto",
+      "blur": 0.7,
+      "strength": 0.8
+    }
+  }
+}

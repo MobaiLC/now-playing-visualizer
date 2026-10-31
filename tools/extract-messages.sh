@@ -7,7 +7,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-DOMAIN="plasma_applet_com.github.mobailc.nowplayingvisualizer"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 

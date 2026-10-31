@@ -1,0 +1,22 @@
+{
+  "progress": {
+    "color": "#5ee7ff"
+  },
+  "bars": {
+    "align": "center",
+    "count": 32,
+    "gap": 3,
+    "radius": 2,
+    "colors": [
+      "#2de0c0",
+      "#5ee7ff"
+    ],
+    "gradient": "horizontal",
+    "glow": {
+      "enabled": true,
+      "color": "#5ee7ff",
+      "blur": 0.6,
+      "strength": 0.7
+    }
+  }
+}

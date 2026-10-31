@@ -44,6 +44,10 @@ tools/install.sh --systemd  # opcional: servicio del helper + comprobación tras
 
 Después reinicia Plasma (`systemctl --user restart plasma-plasmashell`, o cierra sesión y vuelve a entrar), haz clic derecho en el escritorio → **Añadir elementos gráficos…** → **Now Playing Visualizer**.
 
+Otras formas, cuando estén publicadas (todavía no lo están):
+- **AUR:** `plasma6-applets-now-playing-visualizer-git`. El PKGBUILD está en [`packaging/aur/`](packaging/aur/PKGBUILD). Instala el widget para todos los usuarios, junto con las unidades de systemd, que no se activan hasta que tú lo hagas.
+- **KDE Store / archivo `.plasmoid`:** créalo con `tools/make-plasmoid.sh` e instálalo con `kpackagetool6 -t Plasma/Applet -i build/now-playing-visualizer-*.plasmoid`.
+
 `--systemd` instala dos unidades de usuario:
 - `nowplaying-viz.service` mantiene el helper en marcha y lo reinicia si falla.
 - `nowplaying-viz-check.path` ejecuta una comprobación tras cada actualización de paquetes.
@@ -113,7 +117,7 @@ Se agradecen informes de otros reproductores.
 
 ## Solución de problemas
 
-- **Comprobarlo todo** — dice qué falta o está roto y a qué afecta:
+- **Comprobarlo todo** — dice qué falta o está roto y a qué afecta (si lo instalaste desde AUR, usa `/usr/share/…` en vez de `~/.local/share/…`):
   ```bash
   python3 ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/code/check.py
   ```
@@ -130,19 +134,24 @@ Se agradecen informes de otros reproductores.
 
 ## Desarrollo
 
+Empieza por [CONTRIBUTING.md](CONTRIBUTING.md), en inglés: cómo preparar el entorno, qué comprobaciones ejecutar y recetas paso a paso (añadir una opción, un estilo de barras, un modo de color, un preset o una traducción). Después, según lo que necesites:
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — las piezas y cómo circulan los datos entre ellas.
+- [docs/CONFIG.md](docs/CONFIG.md) — todas las opciones, generado desde `schema.json`.
+- [docs/PROTOCOL.md](docs/PROTOCOL.md) — los mensajes entre el widget y el helper.
+- [docs/adr/](docs/adr/README.md) — por qué cada cosa está hecha así.
+- [CHANGELOG.md](CHANGELOG.md).
+
 ```
 package/            el plasmoide (se instala tal cual)
   contents/ui/        QML: main, Card, Bars, páginas Diseño y Audio, MprisSource
-  contents/code/      helper.py, schema.json, presets.json, check.py
-packaging/systemd/  unidades de usuario opcionales
-tools/              instalar, extraer textos, compilar traducciones
+  contents/ui/renderers/  un archivo JS por estilo de barras, colores, geometría común
+  contents/code/      helper.py, schema.json, presets/*.json, check.py
+packaging/          unidades de systemd, PKGBUILD de AUR
+tests/              tests del helper (python3 -m unittest discover -s tests)
+tools/              instalar, crear el .plasmoid, traducciones, documentación de opciones
 translate/          plantilla de gettext y traducciones
 ```
-
-- **Añadir una opción:** añade una entrada en `schema.json` (tipo, valor por defecto, rango, etiqueta y grupo) y léela en QML como `cfg.<clave>`. La página Diseño y la validación la recogen solas.
-- **Añadir un preset:** añádelo en `presets.json`, poniendo solo lo que cambia respecto a los valores por defecto.
-- **Traducciones:** ejecuta `tools/extract-messages.sh` cuando cambies textos, traduce `translate/<idioma>.po` y ejecuta `tools/install.sh`.
-- **Probar cambios:** ejecuta `tools/install.sh && systemctl --user restart plasma-plasmashell`. Plasma guarda en caché el código de los widgets, así que el reinicio hace falta.
 
 ## Transparencia
 

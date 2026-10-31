@@ -35,7 +35,8 @@ PORT = int(os.environ.get("NPV_PORT", "47811"))
 # also lets us find its capture stream among the nodes.
 CAPTURE_TARGET = "nowplaying-viz-capture"
 HERE = Path(__file__).resolve().parent
-PRESETS_FILE = HERE / "presets.json"
+# one file per built-in preset; each lists only what differs from schema.json
+PRESETS_DIR = HERE / "presets"
 SCHEMA_FILE = HERE / "schema.json"
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "nowplaying-viz"
 CONFIG_FILE = CONFIG_DIR / "config.json"
@@ -94,6 +95,10 @@ def set_path(d, path, value):
 
 
 # ------------------------------------------------------------------ Schema --
+
+def load_builtin_presets():
+    return {f.stem: json.loads(f.read_text()) for f in sorted(PRESETS_DIR.glob("*.json"))}
+
 
 def load_schema():
     return json.loads(SCHEMA_FILE.read_text())
@@ -212,7 +217,7 @@ def to_qml_colors(v):
 
 def load_config():
     schema = load_schema()
-    builtin = json.loads(PRESETS_FILE.read_text())
+    builtin = load_builtin_presets()
     if not CONFIG_FILE.exists():
         CONFIG_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
         write_user(default_user_config())
@@ -225,7 +230,7 @@ def load_config():
     if migrate(user):
         write_user(user)
     issues = []
-    presets = deep_merge(builtin["presets"], user.get("presets", {}))
+    presets = deep_merge(builtin, user.get("presets", {}))
     name = user.get("preset", "lookas")
     if name not in presets:
         issues.append({"code": "preset_missing", "detail": name})
@@ -374,8 +379,7 @@ def apply_design(msg):
         name = str(msg.get("name", "")).strip()
         if not name or len(name) > MAX_NAME:
             return
-        builtin = json.loads(PRESETS_FILE.read_text())
-        presets = deep_merge(builtin["presets"], user.get("presets", {}))
+        presets = deep_merge(load_builtin_presets(), user.get("presets", {}))
         base = presets.get(user.get("preset", "lookas"), {})
         user.setdefault("presets", {})[name] = deep_merge(base, overrides)
         user["preset"] = name

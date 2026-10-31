@@ -1,0 +1,23 @@
+{
+  "bars": {
+    "style": "wave",
+    "count": 48,
+    "colors": [
+      "#5ee7ff",
+      "#2de0c0"
+    ],
+    "gradient": "horizontal",
+    "wave": {
+      "mode": "curve",
+      "lineWidth": 2,
+      "fill": true,
+      "fillOpacity": 0.35
+    },
+    "glow": {
+      "enabled": true,
+      "color": "#5ee7ff",
+      "blur": 0.6,
+      "strength": 0.7
+    }
+  }
+}

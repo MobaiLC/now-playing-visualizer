@@ -1,0 +1,23 @@
+{
+  "panel": {
+    "color": "#03201ca8",
+    "borderColor": "#2de0c033"
+  },
+  "progress": {
+    "color": "#2de0c0"
+  },
+  "bars": {
+    "colors": [
+      "#00a39a",
+      "#2de0c0",
+      "#5ee7ff"
+    ],
+    "radius": 3,
+    "glow": {
+      "enabled": true,
+      "color": "#2de0c0",
+      "blur": 0.7,
+      "strength": 0.9
+    }
+  }
+}

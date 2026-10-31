@@ -1,0 +1,19 @@
+{
+  "bars": {
+    "colorMode": "hue",
+    "radius": 3,
+    "hue": {
+      "speed": 40
+    },
+    "peaks": {
+      "enabled": true,
+      "color": "#ffffff"
+    },
+    "glow": {
+      "enabled": true,
+      "color": "auto",
+      "blur": 0.5,
+      "strength": 0.6
+    }
+  }
+}

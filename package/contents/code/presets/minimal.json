@@ -1,0 +1,20 @@
+{
+  "panel": {
+    "color": "#00000000",
+    "borderWidth": 0
+  },
+  "header": {
+    "show": false
+  },
+  "subtitle": {
+    "showAlbum": false
+  },
+  "bars": {
+    "count": 32,
+    "gap": 2,
+    "colors": [
+      "#ffffffcc"
+    ],
+    "radius": 1
+  }
+}

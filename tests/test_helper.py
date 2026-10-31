@@ -1,0 +1,259 @@
+# SPDX-FileCopyrightText: 2026 MobaiLC
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Tests for package/contents/code/helper.py (standard library only).
+
+Run from the repository root:  python3 -m unittest discover -s tests -v
+
+The helper reads XDG_CONFIG_HOME when it is imported, so every test runs
+against a throwaway config folder and never touches the real one.
+"""
+
+import asyncio
+import base64
+import importlib
+import json
+import os
+import socket
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+CODE = ROOT / "package" / "contents" / "code"
+TMP = tempfile.TemporaryDirectory()
+os.environ["XDG_CONFIG_HOME"] = TMP.name
+sys.path.insert(0, str(CODE))
+helper = importlib.import_module("helper")
+
+
+def write_user(user):
+    helper.CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    helper.CONFIG_FILE.write_text(json.dumps(user))
+
+
+def read_user():
+    return json.loads(helper.CONFIG_FILE.read_text())
+
+
+class SchemaTests(unittest.TestCase):
+    """schema.json is the single source of truth, so it must be consistent."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.schema = helper.load_schema()
+        cls.options = cls.schema["options"]
+
+    def test_every_default_is_valid(self):
+        for key, spec in self.options.items():
+            with self.subTest(key=key):
+                self.assertEqual(helper.coerce(spec["default"], spec), spec["default"])
+
+    def test_groups_tabs_and_conditions_point_to_real_things(self):
+        groups = {g["id"] for g in self.schema["groups"]}
+        tabs = {t["id"] for t in self.schema["tabs"]}
+        for g in self.schema["groups"]:
+            self.assertIn(g["tab"], tabs, g["id"])
+        for key, spec in self.options.items():
+            with self.subTest(key=key):
+                self.assertIn(spec["group"], groups)
+                for cond in ("when", "whenNot"):
+                    for other in spec.get(cond, {}):
+                        self.assertIn(other, self.options, f"{cond} refers to unknown {other}")
+
+    def test_numbers_have_sane_ranges(self):
+        for key, spec in self.options.items():
+            if spec["type"] in ("int", "real"):
+                with self.subTest(key=key):
+                    self.assertLessEqual(spec["min"], spec["default"])
+                    self.assertLessEqual(spec["default"], spec["max"])
+
+    def test_config_version_matches_schema(self):
+        self.assertEqual(self.schema["version"], helper.CONFIG_VERSION)
+
+
+class PresetTests(unittest.TestCase):
+    def test_every_builtin_preset_is_valid(self):
+        schema = helper.load_schema()
+        presets = helper.load_builtin_presets()
+        self.assertIn("lookas", presets)
+        for name, preset in presets.items():
+            with self.subTest(preset=name):
+                eff = helper.deep_merge(helper.schema_defaults(schema), preset)
+                issues = []
+                helper.validate(eff, schema, issues)
+                self.assertEqual(issues, [])
+                # a preset may only use keys that exist in the schema
+                for key in flatten(preset):
+                    self.assertIn(key, schema["options"])
+
+
+def flatten(d, prefix=""):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            yield from flatten(v, f"{prefix}{k}.")
+        else:
+            yield f"{prefix}{k}"
+
+
+class ValidationTests(unittest.TestCase):
+    def setUp(self):
+        self.schema = helper.load_schema()
+
+    def test_bad_values_fall_back_or_get_clamped(self):
+        eff = helper.schema_defaults(self.schema)
+        eff["bars"]["count"] = 999
+        eff["bars"]["style"] = "nope"
+        eff["panel"]["color"] = "red"
+        eff["bars"]["show"] = "yes"
+        issues = []
+        helper.validate(eff, self.schema, issues)
+        codes = {(i["code"], i["detail"]) for i in issues}
+        self.assertIn(("out_of_range", "bars.count"), codes)
+        self.assertIn(("invalid_option", "bars.style"), codes)
+        self.assertIn(("invalid_option", "panel.color"), codes)
+        self.assertIn(("invalid_option", "bars.show"), codes)
+        self.assertEqual(eff["bars"]["count"], 128)
+        self.assertEqual(eff["bars"]["style"], "bars")
+
+    def test_booleans_are_not_numbers(self):
+        spec = {"type": "int", "min": 0, "max": 10}
+        self.assertIs(helper.coerce(True, spec), helper._INVALID)
+
+    def test_colour_conversion_to_qt(self):
+        self.assertEqual(helper.to_qml_colors("#11223344"), "#44112233")
+        self.assertEqual(helper.to_qml_colors("#112233"), "#112233")
+        self.assertEqual(helper.to_qml_colors({"a": ["#11223344"]}), {"a": ["#44112233"]})
+
+    def test_deep_merge_does_not_modify_inputs(self):
+        a = {"x": {"y": 1, "z": 2}}
+        b = {"x": {"y": 3}}
+        self.assertEqual(helper.deep_merge(a, b), {"x": {"y": 3, "z": 2}})
+        self.assertEqual(a, {"x": {"y": 1, "z": 2}})
+
+
+class MigrationTests(unittest.TestCase):
+    def test_v1_hide_option_becomes_when_idle(self):
+        user = {"version": 1, "overrides": {"panel": {"hideWhenNoPlayer": False}},
+                "presets": {"mine": {"panel": {"hideWhenNoPlayer": True}}}}
+        self.assertTrue(helper.migrate(user))
+        self.assertEqual(user["version"], helper.CONFIG_VERSION)
+        self.assertEqual(user["overrides"]["panel"], {"whenIdle": "last"})
+        self.assertEqual(user["presets"]["mine"]["panel"], {})
+
+    def test_current_version_is_left_alone(self):
+        self.assertFalse(helper.migrate({"version": helper.CONFIG_VERSION}))
+
+
+class DesignEditTests(unittest.TestCase):
+    def setUp(self):
+        write_user(helper.default_user_config())
+
+    def test_set_design_only_accepts_known_valid_options(self):
+        helper.apply_design({"type": "setDesign", "changes": {
+            "bars.count": 40, "bars.style": "nope", "not.an.option": 1, "panel.color": "#000000aa"}})
+        o = read_user()["overrides"]
+        self.assertEqual(o["bars"], {"count": 40})
+        self.assertEqual(o["panel"], {"color": "#000000aa"})
+        self.assertNotIn("not", o)
+
+    def test_switching_preset_drops_bar_overrides_only(self):
+        helper.apply_design({"type": "setDesign", "changes": {"bars.count": 40, "header.show": False}})
+        helper.apply_design({"type": "setPreset", "name": "neon"})
+        user = read_user()
+        self.assertEqual(user["preset"], "neon")
+        self.assertEqual(user["overrides"], {"header": {"show": False}})
+
+    def test_save_and_delete_preset(self):
+        helper.apply_design({"type": "setDesign", "changes": {"bars.gap": 9}})
+        helper.apply_design({"type": "savePreset", "name": "mine"})
+        user = read_user()
+        self.assertEqual(user["preset"], "mine")
+        self.assertEqual(user["presets"]["mine"]["bars"]["gap"], 9)
+        helper.apply_design({"type": "deletePreset", "name": "mine"})
+        self.assertEqual(read_user()["preset"], "lookas")
+
+    def test_undo_and_cancel(self):
+        ws = object()
+        helper.begin_edit(ws)
+        helper.push_history("setPreset")
+        helper.apply_design({"type": "setPreset", "name": "neon"})
+        self.assertTrue(helper.edit_state()["dirty"])
+        helper.restore_design(helper.edit["history"].pop())  # Undo
+        self.assertEqual(read_user()["preset"], "lookas")
+        helper.apply_design({"type": "setPreset", "name": "teal"})
+        helper.restore_design(helper.edit["snapshot"])  # what Cancel does
+        self.assertEqual(read_user()["preset"], "lookas")
+        self.assertFalse(helper.edit_state()["dirty"])
+
+
+class WebSocketTests(unittest.IsolatedAsyncioTestCase):
+    """The helper must talk to the widget and refuse web pages."""
+
+    async def asyncSetUp(self):
+        write_user(helper.default_user_config())
+        helper.state["config"] = helper.load_config()
+        self.server = await asyncio.start_server(helper.accept, helper.HOST, 0)
+        self.port = self.server.sockets[0].getsockname()[1]
+        self.old_port, helper.PORT = helper.PORT, self.port
+        self.writers = []
+
+    async def asyncTearDown(self):
+        helper.PORT = self.old_port
+        for writer in self.writers:
+            writer.close()
+        self.server.close()
+        # never hang the suite on a connection a failing test left open
+        await asyncio.wait_for(self.server.wait_closed(), 3)
+
+    async def handshake(self, extra=""):
+        reader, writer = await asyncio.open_connection(helper.HOST, self.port)
+        self.writers.append(writer)
+        key = base64.b64encode(os.urandom(16)).decode()
+        writer.write((f"GET / HTTP/1.1\r\nHost: {helper.HOST}:{self.port}\r\nUpgrade: websocket\r\n"
+                      f"Connection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n"
+                      f"{extra}\r\n").encode())
+        await writer.drain()
+        status = (await asyncio.wait_for(reader.readline(), 2)).decode()
+        return status, reader, writer
+
+    async def test_widget_style_client_gets_schema_first(self):
+        status, reader, writer = await self.handshake()
+        self.assertIn("101", status)
+        await reader.readuntil(b"\r\n\r\n")
+        b1, b2 = await reader.readexactly(2)
+        n = b2 & 0x7F
+        if n == 126:
+            n = int.from_bytes(await reader.readexactly(2), "big")
+        elif n == 127:
+            n = int.from_bytes(await reader.readexactly(8), "big")
+        first = json.loads(await reader.readexactly(n))
+        self.assertEqual(first["type"], "schema")
+
+    async def test_browser_origin_is_refused(self):
+        status, _, writer = await self.handshake("Origin: https://example.com\r\n")
+        self.assertIn("403", status)
+
+    async def test_unexpected_host_is_refused(self):
+        reader, writer = await asyncio.open_connection(helper.HOST, self.port)
+        self.writers.append(writer)
+        writer.write(b"GET / HTTP/1.1\r\nHost: evil.example\r\nUpgrade: websocket\r\n"
+                     b"Connection: Upgrade\r\nSec-WebSocket-Key: AAAAAAAAAAAAAAAAAAAAAA==\r\n\r\n")
+        await writer.drain()
+        status = (await asyncio.wait_for(reader.readline(), 2)).decode()
+        self.assertIn("403", status)
+
+
+class MediaActionTests(unittest.TestCase):
+    def test_no_player_means_nothing_happens(self):
+        helper.state["media_player"] = None
+        helper.media_action("next", None)  # must not raise
+
+    def test_icon_names_only(self):
+        self.assertEqual(helper.icon_name("spotify"), "spotify")
+        self.assertEqual(helper.icon_name("/etc/passwd"), "")
+        self.assertEqual(helper.icon_name("https://example.com/x.png"), "")
+
+
+if __name__ == "__main__":
+    unittest.main()

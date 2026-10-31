@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2026 MobaiLC
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  helper:
+    name: Helper tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # the oldest we claim to support, and the newest
+        python: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: helper.py and check.py compile
+        run: python -m py_compile package/contents/code/helper.py package/contents/code/check.py
+
+  repo:
+    name: Docs, data and translations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install gettext
+        run: sudo apt-get update && sudo apt-get install -y gettext
+      - name: JSON files are valid
+        run: |
+          for f in package/metadata.json package/contents/code/schema.json package/contents/code/presets/*.json; do
+            python3 -m json.tool "$f" > /dev/null || { echo "invalid JSON: $f"; exit 1; }
+          done
+      - name: docs/CONFIG.md matches schema.json
+        run: python3 tools/gen-config-doc.py --check
+      - name: Translations compile
+        run: for po in translate/*.po; do msgfmt --check --statistics -o /dev/null "$po"; done
+      - name: Shell scripts
+        run: shellcheck tools/*.sh

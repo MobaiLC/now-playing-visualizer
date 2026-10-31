@@ -4,7 +4,9 @@
 """Self-check for Now Playing Visualizer.
 
 Runs automatically after every pacman transaction (systemd path unit) and can
-be run by hand:  python3 ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/code/check.py
+be run by hand:  python3 <plasmoid folder>/contents/code/check.py
+(~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer when
+installed with tools/install.sh, /usr/share/plasma/plasmoids/... from a package)
 
 It verifies the programs and QML modules the widget relies on and sends a
 desktop notification only when something is wrong.
@@ -71,9 +73,11 @@ def main():
 
     try:
         py_compile.compile(str(HERE / "helper.py"), doraise=True)
-        json.loads((HERE / "presets.json").read_text())
+        json.loads((HERE / "schema.json").read_text())
+        for preset in (HERE / "presets").glob("*.json"):
+            json.loads(preset.read_text())
     except Exception as e:
-        broken.append(f"helper.py/presets.json: {e}")
+        broken.append(f"helper.py/schema.json/presets: {e}")
 
     if not Path(QML).exists():
         degraded.append(_("Qt 6 «qml» tool not found; QML modules could not be checked"))
@@ -98,7 +102,8 @@ def main():
     if (broken or degraded) and "--notify" in sys.argv and shutil.which("notify-send"):
         title = _("Now Playing Visualizer: something broke") if broken else _("Now Playing Visualizer: compatibility mode")
         body = "\n".join(broken + degraded)
-        body += "\n\n" + _("Details:") + " python3 ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/code/check.py"
+        # where this copy lives: ~/.local/share/... or /usr/share/... (AUR package)
+        body += "\n\n" + _("Details:") + f" python3 {Path(__file__).resolve()}"
         subprocess.run(["notify-send", "-a", "Now Playing Visualizer", "-i", "view-media-visualization",
                         "-u", "critical" if broken else "normal", title, body])
     return 1 if broken else 0

@@ -44,6 +44,10 @@ tools/install.sh --systemd  # optional: helper service + post-update check
 
 Then restart Plasma (`systemctl --user restart plasma-plasmashell`, or log out and in), right-click the desktop → **Add Widgets…** → **Now Playing Visualizer**.
 
+Other ways, once they are published (not yet):
+- **AUR:** `plasma6-applets-now-playing-visualizer-git`. The PKGBUILD is in [`packaging/aur/`](packaging/aur/PKGBUILD). It installs the widget for every user, plus the systemd units, which stay disabled until you enable them.
+- **KDE Store / a `.plasmoid` file:** build one with `tools/make-plasmoid.sh` and install it with `kpackagetool6 -t Plasma/Applet -i build/now-playing-visualizer-*.plasmoid`.
+
 The `--systemd` option installs two user units:
 - `nowplaying-viz.service` keeps the helper running and restarts it if it crashes.
 - `nowplaying-viz-check.path` runs a self-check after each package upgrade.
@@ -113,7 +117,7 @@ Reports for other players are very welcome.
 
 ## Troubleshooting
 
-- **Check everything** — prints what is missing or broken and what it affects:
+- **Check everything** — prints what is missing or broken and what it affects (from the AUR package, use `/usr/share/…` instead of `~/.local/share/…`):
   ```bash
   python3 ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/code/check.py
   ```
@@ -130,19 +134,24 @@ Reports for other players are very welcome.
 
 ## Development
 
+Start with [CONTRIBUTING.md](CONTRIBUTING.md): set-up, checks to run, and step-by-step recipes (add an option, a bar style, a colour mode, a preset, a translation). Then, as needed:
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — the pieces and how data flows between them.
+- [docs/CONFIG.md](docs/CONFIG.md) — every option, generated from `schema.json`.
+- [docs/PROTOCOL.md](docs/PROTOCOL.md) — the messages between the widget and the helper.
+- [docs/adr/](docs/adr/README.md) — why things are built the way they are.
+- [CHANGELOG.md](CHANGELOG.md).
+
 ```
 package/            the plasmoid (installed as-is)
   contents/ui/        QML: main, Card, Bars, Design and Audio pages, MprisSource
-  contents/code/      helper.py, schema.json, presets.json, check.py
-packaging/systemd/  optional user units
-tools/              install, extract-messages, build-translations
+  contents/ui/renderers/  one JS file per bar style, colours, shared geometry
+  contents/code/      helper.py, schema.json, presets/*.json, check.py
+packaging/          systemd user units, AUR PKGBUILD
+tests/              helper unit tests (python3 -m unittest discover -s tests)
+tools/              install, make-plasmoid, translations, config docs
 translate/          gettext template and translations
 ```
-
-- **Add an option:** add an entry to `schema.json` (type, default, range, label, group) and read it in QML as `cfg.<key>`. The Design page and validation pick it up automatically.
-- **Add a preset:** add it to `presets.json`, listing only what differs from the defaults.
-- **Translations:** run `tools/extract-messages.sh` after changing UI text, translate `translate/<lang>.po`, and run `tools/install.sh`.
-- **Try changes:** run `tools/install.sh && systemctl --user restart plasma-plasmashell`. Plasma caches widget code, so the restart is needed.
 
 ## Transparency
 

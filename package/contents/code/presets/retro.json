@@ -1,0 +1,26 @@
+{
+  "bars": {
+    "style": "blocks",
+    "count": 20,
+    "gap": 3,
+    "colors": [
+      "#2de0c0",
+      "#eed49f",
+      "#ed8796"
+    ],
+    "smoothGradient": false,
+    "blocks": {
+      "height": 5,
+      "gap": 2,
+      "inactive": {
+        "show": true,
+        "color": "#ffffff14"
+      }
+    },
+    "peaks": {
+      "enabled": true,
+      "color": "#ffffff",
+      "height": 3
+    }
+  }
+}
