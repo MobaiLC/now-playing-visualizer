@@ -1,0 +1,25 @@
+pkgbase = plasma6-applets-now-playing-visualizer-git
+	pkgdesc = Plasma 6 widget: now playing card with cover art, progress and a CAVA audio visualizer that can listen to selected apps only
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/MobaiLC/now-playing-visualizer
+	arch = any
+	license = GPL-3.0-or-later
+	makedepends = git
+	makedepends = gettext
+	depends = plasma-workspace
+	depends = plasma5support
+	depends = kirigami
+	depends = kcmutils
+	depends = qt6-declarative
+	depends = qt6-websockets
+	depends = cava
+	depends = pipewire
+	depends = python
+	depends = systemd
+	provides = plasma6-applets-now-playing-visualizer
+	conflicts = plasma6-applets-now-playing-visualizer
+	source = git+https://github.com/MobaiLC/now-playing-visualizer.git
+	sha256sums = SKIP
+
+pkgname = plasma6-applets-now-playing-visualizer-git
