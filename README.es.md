@@ -27,7 +27,7 @@ Un widget de escritorio para KDE Plasma 6 que muestra la canción que estás esc
 | KDE Plasma 6 (Qt 6) | el widget |
 | PipeWire (con `pw-dump`, `pw-link`) | captura de audio y audio por aplicación |
 | `cava` | el análisis del audio |
-| Python 3 (probado con 3.14) | el helper (solo biblioteca estándar) |
+| Python 3.10+ (probado de 3.10 a 3.14) | el helper (solo biblioteca estándar) |
 | `busctl` (systemd) | leer el reproductor por D-Bus cuando hace falta |
 | `gettext` (`msgfmt`) | compilar las traducciones al instalar |
 
