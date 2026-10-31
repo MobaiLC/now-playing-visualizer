@@ -214,6 +214,8 @@ PlasmoidItem {
                             Layout.fillWidth: true
                             visible: root.cfg.header.show
                             text: root.fillTemplate(root.cfg.header.text || i18n("Listening to {title}"))
+                            // titles come from any MPRIS player: never render them as HTML
+                            textFormat: Text.PlainText
                             color: root.cfg.header.color
                             font.family: root.fontFamily
                             font.pixelSize: root.cfg.header.size
@@ -308,6 +310,7 @@ PlasmoidItem {
                                 Text {
                                     Layout.fillWidth: true
                                     text: root.shownMedia ? root.shownMedia.track : i18n("Nothing playing")
+                                    textFormat: Text.PlainText
                                     color: root.cfg.title.color
                                     font.family: root.fontFamily
                                     font.pixelSize: root.cfg.title.size
@@ -317,6 +320,7 @@ PlasmoidItem {
                                 Text {
                                     Layout.fillWidth: true
                                     text: root.shownMedia?.artist ?? ""
+                                    textFormat: Text.PlainText
                                     color: root.cfg.subtitle.color
                                     font.family: root.fontFamily
                                     font.pixelSize: root.cfg.subtitle.size
@@ -326,6 +330,7 @@ PlasmoidItem {
                                     Layout.fillWidth: true
                                     visible: root.cfg.subtitle.showAlbum && text !== ""
                                     text: root.shownMedia?.album ?? ""
+                                    textFormat: Text.PlainText
                                     color: root.cfg.subtitle.color
                                     font.family: root.fontFamily
                                     font.pixelSize: root.cfg.subtitle.size

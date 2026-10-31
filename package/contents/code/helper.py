@@ -25,6 +25,7 @@ import signal
 import struct
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -43,6 +44,10 @@ IDLE_EXIT_SECONDS = 60
 # --service: started by systemd, stays up (CAVA still only runs while needed)
 SERVICE = "--service" in sys.argv
 COLOR_RE = re.compile(r"^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+# our own messages are a few KB; anything bigger is not from the widget
+MAX_MESSAGE = 256 * 1024
+MAX_NAME = 128
+MAX_APPS = 64
 
 clients = set()
 state = {
@@ -208,7 +213,7 @@ def load_config():
     schema = load_schema()
     builtin = json.loads(PRESETS_FILE.read_text())
     if not CONFIG_FILE.exists():
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        CONFIG_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
         write_user(default_user_config())
     try:
         user = json.loads(CONFIG_FILE.read_text())
@@ -243,11 +248,24 @@ def read_user():
         return default_user_config()
 
 
+def write_private(path, text):
+    """Atomic write readable only by us, so the watcher never sees half a file."""
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        os.unlink(tmp)
+        raise
+
+
 def write_user(user):
-    CONFIG_FILE.write_text(json.dumps(user, indent=2, ensure_ascii=False) + "\n")
+    write_private(CONFIG_FILE, json.dumps(user, indent=2, ensure_ascii=False) + "\n")
 
 
 def save_user_apps(apps):
+    apps = list(dict.fromkeys(str(a).lower()[:MAX_NAME] for a in apps))[:MAX_APPS] if isinstance(apps, list) else []
     user = read_user()
     user.setdefault("audio", {})["apps"] = apps
     write_user(user)
@@ -259,17 +277,25 @@ def apply_design(msg):
     kind = msg.get("type")
     overrides = user.setdefault("overrides", {})
     if kind == "setDesign":
-        for path, value in (msg.get("changes") or {}).items():
-            set_path(overrides, path, value)
+        # only known options with valid values reach config.json
+        options = load_schema()["options"]
+        changes = msg.get("changes")
+        for path, value in (changes.items() if isinstance(changes, dict) else []):
+            spec = options.get(path)
+            if spec is None:
+                continue
+            fixed = coerce(value, spec)
+            if fixed is not _INVALID:
+                set_path(overrides, path, fixed)
     elif kind == "setPreset":
-        user["preset"] = str(msg.get("name", "lookas"))
+        user["preset"] = str(msg.get("name", "lookas"))[:MAX_NAME]
         # bar settings belong to the preset; keep panel tweaks like hidden header
         overrides.pop("bars", None)
     elif kind == "resetDesign":
         user["overrides"] = {}
     elif kind == "savePreset":
         name = str(msg.get("name", "")).strip()
-        if not name:
+        if not name or len(name) > MAX_NAME:
             return
         builtin = json.loads(PRESETS_FILE.read_text())
         presets = deep_merge(builtin["presets"], user.get("presets", {}))
@@ -315,6 +341,12 @@ class WsConn:
         key = headers.get("sec-websocket-key")
         if not key:
             raise WsClosed("not a websocket request")
+        # Browsers always send Origin and Qt's WebSocket never does: this keeps
+        # web pages (and DNS rebinding) from talking to the helper.
+        if "origin" in headers or headers.get("host") not in (f"{HOST}:{PORT}", f"localhost:{PORT}"):
+            self.writer.write(b"HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n")
+            await self.writer.drain()
+            raise WsClosed("rejected origin " + headers.get("origin", "") + " host " + headers.get("host", ""))
         accept = base64.b64encode(hashlib.sha1((key + WS_GUID).encode()).digest()).decode()
         self.writer.write(("HTTP/1.1 101 Switching Protocols\r\n"
                            "Upgrade: websocket\r\nConnection: Upgrade\r\n"
@@ -347,10 +379,13 @@ class WsConn:
                 n = struct.unpack("!H", await self.reader.readexactly(2))[0]
             elif n == 127:
                 n = struct.unpack("!Q", await self.reader.readexactly(8))[0]
+            if len(message) + n > MAX_MESSAGE:
+                raise WsClosed("message too big")
             mask = await self.reader.readexactly(4) if masked else b"\0\0\0\0"
-            data = bytearray(await self.reader.readexactly(n))
-            for i in range(n):
-                data[i] ^= mask[i % 4]
+            data = await self.reader.readexactly(n)
+            if masked and n:
+                full = (mask * (n // 4 + 1))[:n]
+                data = (int.from_bytes(data, "big") ^ int.from_bytes(full, "big")).to_bytes(n, "big")
             if opcode == 0x8:
                 raise WsClosed()
             if opcode == 0x9:
@@ -399,6 +434,12 @@ def app_key(props):
     return (props.get("application.process.binary") or props.get("application.name") or "").lower()
 
 
+def icon_name(name):
+    """Theme icon names only: a path or URL here would make the settings page
+    load whatever file or address an app puts in its stream properties."""
+    return name if re.fullmatch(r"[\w.+-]{1,128}", name) else ""
+
+
 def list_audio_apps(objs):
     """Applications currently producing audio, one entry per app."""
     apps = {}
@@ -414,7 +455,7 @@ def list_audio_apps(objs):
         apps.setdefault(key, {
             "id": key,
             "name": p.get("application.name") or key,
-            "icon": p.get("application.icon-name") or p.get("application.process.binary") or "",
+            "icon": icon_name(p.get("application.icon-name") or p.get("application.process.binary") or ""),
         })
     return list(apps.values())
 
@@ -606,7 +647,7 @@ async def cava_loop():
         conf = cava_config(cfg)
         cava_key = conf
         conf_path = CONFIG_DIR / ".cava.conf"
-        conf_path.write_text(conf)
+        write_private(conf_path, conf)
         started = time.monotonic()
         try:
             cava_proc = await asyncio.create_subprocess_exec(
@@ -665,7 +706,13 @@ async def config_watch_loop():
             m = None
         if m != mtime or not state["config"]:
             mtime = m
-            cfg = load_config()
+            try:
+                cfg = load_config()
+            except Exception as e:
+                # a broken config.json must never stop the watcher
+                log("config:", repr(e))
+                state["issues"] = [{"code": "config_parse", "detail": type(e).__name__}]
+                cfg = None
             if cfg is not None:
                 state["config"] = cfg
                 restart_cava_if_needed()
@@ -720,6 +767,8 @@ async def handler(ws):
                 msg = json.loads(raw)
             except json.JSONDecodeError:
                 continue
+            if not isinstance(msg, dict):
+                continue
             if msg.get("type") == "listApps":
                 apps = await asyncio.to_thread(lambda: list_audio_apps(pw_dump()))
                 await ws.send(json.dumps({"type": "apps", "data": apps}))
@@ -731,7 +780,7 @@ async def handler(ws):
             elif msg.get("type") == "wantMedia":
                 state["media_wanted"] = True
             elif msg.get("type") == "setApps":
-                save_user_apps([str(a).lower() for a in msg.get("apps", [])])
+                save_user_apps(msg.get("apps"))
             elif msg.get("type") in ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset"):
                 apply_design(msg)
     finally:

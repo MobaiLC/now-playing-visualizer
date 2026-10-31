@@ -11,6 +11,8 @@ P5Support.DataSource {
     onNewData: source => disconnectSource(source)
 
     function launch(path) {
-        connectSource(`setsid -f python3 -I '${path}' >"$HOME/.cache/nowplaying-viz.log" 2>&1`);
+        // single-quote the path for the shell, whatever it contains
+        const quoted = "'" + path.replace(/'/g, "'\\''") + "'";
+        connectSource(`setsid -f python3 -I ${quoted} >"$HOME/.cache/nowplaying-viz.log" 2>&1`);
     }
 }

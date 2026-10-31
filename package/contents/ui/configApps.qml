@@ -79,6 +79,7 @@ KCM.SimpleKCM {
                 }
                 QQC2.Label {
                     text: modelData.offline ? i18n("%1 (not playing now)", modelData.name) : modelData.name
+                    textFormat: Text.PlainText
                     opacity: modelData.offline ? 0.6 : 1
                 }
             }
