@@ -129,7 +129,7 @@ Se agradecen informes de otros reproductores.
 
 - La información de la canción viene de un **módulo privado de Plasma** (el que usa su controlador multimedia). Si una actualización lo cambia, el widget pasa solo a usar D-Bus, pero puede hacer falta algún arreglo.
 - **Hace falta PipeWire**; PulseAudio sin PipeWire no está soportado.
-- En la versión 0.1.0, el clic, el arrastre y la rueda del ratón se comprobaron dibujando la tarjeta, pero apenas se han probado a mano.
+- Los controles del reproductor (botones, avanzar en la canción, volumen con la rueda) solo se han probado a mano en Liner y en YouTube con Zen. Riff y Spotify no se han probado.
 - Solo se ha probado en CachyOS con Plasma 6.8.
 
 ## Desarrollo

@@ -129,7 +129,7 @@ Reports for other players are very welcome.
 
 - Song info comes from a **private Plasma module** (the one the media controller uses). If an update changes it, the widget falls back to D-Bus automatically, but fixes may be needed.
 - **PipeWire is required**; plain PulseAudio is not supported.
-- Clicking, dragging and the mouse wheel in 0.1.0 were built and checked by rendering, but have had little hands-on testing.
+- Player controls (buttons, seeking, mouse-wheel volume) have been tested by hand on Liner and on YouTube in Zen only. Riff and Spotify are untested.
 - Only tested on CachyOS with Plasma 6.8.
 
 ## Development

@@ -2,7 +2,7 @@
 
 All notable changes to this project. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
-## [0.1.0] - unreleased
+## [0.1.0] - 2026-10-31
 
 First public version.
 
@@ -36,5 +36,6 @@ First public version.
 ### Known limitations
 - Song info depends on a private Plasma module; the D-Bus fallback covers breakage.
 - PipeWire is required.
-- Click, drag and mouse-wheel controls have had little hands-on testing.
+- Player controls were tested by hand on Liner and on YouTube in Zen. Wheel volume on Liner (the PipeWire-stream path) was verified through the helper after the fix, but not re-tested by hand.
+- Riff and Spotify have not been tested.
 - Only tested on CachyOS with Plasma 6.8.
