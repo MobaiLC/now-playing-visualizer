@@ -15,6 +15,7 @@ pkgbase = plasma6-applets-now-playing-visualizer-git
 	depends = qt6-websockets
 	depends = cava
 	depends = pipewire
+	depends = wireplumber
 	depends = python
 	depends = systemd
 	provides = plasma6-applets-now-playing-visualizer

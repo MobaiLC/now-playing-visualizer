@@ -46,6 +46,7 @@ COMMANDS = {
     "pw-dump": _("list of audio apps"),
     "pw-link": _("per-app audio"),
     "busctl": _("reading the song over D-Bus"),
+    "wpctl": _("volume for players without MPRIS volume"),
 }
 
 

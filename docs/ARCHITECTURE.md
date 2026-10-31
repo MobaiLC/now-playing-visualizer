@@ -48,6 +48,7 @@ This page is for people changing the code or maintaining a fork. For using the w
 2. **Bars.** CAVA runs only while at least one client subscribes to `bars`. Each output line goes out as a text frame, `B` followed by the values (`B12;340;…`, each 0–1000). `Bars.qml` smooths them every frame with `attack` and `decay`.
 3. **Song.** `MprisSource.qml` follows the playing (or preferred) player. If it can't load, or `advanced.forceDbusMedia` is set, the widget sends `wantMedia` and the helper polls MPRIS over D-Bus once a second.
 4. **Controls.** `Card.action()` → `main.qml` → `MprisSource.act()`, or `mediaAction` to the helper in fallback mode. Controls are shown only when the player reports the matching `Can*` capability.
+   - Volume always goes through the helper. Many players (Liner and other Chromium/Electron apps) have no MPRIS `Volume`, so the helper changes the app's own PipeWire streams instead. It finds them by matching the MPRIS bus owner's process id, or the app name.
 
 ## Per-app audio
 

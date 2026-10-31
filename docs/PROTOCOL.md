@@ -39,7 +39,7 @@ Issue codes:
 | `undo` | | Restores the previous design (editing page only). |
 | `commitEdit` | | Keeps the current design (Apply/OK). |
 | `wantMedia` | | Starts the D-Bus media reader (fallback mode). |
-| `mediaAction` | `action`: `playPause`, `next`, `previous`, `raise`, `seek` (`value` in µs), `volume` (`value` ±delta) | Controls the player in fallback mode. |
+| `mediaAction` | `action`: `playPause`, `next`, `previous`, `raise`, `seek` (`value` in µs), `volume` (`value` ±delta, plus `identity`) | Controls the player in fallback mode. `volume` is always sent this way, with the player's MPRIS `identity`: the helper uses MPRIS `Volume` when it is writable, and the app's PipeWire streams (`wpctl`) otherwise. |
 | `quit` | | Asks a widget-started helper to exit so the systemd service can take over. Ignored by `--service` helpers. |
 
 ## Compatibility

@@ -29,6 +29,10 @@ First public version.
 - **Documentation:** README, architecture, protocol, configuration reference (generated), decision records and contributing guide.
 - **Quality checks:** helper unit tests and CI.
 
+### Fixed (found in hands-on testing before release)
+- After seeking, the progress bar stopped following the player, and other players then showed the song stuck at its end. The seek overwrote a QML binding; the position is now a plain value updated from the player.
+- The mouse wheel did nothing on players without MPRIS volume, such as Liner. It now changes the app's PipeWire stream volume instead (no on-screen volume popup in that case).
+
 ### Known limitations
 - Song info depends on a private Plasma module; the D-Bus fallback covers breakage.
 - PipeWire is required.

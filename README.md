@@ -25,13 +25,13 @@ A KDE Plasma 6 desktop widget that shows the song you're listening to — cover 
 | What | Why |
 |---|---|
 | KDE Plasma 6 (Qt 6) | the widget itself |
-| PipeWire (with `pw-dump`, `pw-link`) | audio capture and per-app routing |
+| PipeWire (with `pw-dump`, `pw-link`) and WirePlumber (`wpctl`) | audio capture, per-app routing, volume for players without MPRIS volume |
 | `cava` | the audio analysis |
 | Python 3.10+ (tested on 3.10, 3.12, 3.13 and 3.14) | the helper (standard library only) |
 | `busctl` (systemd) | reading the player over D-Bus when needed |
 | `gettext` (`msgfmt`) | building the translations at install time |
 
-On Arch-based systems: `sudo pacman -S cava pipewire python gettext`.
+On Arch-based systems: `sudo pacman -S cava pipewire wireplumber python gettext`.
 
 ## Install
 
@@ -88,7 +88,7 @@ Colours use web notation, `#RRGGBB` or `#RRGGBBAA`. The full list of options, wi
 
 ## Player compatibility
 
-Controls are offered only when the player reports it supports them.
+Controls are offered only when the player reports it supports them. Volume (mouse wheel) works with every player: through MPRIS when the player has it (Zen/Firefox), otherwise by changing the app's own audio stream (Liner).
 
 | Player | Play/pause | Next/previous | Seek | Tested how |
 |---|---|---|---|---|

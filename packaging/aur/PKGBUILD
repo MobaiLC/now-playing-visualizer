@@ -11,7 +11,7 @@ arch=('any')
 url="https://github.com/MobaiLC/now-playing-visualizer"
 license=('GPL-3.0-or-later')
 depends=('plasma-workspace' 'plasma5support' 'kirigami' 'kcmutils' 'qt6-declarative' 'qt6-websockets'
-         'cava' 'pipewire' 'python' 'systemd')
+         'cava' 'pipewire' 'wireplumber' 'python' 'systemd')
 makedepends=('git' 'gettext')
 provides=("plasma6-applets-now-playing-visualizer")
 conflicts=("plasma6-applets-now-playing-visualizer")

@@ -676,10 +676,49 @@ def media_action(action, value):
     elif action == "seek" and isinstance(value, (int, float)) and not isinstance(value, bool):
         run(call + [iface, "SetPosition", "ox", p["trackId"], str(max(0, int(value)))])
     elif action == "volume" and isinstance(value, (int, float)) and not isinstance(value, bool):
-        vol = busctl_prop(p["bus"], iface, "Volume", None)
+        change_volume(p["bus"], p["identity"], float(value))
+
+
+def find_player_bus(identity):
+    """MPRIS bus name of the player with this Identity (Plasma's module doesn't expose it)."""
+    names = busctl_json("call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
+                        "org.freedesktop.DBus", "ListNames")
+    for n in (names[0]["data"][0] if names else []):
+        if n.startswith("org.mpris.MediaPlayer2.") and \
+                busctl_prop(n, "org.mpris.MediaPlayer2", "Identity", None) == identity:
+            return n
+    return None
+
+
+def change_volume(bus, identity, delta):
+    """Player volume by delta (-1..1). Uses MPRIS Volume when the player has a
+    writable one (Firefox/Zen do); many players don't (Liner and other
+    Chromium/Electron apps), so then the app's own PipeWire streams are
+    changed instead, like Plasma's volume mixer does."""
+    delta = max(-1.0, min(1.0, delta))
+    iface = "org.mpris.MediaPlayer2.Player"
+    intro = run(["busctl", "--user", "introspect", bus, MPRIS_PATH, iface]).stdout
+    if re.search(r"^\.Volume\s+property\s+d\s.*\bwritable\b", intro, re.M):
+        vol = busctl_prop(bus, iface, "Volume", None)
         if isinstance(vol, (int, float)):
-            new = min(1.0, max(0.0, vol + float(value)))
-            run(["busctl", "--user", "set-property", p["bus"], MPRIS_PATH, iface, "Volume", "d", str(new)])
+            new = min(1.0, max(0.0, vol + delta))
+            run(["busctl", "--user", "set-property", bus, MPRIS_PATH, iface, "Volume", "d", str(new)])
+            return
+    pid = busctl_json("call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
+                      "org.freedesktop.DBus", "GetConnectionUnixProcessID", "s", bus)
+    pid = pid[0]["data"][0] if pid else None
+    ident = (identity or "").lower()
+    step = f"{abs(delta) * 100:.0f}%{'+' if delta > 0 else '-'}"
+    for o in pw_dump():
+        props = (o.get("info") or {}).get("props") or {}
+        if o.get("type") != "PipeWire:Interface:Node" or props.get("media.class") != "Stream/Output/Audio":
+            continue
+        name = (props.get("application.name") or "").lower()
+        binary = (props.get("application.process.binary") or "").lower()
+        same_process = pid is not None and props.get("application.process.id") == pid
+        same_name = bool(name) and (name == ident or re.search(rf"\b{re.escape(name)}\b", ident))
+        if same_process or same_name or (binary and binary == ident):
+            run(["wpctl", "set-volume", "-l", "1.0", str(o["id"]), step])
 
 
 async def media_loop():
@@ -901,7 +940,16 @@ async def handler(ws):
                 state["media_wanted"] = True
             elif msg.get("type") == "mediaAction" and msg.get("action") in (
                     "playPause", "next", "previous", "raise", "seek", "volume"):
-                await asyncio.to_thread(media_action, msg["action"], msg.get("value"))
+                identity = msg.get("identity")
+                value = msg.get("value")
+                if (msg["action"] == "volume" and isinstance(identity, str) and identity
+                        and isinstance(value, (int, float)) and not isinstance(value, bool)):
+                    # sent by the widget even when it isn't in fallback mode
+                    bus = await asyncio.to_thread(find_player_bus, identity[:MAX_NAME])
+                    if bus:
+                        await asyncio.to_thread(change_volume, bus, identity[:MAX_NAME], float(value))
+                else:
+                    await asyncio.to_thread(media_action, msg["action"], value)
             elif msg.get("type") == "setApps":
                 save_user_apps(msg.get("apps"))
             elif msg.get("type") in ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset"):

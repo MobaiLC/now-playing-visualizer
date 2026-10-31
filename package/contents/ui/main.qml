@@ -78,6 +78,7 @@ PlasmoidItem {
     onPlayerChanged: {
         if (hasTrack)
             lastMedia = player;
+        syncedPos = playerPos;
     }
     readonly property string whenIdle: panelCfg.whenIdle || "last"
     readonly property var shownMedia: hasTrack ? player : (whenIdle === "last" ? lastMedia : null)
@@ -85,7 +86,12 @@ PlasmoidItem {
     readonly property bool isPlaying: !!player && player.playing
 
     // ---- position (MPRIS gives µs; interpolate locally between syncs) -------
-    property real syncedPos: player ? player.position : 0
+    // syncedPos is a plain value, not a binding: a seek sets it right away
+    // (the player confirms a moment later), and assigning to a bound property
+    // would cut it off from the player for good.
+    readonly property real playerPos: player ? player.position : 0
+    property real syncedPos: 0
+    onPlayerPosChanged: syncedPos = playerPos
     property double syncedAt: Date.now()
     property double now: Date.now()
     onSyncedPosChanged: syncedAt = Date.now()
@@ -115,8 +121,11 @@ PlasmoidItem {
     }
 
     function mediaAction(name, value) {
-        if (useFallback)
-            helper.send({ type: "mediaAction", action: name, value: value });
+        // volume always goes through the helper: many players (Liner, other
+        // Chromium/Electron apps) have no MPRIS volume, so it falls back to
+        // the app's own PipeWire stream
+        if (useFallback || name === "volume")
+            helper.send({ type: "mediaAction", action: name, value: value, identity: player ? player.identity : "" });
         else if (mprisLoader.item)
             mprisLoader.item.act(name, value);
         // show a seek right away instead of waiting for the next sync

@@ -25,13 +25,13 @@ Un widget de escritorio para KDE Plasma 6 que muestra la canción que estás esc
 | Qué | Para qué |
 |---|---|
 | KDE Plasma 6 (Qt 6) | el widget |
-| PipeWire (con `pw-dump`, `pw-link`) | captura de audio y audio por aplicación |
+| PipeWire (con `pw-dump`, `pw-link`) y WirePlumber (`wpctl`) | captura de audio, audio por aplicación y volumen de reproductores sin volumen MPRIS |
 | `cava` | el análisis del audio |
 | Python 3.10+ (probado en 3.10, 3.12, 3.13 y 3.14) | el helper (solo biblioteca estándar) |
 | `busctl` (systemd) | leer el reproductor por D-Bus cuando hace falta |
 | `gettext` (`msgfmt`) | compilar las traducciones al instalar |
 
-En sistemas basados en Arch: `sudo pacman -S cava pipewire python gettext`.
+En sistemas basados en Arch: `sudo pacman -S cava pipewire wireplumber python gettext`.
 
 ## Instalación
 
@@ -88,7 +88,7 @@ Los colores van en formato web, `#RRGGBB` o `#RRGGBBAA`. La lista completa de op
 
 ## Reproductores compatibles
 
-Los controles solo aparecen si el reproductor dice que los admite.
+Los controles solo aparecen si el reproductor dice que los admite. El volumen (rueda del ratón) funciona con cualquier reproductor: por MPRIS si lo tiene (Zen/Firefox) y, si no, cambiando el volumen del audio de la propia aplicación (Liner).
 
 | Reproductor | Pausa | Siguiente/anterior | Avanzar | Cómo se ha probado |
 |---|---|---|---|---|
