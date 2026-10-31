@@ -21,12 +21,34 @@ Item {
         position: player.position,
         length: player.length,
         rate: player.rate || 1,
-        playing: player.playbackStatus === Mpris.PlaybackStatus.Playing
+        playing: player.playbackStatus === Mpris.PlaybackStatus.Playing,
+        // what this player says it can do; controls follow these
+        canControl: player.canControl,
+        canPlayPause: player.canControl && (player.canPause || player.canPlay),
+        canGoNext: player.canGoNext,
+        canGoPrevious: player.canGoPrevious,
+        canSeek: player.canSeek,
+        canRaise: player.canRaise
     } : null
 
     function sync() {
         if (player)
             player.updatePosition();
+    }
+
+    // "playPause" | "next" | "previous" | "raise" | "seek" (value: µs) | "volume" (value: ±0..1)
+    function act(action, value) {
+        if (!player)
+            return;
+        switch (action) {
+        case "playPause": player.PlayPause(); break;
+        case "next": player.Next(); break;
+        case "previous": player.Previous(); break;
+        case "raise": player.Raise(); break;
+        // the container sends SetPosition with the current track id
+        case "seek": player.position = value; break;
+        case "volume": player.changeVolume(value, true); break;
+        }
     }
 
     Mpris.Mpris2Model {

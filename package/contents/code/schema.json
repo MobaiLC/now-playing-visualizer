@@ -18,6 +18,7 @@
     { "id": "glow", "tab": "colors", "label": "Glow" },
     { "id": "motion", "tab": "motion", "label": "Motion" },
     { "id": "panel", "tab": "panel", "label": "Panel and song" },
+    { "id": "controls", "tab": "panel", "label": "Layout and controls" },
     { "id": "analysis", "tab": "motion", "label": "Audio analysis" },
     { "id": "advanced", "tab": "advanced", "label": "Advanced" }
   ],
@@ -124,6 +125,33 @@
     "bars.stereo": { "group": "motion", "type": "bool", "default": false, "label": "Stereo (left and right channels)" },
     "bars.hideWhenSilent": { "group": "motion", "type": "bool", "default": true, "label": "Hide when silent" },
     "bars.silenceDelay": { "group": "motion", "type": "int", "default": 2, "min": 1, "max": 30, "unit": "s", "label": "Seconds of silence", "when": { "bars.hideWhenSilent": true } },
+
+    "layout.mode": {
+      "group": "controls", "type": "enum", "default": "auto", "label": "Layout",
+      "values": [
+        { "value": "auto", "label": "Automatic (follows the widget's shape)" },
+        { "value": "horizontal", "label": "Horizontal" },
+        { "value": "vertical", "label": "Vertical (bars below)" },
+        { "value": "compact", "label": "Compact (cover, title and bars)" }
+      ]
+    },
+    "controls.show": {
+      "group": "controls", "type": "enum", "default": "hover", "label": "Player controls",
+      "values": [
+        { "value": "hover", "label": "On hover" },
+        { "value": "always", "label": "Always" },
+        { "value": "never", "label": "Never" }
+      ]
+    },
+    "controls.scrollVolume": { "group": "controls", "type": "bool", "default": true, "label": "Scroll to change the volume" },
+    "title.marquee": {
+      "group": "controls", "type": "enum", "default": "hover", "label": "Scroll long titles",
+      "values": [
+        { "value": "hover", "label": "On hover" },
+        { "value": "always", "label": "Always" },
+        { "value": "never", "label": "Never (cut with …)" }
+      ]
+    },
 
     "panel.color": { "group": "panel", "type": "color", "default": "#1a1b26a8", "label": "Background" },
     "panel.opacity": { "group": "panel", "type": "real", "default": 1, "min": 0, "max": 1, "display": "percent", "label": "Background opacity" },

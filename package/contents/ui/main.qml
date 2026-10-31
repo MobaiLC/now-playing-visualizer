@@ -114,6 +114,18 @@ PlasmoidItem {
         }
     }
 
+    function mediaAction(name, value) {
+        if (useFallback)
+            helper.send({ type: "mediaAction", action: name, value: value });
+        else if (mprisLoader.item)
+            mprisLoader.item.act(name, value);
+        // show a seek right away instead of waiting for the next sync
+        if (name === "seek") {
+            syncedPos = value;
+            syncedAt = Date.now();
+        }
+    }
+
     function issueText(issue) {
         switch (issue.code) {
         case "config_parse": return i18n("config.json has an error, the last valid settings are kept: %1", issue.detail);
@@ -171,6 +183,7 @@ PlasmoidItem {
                 positionMs: root.positionMs
                 lengthMs: root.lengthMs
                 barValues: root.barValues
+                onAction: (name, value) => root.mediaAction(name, value)
                 opacity: root.hasTrack && root.isPlaying ? 1
                     : !root.hasTrack && root.whenIdle === "hide" ? 0
                     : root.panelCfg.idleOpacity

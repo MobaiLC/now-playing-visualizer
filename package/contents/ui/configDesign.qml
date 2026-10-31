@@ -436,6 +436,11 @@ KCM.SimpleKCM {
                 positionMs: 74000
                 lengthMs: 196000
                 barValues: page.previewBars
+                // the preview's controls drive the real player too
+                onAction: (name, value) => {
+                    if (mpris.item)
+                        mpris.item.act(name, value);
+                }
             }
         }
 
@@ -514,6 +519,7 @@ KCM.SimpleKCM {
                                 lengthMs: 196000
                                 barValues: page.thumbBars(thumb.modelData.config.bars.count)
                                 liveBars: false
+                                interactive: false
                             }
                         }
                         RowLayout {

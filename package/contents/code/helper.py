@@ -637,14 +637,45 @@ def read_media():
             "position": busctl_prop(n, player_iface, "Position", 0),
             "rate": busctl_prop(n, player_iface, "Rate", 1) or 1,
             "playing": busctl_prop(n, player_iface, "PlaybackStatus", "") == "Playing",
+            "trackId": meta.get("mpris:trackid") or "/org/mpris/MediaPlayer2/TrackList/NoTrack",
+            "canControl": bool(busctl_prop(n, player_iface, "CanControl", False)),
+            "canGoNext": bool(busctl_prop(n, player_iface, "CanGoNext", False)),
+            "canGoPrevious": bool(busctl_prop(n, player_iface, "CanGoPrevious", False)),
+            "canSeek": bool(busctl_prop(n, player_iface, "CanSeek", False)),
+            "canRaise": bool(busctl_prop(n, "org.mpris.MediaPlayer2", "CanRaise", False)),
         })
+        players[-1]["canPlayPause"] = players[-1]["canControl"] and bool(
+            busctl_prop(n, player_iface, "CanPause", False) or busctl_prop(n, player_iface, "CanPlay", False))
     preferred = [p.lower() for p in state["config"].get("panel", {}).get("preferredPlayers", [])]
     is_pref = lambda p: any(x in (p["identity"] + " " + p["bus"]).lower() for x in preferred)
     for test in (lambda p: p["playing"] and is_pref(p), lambda p: p["playing"], is_pref, lambda p: True):
         for p in players:
             if test(p):
+                state["media_player"] = p
                 return p
+    state["media_player"] = None
     return None
+
+
+def media_action(action, value):
+    """Player controls for the D-Bus fallback (same actions as MprisSource.qml)."""
+    p = state.get("media_player")
+    if not p:
+        return
+    iface = "org.mpris.MediaPlayer2.Player"
+    call = ["busctl", "--user", "call", p["bus"], MPRIS_PATH]
+    if action in ("playPause", "next", "previous"):
+        method = {"playPause": "PlayPause", "next": "Next", "previous": "Previous"}[action]
+        run(call + [iface, method])
+    elif action == "raise":
+        run(call + ["org.mpris.MediaPlayer2", "Raise"])
+    elif action == "seek" and isinstance(value, (int, float)) and not isinstance(value, bool):
+        run(call + [iface, "SetPosition", "ox", p["trackId"], str(max(0, int(value)))])
+    elif action == "volume" and isinstance(value, (int, float)) and not isinstance(value, bool):
+        vol = busctl_prop(p["bus"], iface, "Volume", None)
+        if isinstance(vol, (int, float)):
+            new = min(1.0, max(0.0, vol + float(value)))
+            run(["busctl", "--user", "set-property", p["bus"], MPRIS_PATH, iface, "Volume", "d", str(new)])
 
 
 async def media_loop():
@@ -864,6 +895,9 @@ async def handler(ws):
                     await ws.send(json.dumps({"type": "presets", "data": state.get("presets", [])}))
             elif msg.get("type") == "wantMedia":
                 state["media_wanted"] = True
+            elif msg.get("type") == "mediaAction" and msg.get("action") in (
+                    "playPause", "next", "previous", "raise", "seek", "volume"):
+                await asyncio.to_thread(media_action, msg["action"], msg.get("value"))
             elif msg.get("type") == "setApps":
                 save_user_apps(msg.get("apps"))
             elif msg.get("type") in ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset"):
