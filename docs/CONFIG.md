@@ -178,6 +178,7 @@ warning icon on the widget. Colours use web notation; `AA` is opacity (`00` invi
 | `audio.lowCutoff` | int | `50` | 20 … 500 Hz |  | Lowest frequency |
 | `audio.highCutoff` | int | `12000` | 2000 … 20000 Hz |  | Highest frequency |
 | `audio.apps` | stringList | *(empty)* | list of strings |  | Apps to listen to (empty = whole system) *(not in the UI)* |
+| `audio.followPlayer` | bool | `false` | bool |  | Listen only to the player shown in the widget (overrides audio.apps) *(not in the UI)* |
 
 ## Advanced
 

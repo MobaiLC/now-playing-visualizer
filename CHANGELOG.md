@@ -2,6 +2,15 @@
 
 All notable changes to this project. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Follow the player:** an option under **Audio** that makes the bars listen only to the player shown in the widget, whichever it is, instead of a fixed list of apps (`audio.followPlayer`).
+
+### Tested
+- Follow the player, by hand: Riff, Spotify and Haruna. Song info and bars also checked on those three; their controls were not tested by hand.
+- mpv has no MPRIS without the `mpv-mpris` plugin, so the widget can't show it or follow it; it can still drive the bars through the app list.
+
 ## [0.1.0] - 2026-10-31
 
 First public version.

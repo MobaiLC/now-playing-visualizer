@@ -196,6 +196,7 @@
     "audio.lowCutoff": { "group": "analysis", "type": "int", "default": 50, "min": 20, "max": 500, "unit": "Hz", "label": "Lowest frequency" },
     "audio.highCutoff": { "group": "analysis", "type": "int", "default": 12000, "min": 2000, "max": 20000, "unit": "Hz", "label": "Highest frequency" },
     "audio.apps": { "group": "analysis", "type": "stringList", "default": [], "hidden": true, "label": "Apps to listen to (empty = whole system)" },
+    "audio.followPlayer": { "group": "analysis", "type": "bool", "default": false, "hidden": true, "label": "Listen only to the player shown in the widget (overrides audio.apps)" },
 
     "advanced.forceDbusMedia": { "group": "advanced", "type": "bool", "default": false, "label": "Read the song over D-Bus instead of Plasma's module" }
   }

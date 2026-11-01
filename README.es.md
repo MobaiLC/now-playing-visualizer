@@ -70,7 +70,7 @@ rm -r ~/.config/nowplaying-viz   # tus ajustes y presets
 Clic derecho en el widget → **Configurar…**
 
 - **Diseño** — vista previa en vivo arriba y, debajo, pestañas: *Presets* (clic en una tarjeta para aplicarla, o guarda los tuyos), *Estilo*, *Colores*, *Movimiento*, *Panel* y *Avanzado*. Los cambios se ven al momento; **Aplicar/Aceptar** los guarda y **Cancelar** lo deja todo como estaba.
-- **Audio** — marca las aplicaciones que debe escuchar el visualizador. Si no marcas ninguna, escucha todo el sistema.
+- **Audio** — marca las aplicaciones que debe escuchar el visualizador. Si no marcas ninguna, escucha todo el sistema. O activa **Seguir al reproductor que muestra el widget** para escuchar solo el reproductor que esté sonando, sin mantener una lista.
 
 Todo se guarda en `~/.config/nowplaying-viz/config.json`, que también puedes editar a mano; el widget se actualiza al guardar el archivo:
 
@@ -94,8 +94,10 @@ Los controles solo aparecen si el reproductor dice que los admite. El volumen (r
 |---|---|---|---|---|
 | Liner | ✅ | ✅ | ✅ | en directo |
 | Zen / Firefox (YouTube, etc.) | ✅ | ✅ | ✅ | en directo |
-| Riff | ✅ | ✅ (si hay canción siguiente o anterior en la cola) | ✅ | solo leyendo su código |
-| Spotify (cliente oficial) | ✅ | ✅ | ⚠️ | sin probar; según informes, su MPRIS está incompleto (la posición puede quedarse en 0) |
+| Riff | ✅ | ✅ (si hay canción siguiente o anterior en la cola) | ✅ | en directo: datos de la canción y barras; controles solo leyendo su código |
+| Spotify (cliente oficial) | ✅ | ✅ | ⚠️ | en directo: datos de la canción y barras; controles sin probar a mano. Según informes, su MPRIS está incompleto (la posición puede quedarse en 0) |
+| Haruna | ? | ? | ? | en directo: datos de la canción y barras; controles sin probar |
+| mpv | – | – | – | necesita el plugin `mpv-mpris` para que el widget lo vea; sin él solo funcionan las barras, con la lista de apps |
 
 Se agradecen informes de otros reproductores.
 
@@ -123,13 +125,13 @@ Se agradecen informes de otros reproductores.
   ```
 - **Registros del helper:** `journalctl --user -u nowplaying-viz` (servicio) o `~/.cache/nowplaying-viz.log` (arrancado por el widget).
 - **Errores del widget:** `journalctl --user -u plasma-plasmashell | grep nowplayingvisualizer`.
-- **¿No hay barras?** Comprueba que la aplicación está marcada en **Audio** (o que no hay ninguna, para todo el sistema) y que `cava` está instalado.
+- **¿No hay barras?** Comprueba que la aplicación está marcada en **Audio** (o que no hay ninguna, para todo el sistema, o que **Seguir al reproductor** está activado) y que `cava` está instalado.
 
 ## Limitaciones
 
 - La información de la canción viene de un **módulo privado de Plasma** (el que usa su controlador multimedia). Si una actualización lo cambia, el widget pasa solo a usar D-Bus, pero puede hacer falta algún arreglo.
 - **Hace falta PipeWire**; PulseAudio sin PipeWire no está soportado.
-- Los controles del reproductor (botones, avanzar en la canción, volumen con la rueda) solo se han probado a mano en Liner y en YouTube con Zen. Riff y Spotify no se han probado.
+- Los controles del reproductor (botones, avanzar en la canción, volumen con la rueda) solo se han probado a mano en Liner y en YouTube con Zen. En Riff, Spotify y Haruna solo se han comprobado los datos de la canción y las barras.
 - Solo se ha probado en CachyOS con Plasma 6.8.
 
 ## Desarrollo

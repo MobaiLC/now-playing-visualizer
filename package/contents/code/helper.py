@@ -6,9 +6,10 @@
 Runs a small WebSocket server on localhost that the plasmoid connects to. It:
   * reads ~/.config/nowplaying-viz/config.json, merges it with the built-in
     presets and pushes the result to the widget whenever the file changes;
-  * routes the audio of the selected applications into a private PipeWire
-    null sink (in parallel, the apps still play through your speakers);
-  * runs CAVA on that sink (or on the whole system) and streams the bars.
+  * links the audio of the selected applications, or of the active player,
+    straight into CAVA's capture stream (they still play through your
+    speakers);
+  * runs CAVA on those streams (or on the whole system) and streams the bars.
 
 Only one instance runs at a time (the port is the lock). It exits by itself
 when no widget has been connected for a while.
@@ -277,11 +278,15 @@ def write_user(user):
     write_private(CONFIG_FILE, json.dumps(user, indent=2, ensure_ascii=False) + "\n")
 
 
+def save_user_audio(key, value):
+    user = read_user()
+    user.setdefault("audio", {})[key] = value
+    write_user(user)
+
+
 def save_user_apps(apps):
     apps = list(dict.fromkeys(str(a).lower()[:MAX_NAME] for a in apps))[:MAX_APPS] if isinstance(apps, list) else []
-    user = read_user()
-    user.setdefault("audio", {})["apps"] = apps
-    write_user(user)
+    save_user_audio("apps", apps)
 
 
 # ------------------------------------------------------------ Edit session --
@@ -550,12 +555,12 @@ def remove_legacy_sink():
             run(["pactl", "unload-module", line.split()[0]])
 
 
-def sync_links(apps):
-    """Per-app audio: link the selected apps straight into CAVA's capture
-    stream and drop every other link into it (WirePlumber's fallback link to
-    the default microphone included). No virtual device is created."""
+def sync_links(wanted):
+    """Per-app audio: link the streams for which wanted(props) is true (see
+    link_filter) straight into CAVA's capture stream and drop every other link
+    into it (WirePlumber's fallback link to the default microphone included).
+    No virtual device is created."""
     objs = pw_dump()
-    wanted = {a.lower() for a in apps}
     nodes, ports, links = {}, {}, []
     for o in objs:
         t, info = o.get("type"), o.get("info") or {}
@@ -578,7 +583,7 @@ def sync_links(apps):
         if d != "output":
             continue
         node = nodes.get(p.get("node.id"))
-        if not node or node.get("media.class") != "Stream/Output/Audio" or app_key(node) not in wanted:
+        if not node or node.get("media.class") != "Stream/Output/Audio" or not wanted(node):
             continue
         ch = p.get("audio.channel")
         if ch in cava_in:
@@ -620,12 +625,58 @@ def busctl_prop(name, iface, prop, default=None):
     return res[0]["data"] if res else default
 
 
-def read_media():
+def mpris_names():
     names = busctl_json("call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
                         "org.freedesktop.DBus", "ListNames")
-    names = [n for n in (names[0]["data"][0] if names else []) if n.startswith("org.mpris.MediaPlayer2.")]
+    return [n for n in (names[0]["data"][0] if names else []) if n.startswith("org.mpris.MediaPlayer2.")]
+
+
+def bus_pid(bus):
+    pid = busctl_json("call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
+                      "org.freedesktop.DBus", "GetConnectionUnixProcessID", "s", bus)
+    return pid[0]["data"][0] if pid else None
+
+
+def pick_player(players):
+    """The player to show: playing and preferred, then playing, then
+    preferred, then any. Each player needs "bus", "identity" and "playing"."""
+    preferred = [p.lower() for p in state["config"].get("panel", {}).get("preferredPlayers", [])]
+    is_pref = lambda p: any(x in (p["identity"] + " " + p["bus"]).lower() for x in preferred)
+    for test in (lambda p: p["playing"] and is_pref(p), lambda p: p["playing"], is_pref, lambda p: True):
+        for p in players:
+            if test(p):
+                return p
+    return None
+
+
+def player_stream(props, pid, ident):
+    """True if a PipeWire stream belongs to the player with this PID or
+    (lower-case) Identity. Chromium/Electron players register MPRIS as
+    "chromium.instanceN", so the PID or the stream's app name is what ties
+    them together."""
+    name = (props.get("application.name") or "").lower()
+    binary = (props.get("application.process.binary") or "").lower()
+    same_process = pid is not None and props.get("application.process.id") == pid
+    same_name = bool(name) and (name == ident or re.search(rf"\b{re.escape(name)}\b", ident))
+    return bool(same_process or same_name or (binary and binary == ident))
+
+
+def active_player():
+    """(pid, lower-case identity) of the player the widget most likely shows,
+    for audio.followPlayer; None when there is no player."""
+    iface = "org.mpris.MediaPlayer2.Player"
+    players = [{
+        "bus": n,
+        "identity": busctl_prop(n, "org.mpris.MediaPlayer2", "Identity", n.split(".")[-1]),
+        "playing": busctl_prop(n, iface, "PlaybackStatus", "") == "Playing",
+    } for n in mpris_names()]
+    p = pick_player(players)
+    return (bus_pid(p["bus"]), (p["identity"] or "").lower()) if p else None
+
+
+def read_media():
     players = []
-    for n in names:
+    for n in mpris_names():
         player_iface = "org.mpris.MediaPlayer2.Player"
         meta = busctl_prop(n, player_iface, "Metadata", {})
         meta = {k: v.get("data") for k, v in meta.items()} if isinstance(meta, dict) else {}
@@ -650,15 +701,8 @@ def read_media():
         })
         players[-1]["canPlayPause"] = players[-1]["canControl"] and bool(
             busctl_prop(n, player_iface, "CanPause", False) or busctl_prop(n, player_iface, "CanPlay", False))
-    preferred = [p.lower() for p in state["config"].get("panel", {}).get("preferredPlayers", [])]
-    is_pref = lambda p: any(x in (p["identity"] + " " + p["bus"]).lower() for x in preferred)
-    for test in (lambda p: p["playing"] and is_pref(p), lambda p: p["playing"], is_pref, lambda p: True):
-        for p in players:
-            if test(p):
-                state["media_player"] = p
-                return p
-    state["media_player"] = None
-    return None
+    state["media_player"] = pick_player(players)
+    return state["media_player"]
 
 
 def media_action(action, value):
@@ -681,11 +725,8 @@ def media_action(action, value):
 
 def find_player_bus(identity):
     """MPRIS bus name of the player with this Identity (Plasma's module doesn't expose it)."""
-    names = busctl_json("call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
-                        "org.freedesktop.DBus", "ListNames")
-    for n in (names[0]["data"][0] if names else []):
-        if n.startswith("org.mpris.MediaPlayer2.") and \
-                busctl_prop(n, "org.mpris.MediaPlayer2", "Identity", None) == identity:
+    for n in mpris_names():
+        if busctl_prop(n, "org.mpris.MediaPlayer2", "Identity", None) == identity:
             return n
     return None
 
@@ -704,20 +745,14 @@ def change_volume(bus, identity, delta):
             new = min(1.0, max(0.0, vol + delta))
             run(["busctl", "--user", "set-property", bus, MPRIS_PATH, iface, "Volume", "d", str(new)])
             return
-    pid = busctl_json("call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
-                      "org.freedesktop.DBus", "GetConnectionUnixProcessID", "s", bus)
-    pid = pid[0]["data"][0] if pid else None
+    pid = bus_pid(bus)
     ident = (identity or "").lower()
     step = f"{abs(delta) * 100:.0f}%{'+' if delta > 0 else '-'}"
     for o in pw_dump():
         props = (o.get("info") or {}).get("props") or {}
         if o.get("type") != "PipeWire:Interface:Node" or props.get("media.class") != "Stream/Output/Audio":
             continue
-        name = (props.get("application.name") or "").lower()
-        binary = (props.get("application.process.binary") or "").lower()
-        same_process = pid is not None and props.get("application.process.id") == pid
-        same_name = bool(name) and (name == ident or re.search(rf"\b{re.escape(name)}\b", ident))
-        if same_process or same_name or (binary and binary == ident):
+        if player_stream(props, pid, ident):
             run(["wpctl", "set-volume", "-l", "1.0", str(o["id"]), step])
 
 
@@ -733,7 +768,7 @@ async def media_loop():
 
 def cava_config(cfg):
     a, b = cfg.get("audio", {}), cfg.get("bars", {})
-    source = CAPTURE_TARGET if a.get("apps") else "auto"
+    source = CAPTURE_TARGET if a.get("apps") or a.get("followPlayer") else "auto"
     lines = [
         "[general]",
         f"framerate={int(b.get('framerate', 60))}",
@@ -808,10 +843,10 @@ async def cava_loop():
             await set_error("cava_missing")
             await asyncio.sleep(10)
             continue
-        if selected_apps():
+        if per_app_audio():
             # drop WirePlumber's fallback link (the default mic) right away
             asyncio.get_running_loop().call_later(
-                0.3, lambda: asyncio.ensure_future(asyncio.to_thread(sync_links, selected_apps())))
+                0.3, lambda: asyncio.ensure_future(asyncio.to_thread(sync_now)))
         got_data = False
         try:
             async for line in cava_proc.stdout:
@@ -876,15 +911,35 @@ async def config_watch_loop():
         await asyncio.sleep(0.5)
 
 
-def selected_apps():
-    return state["config"].get("audio", {}).get("apps", []) if state["config"] else []
+def audio_config():
+    return state["config"].get("audio", {}) if state["config"] else {}
+
+
+def per_app_audio():
+    a = audio_config()
+    return bool(a.get("followPlayer") or a.get("apps"))
+
+
+def link_filter():
+    """Which streams CAVA listens to: the active player's when following it
+    (nothing while there is no player), else the selected apps."""
+    a = audio_config()
+    if a.get("followPlayer"):
+        player = active_player()
+        return (lambda props: player_stream(props, *player)) if player else (lambda props: False)
+    apps = {x.lower() for x in a.get("apps", [])}
+    return lambda props: app_key(props) in apps
+
+
+def sync_now():
+    sync_links(link_filter())
 
 
 async def link_loop():
     # only does work while CAVA runs in per-app mode (i.e. a widget is open)
     while True:
-        if cava_proc and cava_proc.returncode is None and selected_apps():
-            await asyncio.to_thread(sync_links, selected_apps())
+        if cava_proc and cava_proc.returncode is None and per_app_audio():
+            await asyncio.to_thread(sync_now)
         await asyncio.sleep(1)
 
 
@@ -952,6 +1007,8 @@ async def handler(ws):
                     await asyncio.to_thread(media_action, msg["action"], value)
             elif msg.get("type") == "setApps":
                 save_user_apps(msg.get("apps"))
+            elif msg.get("type") == "setFollowPlayer" and isinstance(msg.get("value"), bool):
+                save_user_audio("followPlayer", msg["value"])
             elif msg.get("type") in ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset"):
                 if edit["owner"] is ws:
                     push_history(msg["type"])

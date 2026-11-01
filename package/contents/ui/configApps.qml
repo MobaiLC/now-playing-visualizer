@@ -8,7 +8,8 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
 
-// OBS-style picker: tick the applications the visualizer should listen to.
+// OBS-style picker: tick the applications the visualizer should listen to,
+// or let it follow whichever player the widget shows.
 // Changes are written straight to config.json by the helper.
 KCM.SimpleKCM {
     id: page
@@ -18,6 +19,7 @@ KCM.SimpleKCM {
 
     property var running: []
     property var selected: []
+    property bool followPlayer: false
 
     readonly property var rows: {
         let ids = running.map(a => a.id);
@@ -39,7 +41,10 @@ KCM.SimpleKCM {
     Helper {
         id: helper
         topics: ["config", "schema"]
-        onConfigReceived: (data, issues) => page.selected = data.audio?.apps ?? []
+        onConfigReceived: (data, issues) => {
+            page.selected = data.audio?.apps ?? [];
+            page.followPlayer = data.audio?.followPlayer ?? false;
+        }
         onAppsReceived: apps => page.running = apps
         onConnectedChanged: if (connected) send({ type: "listApps" })
     }
@@ -57,9 +62,20 @@ KCM.SimpleKCM {
         Kirigami.InlineMessage {
             Layout.fillWidth: true
             visible: true
-            text: page.selected.length === 0
+            text: page.followPlayer
+                ? i18n("The visualizer listens to the player shown in the widget, whichever it is.")
+                : page.selected.length === 0
                 ? i18n("No app selected: the visualizer listens to the whole system.")
                 : i18n("The visualizer only listens to the selected apps. Apps show up here while they are playing sound.")
+        }
+
+        QQC2.CheckBox {
+            text: i18n("Follow the player shown in the widget")
+            checked: page.followPlayer
+            onToggled: {
+                page.followPlayer = checked;
+                helper.send({ type: "setFollowPlayer", value: checked });
+            }
         }
 
         Repeater {
@@ -67,6 +83,7 @@ KCM.SimpleKCM {
             delegate: RowLayout {
                 required property var modelData
                 spacing: Kirigami.Units.smallSpacing
+                enabled: !page.followPlayer
                 QQC2.CheckBox {
                     checked: page.selected.includes(modelData.id)
                     onToggled: page.toggle(modelData.id, checked)

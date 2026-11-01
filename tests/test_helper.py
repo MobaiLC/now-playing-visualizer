@@ -18,6 +18,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
 CODE = ROOT / "package" / "contents" / "code"
@@ -242,6 +243,48 @@ class WebSocketTests(unittest.IsolatedAsyncioTestCase):
         await writer.drain()
         status = (await asyncio.wait_for(reader.readline(), 2)).decode()
         self.assertIn("403", status)
+
+
+class FollowPlayerTests(unittest.TestCase):
+    def setUp(self):
+        self.saved = helper.state["config"]
+        helper.state["config"] = {"panel": {"preferredPlayers": []}, "audio": {"apps": ["liner"], "followPlayer": True}}
+
+    def tearDown(self):
+        helper.state["config"] = self.saved
+
+    def test_playing_player_wins_over_paused_one(self):
+        players = [{"bus": "org.mpris.MediaPlayer2.elisa", "identity": "Elisa", "playing": False},
+                   {"bus": "org.mpris.MediaPlayer2.chromium.instance42", "identity": "Riff", "playing": True}]
+        self.assertEqual(helper.pick_player(players)["identity"], "Riff")
+        self.assertIsNone(helper.pick_player([]))
+
+    def test_streams_match_by_pid_or_name(self):
+        riff = {"application.name": "Riff", "application.process.binary": "riff", "application.process.id": 42}
+        chromium = {"application.name": "Chromium", "application.process.binary": "chromium", "application.process.id": 7}
+        self.assertTrue(helper.player_stream(riff, 42, "riff"))
+        self.assertTrue(helper.player_stream(riff, None, "riff"))
+        self.assertTrue(helper.player_stream(chromium, 7, "riff"))
+        self.assertFalse(helper.player_stream(chromium, 42, "riff"))
+
+    def test_follow_player_overrides_the_app_list(self):
+        liner = {"application.process.binary": "liner"}
+        riff = {"application.name": "Riff", "application.process.id": 42}
+        with mock.patch.object(helper, "active_player", return_value=(42, "riff")):
+            wanted = helper.link_filter()
+        self.assertTrue(wanted(riff))
+        self.assertFalse(wanted(liner))
+        with mock.patch.object(helper, "active_player", return_value=None):
+            self.assertFalse(helper.link_filter()(riff))
+        helper.state["config"]["audio"]["followPlayer"] = False
+        self.assertTrue(helper.link_filter()(liner))
+        self.assertFalse(helper.link_filter()(riff))
+
+    def test_capture_mode_when_following(self):
+        cfg = {"audio": {"apps": [], "followPlayer": True}, "bars": {}}
+        self.assertIn("source=" + helper.CAPTURE_TARGET, helper.cava_config(cfg))
+        cfg["audio"]["followPlayer"] = False
+        self.assertIn("source=auto", helper.cava_config(cfg))
 
 
 class MediaActionTests(unittest.TestCase):

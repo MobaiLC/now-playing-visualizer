@@ -30,6 +30,7 @@ Issue codes:
 | `subscribe` | `topics`: any of `config`, `schema`, `presets`, `bars`, `media` | Limits what this client receives. Without it a client gets everything. |
 | `listApps` | | Replies with `apps`. |
 | `setApps` | `apps`: list of app ids | Saves `audio.apps` (lower-cased, deduplicated, max 64). |
+| `setFollowPlayer` | `value`: bool | Saves `audio.followPlayer`. |
 | `beginEdit` | | Starts an edit session (snapshot + Undo history). |
 | `setDesign` | `changes`: `{ "bars.count": 40, … }` | Writes valid, known options into `overrides`. |
 | `setPreset` | `name` | Switches preset and drops bar overrides. |

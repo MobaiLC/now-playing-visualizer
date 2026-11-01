@@ -52,13 +52,13 @@ This page is for people changing the code or maintaining a fork. For using the w
 
 ## Per-app audio
 
-When `audio.apps` is not empty:
+When `audio.apps` is not empty, or `audio.followPlayer` is on:
 - CAVA is started with `method=pipewire` and a target that doesn't exist, so it can be found among the PipeWire nodes and never captures anything by itself.
 - Every second, while CAVA runs, the helper:
-  - links the output ports of the selected apps' streams into CAVA's input ports;
+  - links the output ports of the selected apps' streams into CAVA's input ports. With `audio.followPlayer` the list is ignored and it links the active player's streams instead: the player is picked like the D-Bus fallback picks the one to show (playing and preferred first), and its streams are found by the MPRIS connection's PID or by app name, as for volume;
   - removes any other link into it, including WirePlumber's fallback link to the default microphone.
 
-No virtual device is created. When the list is empty, CAVA captures the default output (`source=auto`).
+No virtual device is created. When the list is empty and `audio.followPlayer` is off, CAVA captures the default output (`source=auto`).
 
 ## Edit sessions (Apply / Cancel)
 

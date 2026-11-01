@@ -70,7 +70,7 @@ rm -r ~/.config/nowplaying-viz   # your settings and presets
 Right-click the widget → **Configure…**
 
 - **Design** — live preview at the top, then tabs: *Presets* (click a card to apply it, or save your own), *Style*, *Colors*, *Motion*, *Panel* and *Advanced*. Changes show immediately; **Apply/OK** keeps them and **Cancel** puts everything back.
-- **Audio** — tick the apps the visualizer should listen to. With none ticked it listens to the whole system.
+- **Audio** — tick the apps the visualizer should listen to. With none ticked it listens to the whole system. Or tick **Follow the player shown in the widget** to listen only to whichever player is playing, without keeping a list.
 
 Everything is stored in `~/.config/nowplaying-viz/config.json`, which you can also edit by hand; the widget reloads when the file is saved:
 
@@ -94,8 +94,10 @@ Controls are offered only when the player reports it supports them. Volume (mous
 |---|---|---|---|---|
 | Liner | ✅ | ✅ | ✅ | live |
 | Zen / Firefox (YouTube, etc.) | ✅ | ✅ | ✅ | live |
-| Riff | ✅ | ✅ (when the queue has a next/previous track) | ✅ | source code only |
-| Spotify (official client) | ✅ | ✅ | ⚠️ | not tested; its MPRIS support is reported to be incomplete (position may stay at 0) |
+| Riff | ✅ | ✅ (when the queue has a next/previous track) | ✅ | live: song info and bars; controls only from its source code |
+| Spotify (official client) | ✅ | ✅ | ⚠️ | live: song info and bars; controls not tested by hand. Its MPRIS support is reported to be incomplete (position may stay at 0) |
+| Haruna | ? | ? | ? | live: song info and bars; controls not tested |
+| mpv | – | – | – | needs the `mpv-mpris` plugin to show up at all; without it only the bars work, through the app list |
 
 Reports for other players are very welcome.
 
@@ -123,13 +125,13 @@ Reports for other players are very welcome.
   ```
 - **Helper logs:** `journalctl --user -u nowplaying-viz` (service) or `~/.cache/nowplaying-viz.log` (started by the widget).
 - **Widget errors:** `journalctl --user -u plasma-plasmashell | grep nowplayingvisualizer`.
-- **No bars?** Make sure the app is ticked under **Audio** (or none is, for the whole system) and that `cava` is installed.
+- **No bars?** Make sure the app is ticked under **Audio** (or none is, for the whole system, or **Follow the player** is on) and that `cava` is installed.
 
 ## Limitations
 
 - Song info comes from a **private Plasma module** (the one the media controller uses). If an update changes it, the widget falls back to D-Bus automatically, but fixes may be needed.
 - **PipeWire is required**; plain PulseAudio is not supported.
-- Player controls (buttons, seeking, mouse-wheel volume) have been tested by hand on Liner and on YouTube in Zen only. Riff and Spotify are untested.
+- Player controls (buttons, seeking, mouse-wheel volume) have been tested by hand on Liner and on YouTube in Zen only. On Riff, Spotify and Haruna only the song info and the bars have been checked.
 - Only tested on CachyOS with Plasma 6.8.
 
 ## Development
