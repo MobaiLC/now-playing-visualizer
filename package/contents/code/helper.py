@@ -23,6 +23,7 @@ import json
 import os
 import re
 import signal
+import socket
 import struct
 import subprocess
 import sys
@@ -1061,8 +1062,55 @@ async def idle_loop(stop):
             return
 
 
+# ------------------------------------------------------------- Local users --
+# 127.0.0.1 is shared by every user of the machine. The kernel knows who owns
+# each TCP socket, so connections from other users are refused without the
+# widget having to send anything (a token would need a file read from QML).
+
+PROC_NET_TCP = "/proc/net/tcp"
+
+
+def proc_addr(addr):
+    """("127.0.0.1", 47811) as /proc/net/tcp writes it: the IPv4 address as a
+    native-endian 32-bit number, then the port, both in hex."""
+    ip, port = addr[:2]
+    return f"{struct.unpack('=I', socket.inet_aton(ip))[0]:08X}:{port:04X}"
+
+
+def socket_uid(local, remote, listening=False):
+    """UID owning the TCP socket local -> remote (remote ignored when
+    listening), None if there is no such socket or /proc can't be read."""
+    want = proc_addr(local)
+    other = None if listening else proc_addr(remote)
+    try:
+        lines = Path(PROC_NET_TCP).read_text().splitlines()[1:]
+    except OSError:
+        return None
+    for line in lines:
+        f = line.split()
+        if len(f) < 8 or f[1] != want:
+            continue
+        if (f[3] == "0A") if listening else (f[2] == other):
+            return int(f[7])
+    return None
+
+
+def peer_is_us(writer):
+    """True if the client end of this connection belongs to our user."""
+    peer, ours = writer.get_extra_info("peername"), writer.get_extra_info("sockname")
+    # the client's socket goes from its port to ours
+    uid = socket_uid(peer, ours) if peer and ours else None
+    if uid != os.getuid():
+        log("refused a connection from", "an unknown user" if uid is None else f"uid {uid}")
+        return False
+    return True
+
+
 async def accept(reader, writer):
     ws = WsConn(reader, writer)
+    if not peer_is_us(writer):
+        ws.close()
+        return
     try:
         await ws.handshake()
     except Exception:
@@ -1179,6 +1227,11 @@ async def main():
             server = await asyncio.start_server(accept, HOST, PORT)
             break
         except OSError:
+            owner = socket_uid((HOST, PORT), None, listening=True)
+            if owner is not None and owner != os.getuid():
+                # the widgets would be talking to someone else's server
+                log(f"port {PORT} is held by another user (uid {owner}); "
+                    "the widget can't reach this helper until it is freed")
             if not SERVICE:
                 log("already running")
                 return

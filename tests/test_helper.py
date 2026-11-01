@@ -245,6 +245,52 @@ class WebSocketTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("403", status)
 
 
+class LocalUserTests(unittest.IsolatedAsyncioTestCase):
+    """Only our own user may talk to the helper (the kernel says who owns a socket)."""
+
+    TABLE = ("  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode\n"
+             "   0: {a}:1234 {b}:B893 01 00000000:00000000 00:00000000 00000000  {uid}        0 1 1\n"
+             "   1: {b}:B893 {a}:1234 01 00000000:00000000 00:00000000 00000000  {me}        0 2 1\n"
+             "   2: {b}:B893 00000000:0000 0A 00000000:00000000 00:00000000 00000000  {uid}        0 3 1\n")
+
+    def fake_proc(self, uid):
+        a = helper.proc_addr(("127.0.0.1", 0)).split(":")[0]
+        f = Path(TMP.name) / "tcp"
+        f.write_text(self.TABLE.format(a=a, b=a, uid=uid, me=os.getuid()))
+        return mock.patch.object(helper, "PROC_NET_TCP", str(f))
+
+    def test_owner_of_the_client_end_is_read(self):
+        with self.fake_proc(4321):
+            # client 127.0.0.1:0x1234 -> server :0xB893, not the server's own end
+            self.assertEqual(helper.socket_uid(("127.0.0.1", 0x1234), ("127.0.0.1", 0xB893)), 4321)
+            self.assertEqual(helper.socket_uid(("127.0.0.1", 0xB893), None, listening=True), 4321)
+            self.assertIsNone(helper.socket_uid(("127.0.0.1", 0x9999), ("127.0.0.1", 0xB893)))
+        with mock.patch.object(helper, "PROC_NET_TCP", "/nonexistent"):
+            self.assertIsNone(helper.socket_uid(("127.0.0.1", 1), ("127.0.0.1", 2)))
+
+    async def test_real_connection_from_us_is_accepted_and_others_refused(self):
+        uids = []
+        server = await asyncio.start_server(helper.accept, helper.HOST, 0)
+        port = server.sockets[0].getsockname()[1]
+        try:
+            for fake_uid in (None, os.getuid() + 1):
+                with mock.patch.object(helper, "socket_uid", return_value=fake_uid), \
+                        mock.patch.object(helper, "log"):
+                    reader, writer = await asyncio.open_connection(helper.HOST, port)
+                    # refused before the handshake: the server just hangs up
+                    self.assertEqual(await asyncio.wait_for(reader.read(), 2), b"")
+                    writer.close()
+            reader, writer = await asyncio.open_connection(helper.HOST, port)
+            await asyncio.sleep(0.1)
+            # the real /proc/net/tcp says this socket is ours
+            uids.append(helper.socket_uid(writer.get_extra_info("sockname"), writer.get_extra_info("peername")))
+            writer.close()
+        finally:
+            server.close()
+            await asyncio.wait_for(server.wait_closed(), 3)
+        self.assertEqual(uids, [os.getuid()])
+
+
 class ShutdownTests(unittest.IsolatedAsyncioTestCase):
     async def test_stops_promptly_with_a_widget_connected(self):
         # systemd used to SIGKILL the service after its stop timeout
