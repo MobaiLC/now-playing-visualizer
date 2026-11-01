@@ -7,12 +7,14 @@ import QtQuick.Controls as QQC2
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.kirigami as Kirigami
+import "players.js" as Players
 
 PlasmoidItem {
     id: root
 
     property var cfg: ({})
     property var issues: []
+    readonly property var shownIssues: helper.outdatedService ? issues.concat([{ code: "helper_outdated" }]) : issues
     property var barValues: []
     // every key is present once the helper has sent the first config
     readonly property bool ready: cfg.panel !== undefined
@@ -30,6 +32,7 @@ PlasmoidItem {
         }
         onBarsReceived: values => root.barValues = values
         onMediaReceived: data => root.fallbackMedia = data
+        onPlayersReceived: list => root.fallbackPlayers = list
     }
 
     // ---- media source -------------------------------------------------------
@@ -46,6 +49,60 @@ PlasmoidItem {
         value: root.panelCfg.preferredPlayers || []
         when: mprisLoader.item !== null
     }
+    Binding {
+        target: mprisLoader.item
+        property: "pinned"
+        value: root.pinnedPlayer
+        when: mprisLoader.item !== null
+    }
+
+    // ---- player menu ----------------------------------------------------------
+    // Right-click > pick a player: the widget then shows that one while it is
+    // open (automatic otherwise). Saved per widget; the helper is told too,
+    // so the D-Bus fallback and "Follow the player" pick the same one.
+    readonly property string pinnedPlayer: Plasmoid.configuration.pinnedPlayer
+    property var fallbackPlayers: []
+    readonly property var openPlayers: useFallback ? fallbackPlayers : (mprisLoader.item ? mprisLoader.item.playerList : [])
+    readonly property var playerMenu: Players.menu(openPlayers, pinnedPlayer)
+
+    function pinPlayer(identity) {
+        Plasmoid.configuration.pinnedPlayer = identity;
+    }
+    function sendPin() {
+        helper.send({ type: "pinPlayer", identity: pinnedPlayer });
+    }
+    onPinnedPlayerChanged: sendPin()
+
+    PlasmaCore.Action {
+        id: playerHeading
+        text: i18n("Show the player")
+        isSeparator: true
+    }
+    PlasmaCore.Action {
+        id: autoPlayer
+        text: i18n("Automatic (the one playing)")
+        checkable: true
+        checked: root.pinnedPlayer === ""
+        onTriggered: root.pinPlayer("")
+    }
+    Instantiator {
+        id: playerActions
+        model: root.playerMenu
+        delegate: PlasmaCore.Action {
+            required property var modelData
+            text: modelData.open ? modelData.identity : i18n("%1 (not open)", modelData.identity)
+            checkable: true
+            checked: root.pinnedPlayer.toLowerCase() === modelData.identity.toLowerCase()
+            // clicking the checked one (or a closed one) goes back to automatic
+            onTriggered: root.pinPlayer(checked ? modelData.identity : "")
+        }
+    }
+    Plasmoid.contextualActions: {
+        const list = [playerHeading, autoPlayer];
+        for (let i = 0; i < playerActions.count; i++)
+            list.push(playerActions.objectAt(i));
+        return list;
+    }
 
     readonly property bool forceFallback: cfg.advanced?.forceDbusMedia ?? false
     readonly property bool useFallback: forceFallback || mprisLoader.status === Loader.Error
@@ -60,6 +117,7 @@ PlasmoidItem {
         target: helper
         function onConnectedChanged() {
             root.requestFallback();
+            root.sendPin();
         }
     }
 
@@ -144,6 +202,7 @@ PlasmoidItem {
         case "cava_missing": return i18n("CAVA is not installed (sudo pacman -S cava)");
         case "cava_error": return i18n("CAVA failed: %1", issue.detail);
         case "sink_error": return i18n("Could not create the virtual audio output: %1", issue.detail);
+        case "helper_outdated": return i18n("The helper service is from an older version. Restart it: systemctl --user restart nowplaying-viz");
         default: return issue.code + (issue.detail ? ": " + issue.detail : "");
         }
     }
@@ -169,7 +228,7 @@ PlasmoidItem {
             anchors.margins: 6
             width: Kirigami.Units.iconSizes.small
             height: width
-            visible: root.issues.length > 0
+            visible: root.shownIssues.length > 0
             source: "dialog-warning"
             HoverHandler {
                 id: issueHover
@@ -179,7 +238,7 @@ PlasmoidItem {
                 onTapped: Plasmoid.internalAction("configure").trigger()
             }
             QQC2.ToolTip.visible: issueHover.hovered
-            QQC2.ToolTip.text: root.issues.map(root.issueText).join("\n") + "\n\n" + i18n("Click to open the settings")
+            QQC2.ToolTip.text: root.shownIssues.map(root.issueText).join("\n") + "\n\n" + i18n("Click to open the settings")
         }
 
         Component {

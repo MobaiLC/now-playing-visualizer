@@ -29,6 +29,8 @@ This page is for people changing the code or maintaining a fork. For using the w
 | `ui/renderers/` | Pure JavaScript: `common.js` (geometry), `palette.js` (colour modes), one file per style, `registry.js` (picks the renderer). |
 | `ui/MprisSource.qml` | The **only** file that imports Plasma's private MPRIS module. Loaded through a `Loader`, so if a Plasma update breaks it, only this file fails. |
 | `ui/Helper.qml` | WebSocket client for the helper; starts the helper through `Launcher.qml` when it isn't running. |
+| `ui/players.js` | Which player the widget shows (the one pinned in the right-click menu while it is open, else the automatic pick), the menu entries and the repeat cycle. The same rules as `pick_player()` in the helper. |
+| `ui/theme.js` | Card colours from the cover art, kept readable (WCAG contrast). |
 | `ui/net.js` | What `Helper.qml` reads from outside, validated: the `NPV_PORT` port and the helper's messages. |
 | `ui/Launcher.qml` | Starts `helper.py` and reads `NPV_PORT` with Plasma5Support; also behind a `Loader` for the same reason. |
 | `ui/configDesign.qml` | The Design page, generated from `schema.json`. |

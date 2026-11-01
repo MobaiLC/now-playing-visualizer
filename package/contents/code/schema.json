@@ -143,6 +143,7 @@
         { "value": "never", "label": "Never" }
       ]
     },
+    "controls.shuffleRepeat": { "group": "controls", "type": "bool", "default": true, "label": "Shuffle and repeat buttons (only for players that have them)" },
     "controls.scrollVolume": { "group": "controls", "type": "bool", "default": true, "label": "Scroll to change the volume" },
     "title.marquee": {
       "group": "controls", "type": "enum", "default": "hover", "label": "Scroll long titles",

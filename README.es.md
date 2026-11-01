@@ -11,11 +11,13 @@ Un widget de escritorio para KDE Plasma 6 que muestra la canción que estás esc
 ## Funciones
 
 - **Tarjeta de la canción** — portada, título, artista, álbum u origen y barra de progreso, leídos de cualquier reproductor compatible con MPRIS (el estándar de Linux para reproductores).
-- **Controles del reproductor** — anterior, pausa y siguiente al pasar el ratón; clic o arrastre en la barra de progreso para avanzar; clic en la portada para traer el reproductor al frente; rueda del ratón para el volumen. Cada control depende de lo que el reproductor diga que admite.
+- **Controles del reproductor** — anterior, pausa y siguiente al pasar el ratón; clic o arrastre en la barra de progreso para avanzar; clic en la portada para traer el reproductor al frente; rueda del ratón para el volumen; aleatorio y repetición en los reproductores que los tienen. Cada control depende de lo que el reproductor diga que admite.
+- **Elegir el reproductor** — clic derecho en el widget para mostrar uno concreto en vez del que esté sonando; cada widget recuerda el suyo.
 - **Audio por aplicación** — eliges a qué aplicaciones reaccionan las barras, como en OBS. Se conectan directamente a CAVA a través de PipeWire, sin que aparezca ningún dispositivo nuevo en tu menú de sonido.
 - **Colores de la canción** — la tarjeta puede tomar sus colores de la portada (siempre legibles) y mostrarla difuminada de fondo.
 - **Tres estilos** — barras, bloques y onda, cada uno también en modo circular, con cinco modos de color: degradado, un color por barra, arcoíris (animado si quieres), colores sacados de la portada o el color de acento de Plasma. Picos que caen y brillo opcionales, y un ecualizador para dar forma a las barras.
 - **Se adapta a su forma** — horizontal, vertical (barras debajo) o compacta, según el tamaño del widget o fijada a mano.
+- **Compartir presets** — exporta tu diseño a un archivo `.json` e importa los de otras personas; de un archivo importado solo se guardan los ajustes válidos.
 - **Ajustes visuales** — vista previa en vivo, presets en tarjetas, pestañas, Deshacer, y Cancelar que de verdad revierte. Por debajo, todas las opciones viven en un archivo JSON que también puedes editar a mano.
 - **Estado de reposo** — cuando no suena nada puede mostrar la última canción atenuada, una tarjeta «Nada sonando», u ocultarse.
 - **Pensado para sobrevivir a las actualizaciones** — las partes que dependen del interior de Plasma están aisladas y tienen alternativa, el helper solo usa la biblioteca estándar de Python, y una comprobación opcional se ejecuta tras cada actualización de `pacman` y te avisa si algo se rompió.

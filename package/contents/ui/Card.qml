@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import org.kde.kirigami as Kirigami
 import "theme.js" as Theme
+import "players.js" as Players
 
 // The now-playing card: cover, song info, progress, controls and bars. Pure
 // view: everything comes in through properties and every user action goes
@@ -173,11 +174,15 @@ Rectangle {
         id: btn
         property string name
         property bool allowed: true
+        // sent with the action (shuffle: the new state, loop: the next mode)
+        property var value: null
+        // off toggles (shuffle, repeat) are drawn dimmed
+        property bool toggledOn: true
         implicitWidth: Kirigami.Units.iconSizes.small
         implicitHeight: implicitWidth
         color: "white"
         isMask: true
-        opacity: allowed ? (tapHover.hovered ? 1 : 0.85) : 0.3
+        opacity: !allowed ? 0.3 : !toggledOn ? (tapHover.hovered ? 0.7 : 0.45) : (tapHover.hovered ? 1 : 0.85)
         HoverHandler {
             id: tapHover
             enabled: btn.allowed
@@ -185,7 +190,7 @@ Rectangle {
         }
         TapHandler {
             enabled: btn.allowed
-            onTapped: card.action(btn.name, null)
+            onTapped: card.action(btn.name, btn.value)
         }
     }
 
@@ -211,6 +216,34 @@ Rectangle {
             source: "media-skip-forward"
             allowed: card.can("canGoNext")
             width: ctl.size; height: ctl.size
+        }
+    }
+
+    // Shuffle and repeat, each only when the player has it (null = it
+    // doesn't: Firefox, Chromium...) and can be controlled. undefined (an
+    // older helper that doesn't send them) hides them too.
+    readonly property bool extrasShown: interactive && !!media && media.canControl === true
+        && controlsCfg.shuffleRepeat !== false && (media.shuffle != null || media.loop != null)
+    component ExtraControls: Row {
+        id: ex
+        property real size: Kirigami.Units.iconSizes.small
+        spacing: size * 0.6
+        visible: card.extrasShown
+        ControlButton {
+            name: "shuffle"
+            source: "media-playlist-shuffle"
+            visible: card.media?.shuffle != null
+            toggledOn: card.media?.shuffle === true
+            value: card.media?.shuffle !== true
+            width: ex.size; height: ex.size
+        }
+        ControlButton {
+            name: "loop"
+            source: card.media?.loop === "Track" ? "media-playlist-repeat-song" : "media-playlist-repeat"
+            visible: card.media?.loop != null
+            toggledOn: (card.media?.loop ?? "None") !== "None"
+            value: Players.nextLoop(card.media?.loop)
+            width: ex.size; height: ex.size
         }
     }
 
@@ -379,9 +412,20 @@ Rectangle {
                         Behavior on opacity {
                             NumberAnimation { duration: 150 }
                         }
-                        Controls {
+                        // shuffle and repeat go on a smaller second row: five
+                        // buttons don't fit across a small cover
+                        Column {
                             anchors.centerIn: parent
-                            size: Math.max(Kirigami.Units.iconSizes.small, card.coverSide * 0.2)
+                            spacing: overlayControls.size * 0.3
+                            Controls {
+                                id: overlayControls
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                size: Math.max(Kirigami.Units.iconSizes.small, card.coverSide * 0.2)
+                            }
+                            ExtraControls {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                size: overlayControls.size * 0.75
+                            }
                         }
                     }
                     HoverHandler {
@@ -427,9 +471,16 @@ Rectangle {
                         elide: Text.ElideRight
                     }
                     // controls in the text column when the cover is hidden or too small
-                    Controls {
+                    Row {
                         visible: card.controlsVisible && card.mode !== "compact" && card.coverSide < Kirigami.Units.gridUnit * 3
-                        size: Kirigami.Units.iconSizes.small
+                        spacing: Kirigami.Units.iconSizes.small * 0.8
+                        Controls {
+                            size: Kirigami.Units.iconSizes.small
+                        }
+                        ExtraControls {
+                            anchors.verticalCenter: parent.verticalCenter
+                            size: Kirigami.Units.iconSizes.small
+                        }
                     }
                     Item { Layout.preferredHeight: 4 }
 
@@ -506,10 +557,17 @@ Rectangle {
                 }
 
                 // compact cards have no room under the title: controls sit beside it
-                Controls {
+                Row {
                     visible: card.controlsVisible && card.mode === "compact"
                     Layout.alignment: Qt.AlignVCenter
-                    size: Kirigami.Units.iconSizes.small
+                    spacing: Kirigami.Units.iconSizes.small * 0.8
+                    Controls {
+                        size: Kirigami.Units.iconSizes.small
+                    }
+                    ExtraControls {
+                        anchors.verticalCenter: parent.verticalCenter
+                        size: Kirigami.Units.iconSizes.small
+                    }
                 }
             }
         }

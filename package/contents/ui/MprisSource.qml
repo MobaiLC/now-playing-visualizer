@@ -3,6 +3,7 @@
 
 import QtQuick
 import org.kde.plasma.private.mpris as Mpris
+import "players.js" as Players
 
 // The only file that imports Plasma's private MPRIS module. It is loaded
 // through a Loader, so if a Plasma update changes that module only this file
@@ -11,6 +12,8 @@ Item {
     id: root
 
     property var preferred: []
+    // Identity picked in the widget's menu, "" = automatic
+    property string pinned: ""
 
     readonly property var media: player ? {
         track: player.track || "",
@@ -28,15 +31,28 @@ Item {
         canGoNext: player.canGoNext,
         canGoPrevious: player.canGoPrevious,
         canSeek: player.canSeek,
-        canRaise: player.canRaise
+        canRaise: player.canRaise,
+        // null: the player doesn't have it (Firefox, Chromium), so no button
+        shuffle: player.shuffle === Mpris.ShuffleStatus.Unknown ? null : player.shuffle === Mpris.ShuffleStatus.On,
+        loop: loopName(player.loopStatus)
     } : null
+
+    function loopName(status) {
+        switch (status) {
+        case Mpris.LoopStatus.None: return "None";
+        case Mpris.LoopStatus.Playlist: return "Playlist";
+        case Mpris.LoopStatus.Track: return "Track";
+        default: return null;
+        }
+    }
 
     function sync() {
         if (player)
             player.updatePosition();
     }
 
-    // "playPause" | "next" | "previous" | "raise" | "seek" (value: µs) | "volume" (value: ±0..1)
+    // "playPause" | "next" | "previous" | "raise" | "seek" (value: µs) |
+    // "volume" (value: ±0..1) | "shuffle" (value: bool) | "loop" (value: "None" | "Playlist" | "Track")
     function act(action, value) {
         if (!player)
             return;
@@ -48,6 +64,15 @@ Item {
         // the container sends SetPosition with the current track id
         case "seek": player.position = value; break;
         case "volume": player.changeVolume(value, true); break;
+        case "shuffle":
+            if (media.shuffle !== null && media.canControl && typeof value === "boolean")
+                player.shuffle = value ? Mpris.ShuffleStatus.On : Mpris.ShuffleStatus.Off;
+            break;
+        case "loop":
+            if (media.loop !== null && media.canControl && Players.LOOP_STATUSES.includes(value))
+                player.loopStatus = value === "Track" ? Mpris.LoopStatus.Track
+                    : value === "Playlist" ? Mpris.LoopStatus.Playlist : Mpris.LoopStatus.None;
+            break;
         }
     }
 
@@ -63,13 +88,8 @@ Item {
         }
     }
 
-    function isPreferred(p) {
-        const names = (preferred || []).map(n => n.toLowerCase());
-        const id = ((p.identity || "") + " " + (p.desktopEntry || "")).toLowerCase();
-        return names.some(n => id.includes(n));
-    }
-
-    readonly property var player: {
+    // every open player, for the selection and the menu
+    readonly property var containers: {
         mpris.currentPlayer; // re-evaluate when players change
         players.count;
         let list = [];
@@ -78,10 +98,16 @@ Item {
             if (o && o.container)
                 list.push(o.container);
         }
-        const playing = p => p.playbackStatus === Mpris.PlaybackStatus.Playing;
-        return list.find(p => playing(p) && isPreferred(p))
-            || list.find(p => playing(p))
-            || list.find(p => isPreferred(p))
-            || mpris.currentPlayer;
+        return list;
+    }
+    readonly property var playerList: containers.map(c => ({
+        identity: c.identity || "",
+        desktopEntry: c.desktopEntry || "",
+        playing: c.playbackStatus === Mpris.PlaybackStatus.Playing
+    }))
+
+    readonly property var player: {
+        const chosen = Players.pick(playerList, pinned, preferred, false);
+        return chosen ? containers[playerList.indexOf(chosen)] : mpris.currentPlayer;
     }
 }

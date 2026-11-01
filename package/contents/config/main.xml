@@ -9,5 +9,8 @@
     <!-- bumped by the Design page on Apply/OK; main.qml forwards it to the
          helper so a live-edited design is kept instead of reverted -->
     <entry name="designCommit" type="String"><default></default></entry>
+    <!-- Identity of the player picked in the widget's right-click menu;
+         empty = automatic. Per widget, so two widgets can show two players. -->
+    <entry name="pinnedPlayer" type="String"><default></default></entry>
   </group>
 </kcfg>

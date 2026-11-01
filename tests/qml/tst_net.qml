@@ -70,4 +70,12 @@ TestCase {
         compare(Net.parseMessage("{}"), null);
         compare(Net.parseMessage('{"type":7}'), null);
     }
+
+    function test_outdated_helper() {
+        verify(Net.outdated({ type: "schema" }));               // before protocol numbers
+        verify(Net.outdated({ type: "schema", protocol: 1 }));
+        verify(Net.outdated({ type: "schema", protocol: "2" }));
+        verify(!Net.outdated({ type: "schema", protocol: Net.PROTOCOL }));
+        verify(!Net.outdated({ type: "schema", protocol: Net.PROTOCOL + 1 }));
+    }
 }

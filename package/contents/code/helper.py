@@ -24,6 +24,7 @@ import os
 import re
 import signal
 import socket
+import stat
 import struct
 import subprocess
 import sys
@@ -61,6 +62,10 @@ SCHEMA_FILE = HERE / "schema.json"
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "nowplaying-viz"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 CONFIG_VERSION = 2
+# Bumped whenever the widget starts relying on a new message. Sent with the
+# schema; a widget that expects more knows this helper is out of date (an
+# old one still running after an update) and replaces or reports it.
+PROTOCOL = 2
 IDLE_EXIT_SECONDS = 60
 # --service: started by systemd, stays up (CAVA still only runs while needed)
 SERVICE = "--service" in sys.argv
@@ -71,6 +76,12 @@ MAX_NAME = 128
 MAX_APPS = 64
 # saved presets; each one is a thumbnail in Design and part of every undo step
 MAX_PRESETS = 100
+# preset files (Import / Export in Design): a real one is a few KB
+PRESET_FORMAT = "nowplaying-viz-preset"
+MAX_PRESET_FILE = 256 * 1024
+MAX_PATH = 4096
+# imported text options and list items are cut to this length
+MAX_IMPORT_TEXT = 256
 # bytes of bar frames a client may have queued before it skips frames (a
 # second or so at 60 fps); a slow client then never holds up the others
 BAR_BACKLOG = 64 * 1024
@@ -385,6 +396,166 @@ def push_history(kind, user=None):
     edit["last_push"] = now
 
 
+# ---------------------------------------------------------- preset files --
+# Design can export the current design to a .json file and import one as a
+# new user preset. The page only sends a path picked in a file dialog; the
+# helper does the reading and writing, because QML can't touch files. A
+# file may come from anyone, so nothing in it is trusted: only known,
+# visible options with valid values are kept.
+
+class PresetFileError(Exception):
+    """code: what Design shows ("file_unreadable", "file_not_preset", ...)."""
+    def __init__(self, code):
+        super().__init__(code)
+        self.code = code
+
+
+def check_path(path, suffix=None):
+    """An absolute local path as given by the file dialog, or PresetFileError."""
+    if (not isinstance(path, str) or not path or len(path) > MAX_PATH or "\0" in path
+            or not os.path.isabs(path)):
+        raise PresetFileError("file_bad_path")
+    if suffix and not path.lower().endswith(suffix):
+        raise PresetFileError("file_bad_path")
+    return path
+
+
+def design_options():
+    """Options a preset may set: everything but the hidden ones (the app list
+    and follow-the-player are personal, not part of a look)."""
+    return {k: spec for k, spec in load_schema()["options"].items() if not spec.get("hidden")}
+
+
+def leaves(d, prefix="", depth=0):
+    """Dotted paths of the non-dict values in d (at most 8 levels deep)."""
+    if not isinstance(d, dict) or depth > 8:
+        return
+    for k, v in d.items():
+        path = f"{prefix}{k}"
+        if isinstance(v, dict):
+            yield from leaves(v, path + ".", depth + 1)
+        else:
+            yield path
+
+
+def clean_design(design):
+    """(only the valid options of design, how many values were dropped).
+    Text is cut to MAX_IMPORT_TEXT, lists to MAX_APPS items."""
+    out = {}
+    options = design_options()
+    for key, spec in options.items():
+        value = get_path(design, key, _INVALID)
+        if value is _INVALID:
+            continue
+        if isinstance(value, str):
+            value = value[:MAX_IMPORT_TEXT]
+        elif isinstance(value, list):
+            value = [x[:MAX_IMPORT_TEXT] if isinstance(x, str) else x for x in value[:MAX_APPS]]
+        fixed = coerce(value, spec)
+        if fixed is not _INVALID:
+            set_path(out, key, fixed)
+    dropped = sum(1 for path in leaves(design) if get_path(out, path, _INVALID) is _INVALID)
+    return out, dropped
+
+
+def preset_name(raw, fallback, taken):
+    """A clean, free name: control characters removed, at most MAX_NAME, and
+    " 2", " 3"... added when the name is a built-in or saved preset."""
+    name = "".join(c for c in (raw if isinstance(raw, str) else "") if c.isprintable()).strip()[:64]
+    if not name:
+        name = "".join(c for c in fallback if c.isprintable()).strip()[:64] or "Imported"
+    base, n = name, 2
+    while name in taken:
+        name = f"{base[:60]} {n}"
+        n += 1
+    return name
+
+
+def read_preset_file(path):
+    """{"name", "design"} from a preset file, or PresetFileError. Accepts our
+    export format and a bare preset like presets/*.json."""
+    path = check_path(path)
+    try:
+        # O_NONBLOCK: a FIFO would otherwise block the helper forever; it is
+        # refused below anyway, like any file that isn't a regular file
+        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_CLOEXEC", 0))
+    except OSError:
+        raise PresetFileError("file_unreadable")
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise PresetFileError("file_unreadable")
+        with os.fdopen(fd, "rb", closefd=False) as f:
+            raw = f.read(MAX_PRESET_FILE + 1)
+    except OSError:
+        raise PresetFileError("file_unreadable")
+    finally:
+        os.close(fd)
+    if len(raw) > MAX_PRESET_FILE:
+        raise PresetFileError("file_too_big")
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError):
+        raise PresetFileError("file_not_json")
+    if not isinstance(data, dict):
+        raise PresetFileError("file_not_preset")
+    if "format" in data:
+        if data.get("format") != PRESET_FORMAT or not isinstance(data.get("design"), dict):
+            raise PresetFileError("file_not_preset")
+        return {"name": data.get("name"), "design": data["design"]}
+    return {"name": None, "design": data}
+
+
+def effective_design(user):
+    """The design as it looks now (preset + overrides over the defaults),
+    validated, with only what differs from the defaults: what Export saves."""
+    schema = load_schema()
+    presets = deep_merge(load_builtin_presets(), user.get("presets", {}))
+    base = presets.get(user.get("preset", "lookas")) or presets.get("lookas", {})
+    eff = deep_merge(deep_merge(schema_defaults(schema), base), user.get("overrides", {}))
+    validate(eff, schema, [])
+    out = {}
+    for key, spec in design_options().items():
+        value = get_path(eff, key)
+        if value != spec["default"]:
+            set_path(out, key, value)
+    return out
+
+
+def write_preset_file(path, user):
+    """Saves the current design to path (must end in .json; an existing file
+    there is replaced only if it is a regular file). Returns the name saved
+    in the file, or raises PresetFileError."""
+    path = check_path(path, ".json")
+    try:
+        st = os.lstat(path)
+    except FileNotFoundError:
+        st = None
+    except OSError:
+        raise PresetFileError("file_unwritable")
+    if st is not None and not stat.S_ISREG(st.st_mode):
+        raise PresetFileError("file_unwritable")
+    name = user.get("preset", "lookas")
+    doc = {"format": PRESET_FORMAT, "version": 1, "name": name, "design": effective_design(user)}
+    folder = os.path.dirname(path)
+    try:
+        fd, tmp = tempfile.mkstemp(dir=folder, prefix=".npv-preset-", suffix=".tmp")
+    except OSError:
+        raise PresetFileError("file_unwritable")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+        # a file to share: readable by others, like any document
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, path)
+    except OSError:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise PresetFileError("file_unwritable")
+    return name
+
+
 def edit_state(user=None):
     dirty = edit["snapshot"] is not None and design_of(user if user is not None else read_user()) != edit["snapshot"]
     return {"type": "editState", "dirty": dirty, "canUndo": bool(edit["history"])}
@@ -441,6 +612,18 @@ def apply_design(msg, user=None):
         user.setdefault("presets", {})[name] = deep_merge(base, overrides)
         user["preset"] = name
         user["overrides"] = {}
+    elif kind == "importPreset":
+        # msg["design"] is cleaned here whatever its source
+        design, _ = clean_design(msg.get("design") if isinstance(msg.get("design"), dict) else {})
+        presets = user.setdefault("presets", {})
+        if len(presets) >= MAX_PRESETS:
+            return "preset_limit"
+        name = preset_name(msg.get("name"), "Imported", set(load_builtin_presets()) | set(presets))
+        presets[name] = design
+        user["preset"] = name
+        # shown as its author made it; Undo / Cancel bring the old design back
+        user["overrides"] = {}
+        msg["savedAs"] = name
     elif kind == "deletePreset":
         name = str(msg.get("name", ""))
         user.get("presets", {}).pop(name, None)
@@ -479,6 +662,10 @@ class WsConn:
         self.lock = asyncio.Lock()
         # None = everything; the settings pages only ask for config/schema
         self.topics = None
+        # Identity of the player picked in this widget's menu ("" = automatic)
+        # and the player this client is shown, for its controls
+        self.pinned = ""
+        self.media_player = None
 
     async def handshake(self):
         head = await asyncio.wait_for(self.reader.readuntil(b"\r\n\r\n"), 5)
@@ -673,6 +860,8 @@ def sync_links(wanted):
 # Fallback used only when Plasma's private MPRIS QML module can't be loaded.
 
 MPRIS_PATH = "/org/mpris/MediaPlayer2"
+# MPRIS LoopStatus values, in the order the repeat button cycles through them
+LOOP_STATUSES = ("None", "Playlist", "Track")
 
 
 def busctl(verb, *args, fmt=()):
@@ -719,12 +908,16 @@ def bus_pid(bus):
     return pid[0]["data"][0] if pid else None
 
 
-def pick_player(players):
-    """The player to show: playing and preferred, then playing, then
-    preferred, then any. Each player needs "bus", "identity" and "playing"."""
+def pick_player(players, pinned=""):
+    """The player to show: the one the user picked in the widget's menu
+    (pinned, an Identity) while it is open, else playing and preferred, then
+    playing, then preferred, then any. Each player needs "bus", "identity"
+    and "playing". Same order as ui/players.js."""
+    pinned = pinned.lower() if isinstance(pinned, str) else ""
     preferred = [p.lower() for p in state["config"].get("panel", {}).get("preferredPlayers", [])]
     is_pref = lambda p: any(x in (p["identity"] + " " + p["bus"]).lower() for x in preferred)
-    for test in (lambda p: p["playing"] and is_pref(p), lambda p: p["playing"], is_pref, lambda p: True):
+    is_pinned = lambda p: bool(pinned) and (p["identity"] or "").lower() == pinned
+    for test in (is_pinned, lambda p: p["playing"] and is_pref(p), lambda p: p["playing"], is_pref, lambda p: True):
         for p in players:
             if test(p):
                 return p
@@ -752,7 +945,7 @@ def active_player():
         "identity": busctl_prop(n, "org.mpris.MediaPlayer2", "Identity", n.split(".")[-1]),
         "playing": busctl_prop(n, iface, "PlaybackStatus", "") == "Playing",
     } for n in mpris_names()]
-    p = pick_player(players)
+    p = pick_player(players, state.get("pinned_player", ""))
     return (bus_pid(p["bus"]), (p["identity"] or "").lower()) if p else None
 
 
@@ -790,6 +983,10 @@ def media_of(n, root, player):
     meta = {k: v.get("data") for k, v in meta.items() if isinstance(v, dict)} if isinstance(meta, dict) else {}
     artist = meta.get("xesam:artist") or []
     can_control = bool(player("CanControl", False))
+    # None when the player doesn't have the property (Firefox, Chromium): the
+    # widget then shows no shuffle / repeat button for it
+    shuffle = player("Shuffle", None)
+    loop = player("LoopStatus", None)
     return {
         "bus": n,
         "track": meta.get("xesam:title") or "",
@@ -808,19 +1005,30 @@ def media_of(n, root, player):
         "canGoPrevious": bool(player("CanGoPrevious", False)),
         "canSeek": bool(player("CanSeek", False)),
         "canRaise": bool(root("CanRaise", False)),
+        "shuffle": shuffle if isinstance(shuffle, bool) else None,
+        "loop": loop if loop in LOOP_STATUSES else None,
     }
 
 
+def read_players():
+    return [media_of(n, player_props(n, "org.mpris.MediaPlayer2"), player_props(n, "org.mpris.MediaPlayer2.Player"))
+            for n in mpris_names()]
+
+
 def read_media():
-    players = [media_of(n, player_props(n, "org.mpris.MediaPlayer2"), player_props(n, "org.mpris.MediaPlayer2.Player"))
-               for n in mpris_names()]
-    state["media_player"] = pick_player(players)
+    state["media_player"] = pick_player(read_players())
     return state["media_player"]
 
 
-def media_action(action, value):
-    """Player controls for the D-Bus fallback (same actions as MprisSource.qml)."""
-    p = state.get("media_player")
+def player_list(players):
+    """What the widget's menu needs to list the open players."""
+    return [{"identity": p["identity"], "playing": p["playing"]} for p in players]
+
+
+def media_action(action, value, player=None):
+    """Player controls for the D-Bus fallback (same actions as MprisSource.qml).
+    player: the one this client shows (its own pick), else the global pick."""
+    p = player or state.get("media_player")
     if not p:
         return
     iface = "org.mpris.MediaPlayer2.Player"
@@ -836,6 +1044,12 @@ def media_action(action, value):
         run(call + [iface, "SetPosition", "ox", p["trackId"], str(max(0, int(value)))])
     elif action == "volume" and isinstance(value, (int, float)) and not isinstance(value, bool):
         change_volume(p["bus"], p["identity"], float(value))
+    # only players that have the property, and only the values MPRIS defines:
+    # the value is typed for busctl, never passed through as given
+    elif action == "shuffle" and isinstance(value, bool) and p.get("shuffle") is not None and p.get("canControl"):
+        run(busctl("set-property", p["bus"], MPRIS_PATH, iface, "Shuffle", "b", "true" if value else "false"))
+    elif action == "loop" and value in LOOP_STATUSES and p.get("loop") is not None and p.get("canControl"):
+        run(busctl("set-property", p["bus"], MPRIS_PATH, iface, "LoopStatus", "s", value))
 
 
 def find_player_bus(identity):
@@ -872,11 +1086,30 @@ def change_volume(bus, identity, delta):
 
 
 async def media_loop():
+    """Once a second while a widget is in D-Bus mode: every client gets the
+    player it pinned in its menu (or the automatic pick) and the list of open
+    players for that menu."""
     while True:
         if state.get("media_wanted") and clients and state["config"]:
-            data = await asyncio.to_thread(read_media)
-            await broadcast(json.dumps({"type": "media", "data": data}), "media")
+            await send_media(await asyncio.to_thread(read_players))
         await asyncio.sleep(1)
+
+
+async def send_media(players):
+    state["media_player"] = pick_player(players)
+    names = player_list(players)
+    dead = []
+    for ws in list(clients):
+        if ws.topics is not None and "media" not in ws.topics:
+            continue
+        ws.media_player = pick_player(players, ws.pinned)
+        try:
+            await asyncio.wait_for(ws.send(json.dumps(
+                {"type": "media", "data": ws.media_player, "players": names})), 1)
+        except Exception:
+            dead.append(ws)
+    for ws in dead:
+        clients.discard(ws)
 
 
 # -------------------------------------------------------------------- CAVA --
@@ -1178,7 +1411,8 @@ async def handler(ws):
     # a new widget has no bars yet: send the next frame even if unchanged
     state["last_bars"] = None
     try:
-        await ws.send(json.dumps({"type": "schema", "data": schema_for_clients()}))
+        await ws.send(json.dumps({"type": "schema", "data": schema_for_clients(),
+                                  "protocol": PROTOCOL, "service": SERVICE}))
         await send_config(ws)
         async for raw in ws:
             try:
@@ -1200,8 +1434,15 @@ async def handler(ws):
                     await ws.send(json.dumps({"type": "presets", "data": state.get("presets", [])}))
             elif msg.get("type") == "wantMedia":
                 state["media_wanted"] = True
+            elif msg.get("type") == "pinPlayer" and isinstance(msg.get("identity"), str):
+                # the widget's choice in its menu; the audio follows the last
+                # one picked by any widget (there is only one CAVA)
+                ws.pinned = msg["identity"][:MAX_NAME]
+                if state.get("pinned_player") != ws.pinned:
+                    state["pinned_player"] = ws.pinned
+                    forget_followed_player()
             elif msg.get("type") == "mediaAction" and msg.get("action") in (
-                    "playPause", "next", "previous", "raise", "seek", "volume"):
+                    "playPause", "next", "previous", "raise", "seek", "volume", "shuffle", "loop"):
                 identity = msg.get("identity")
                 value = msg.get("value")
                 if (msg["action"] == "volume" and isinstance(identity, str) and identity
@@ -1211,12 +1452,31 @@ async def handler(ws):
                     if bus:
                         await asyncio.to_thread(change_volume, bus, identity[:MAX_NAME], float(value))
                 else:
-                    await asyncio.to_thread(media_action, msg["action"], value)
+                    await asyncio.to_thread(media_action, msg["action"], value, ws.media_player)
             elif msg.get("type") == "setApps":
                 save_user_apps(msg.get("apps"))
             elif msg.get("type") == "setFollowPlayer" and isinstance(msg.get("value"), bool):
                 save_user_audio("followPlayer", msg["value"])
-            elif msg.get("type") in ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset"):
+            elif msg.get("type") == "exportPreset":
+                reply = {"type": "presetFile", "op": "export"}
+                try:
+                    reply["name"] = await asyncio.to_thread(write_preset_file, msg.get("path"), read_user())
+                except PresetFileError as e:
+                    reply["error"] = e.code
+                await ws.send(json.dumps(reply))
+            elif msg.get("type") in ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset",
+                                     "importPreset"):
+                dropped = 0
+                if msg["type"] == "importPreset":
+                    # only what was read from the file goes on, never fields of msg
+                    try:
+                        found = await asyncio.to_thread(read_preset_file, msg.get("path"))
+                    except PresetFileError as e:
+                        await ws.send(json.dumps({"type": "presetFile", "op": "import", "error": e.code}))
+                        continue
+                    dropped = clean_design(found["design"])[1]
+                    fallback = os.path.splitext(os.path.basename(msg["path"]))[0]
+                    msg = {"type": "importPreset", "design": found["design"], "name": found["name"] or fallback}
                 user = read_user()
                 if edit["owner"] is ws:
                     push_history(msg["type"], user)
@@ -1227,6 +1487,13 @@ async def handler(ws):
                         edit["history"].pop()  # nothing changed: no undo step
                     reply["error"] = error
                 await ws.send(json.dumps(reply))
+                if msg["type"] == "importPreset":
+                    result = {"type": "presetFile", "op": "import"}
+                    if error:
+                        result["error"] = error
+                    else:
+                        result.update(name=msg["savedAs"], ignored=dropped)
+                    await ws.send(json.dumps(result))
             elif msg.get("type") == "beginEdit":
                 begin_edit(ws)
                 await ws.send(json.dumps(edit_state()))

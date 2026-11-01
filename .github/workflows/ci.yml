@@ -45,9 +45,12 @@ jobs:
     container:
       image: archlinux:base@sha256:e82623936fa1a69700b48e98b058df6eaab18b737c27473a7234a40fdecb9413
     steps:
-      - name: Install Qt
-        # pacman checks every package's signature
-        run: pacman -Syu --noconfirm --needed qt6-declarative
+      - name: Install Qt, Kirigami and Plasma's QML modules
+        # pacman checks every package's signature. The modules let
+        # tst_components.qml compile every file of the widget for real.
+        run: >
+          pacman -Syu --noconfirm --needed
+          qt6-declarative qt6-websockets kirigami libplasma plasma5support kcmutils
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
@@ -55,6 +58,27 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: /usr/lib/qt6/bin/qmltestrunner -input tests/qml
+
+  mpris:
+    name: MPRIS integration (fake players, mpv, Plasma's module)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: archlinux:base@sha256:e82623936fa1a69700b48e98b058df6eaab18b737c27473a7234a40fdecb9413
+    steps:
+      - name: Install players, D-Bus, Qt and Plasma's MPRIS module
+        run: >
+          pacman -Syu --noconfirm --needed
+          python python-gobject dbus systemd mpv mpv-mpris
+          qt6-declarative qt6-websockets plasma-workspace
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Integration tests (private D-Bus session, as a normal user)
+        run: |
+          useradd -m tester
+          cp -r . /home/tester/src && chown -R tester: /home/tester/src
+          su tester -c "cd /home/tester/src && QT_QPA_PLATFORM=offscreen tests/integration/run.sh"
 
   repo:
     name: Docs, data and translations
@@ -76,4 +100,4 @@ jobs:
       - name: Translations compile
         run: for po in translate/*.po; do msgfmt --check --statistics -o /dev/null "$po"; done
       - name: Shell scripts
-        run: shellcheck tools/*.sh
+        run: shellcheck tools/*.sh tests/integration/run.sh

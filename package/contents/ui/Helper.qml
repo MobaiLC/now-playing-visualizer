@@ -15,8 +15,18 @@ Item {
     signal barsReceived(var values)
     signal appsReceived(var apps)
     signal mediaReceived(var data)
+    // open players, for the widget's menu (D-Bus mode only)
+    signal playersReceived(var list)
+    // result of exportPreset / importPreset: { op, error?, name?, ignored? }
+    signal presetFileReceived(var result)
     signal presetsReceived(var list)
     signal editStateReceived(var state)
+
+    // An older helper is still running (it survived an update). One the
+    // widget started is asked to quit, and the next retry starts the new
+    // one; the systemd service ignores that, so it is reported instead.
+    property bool outdatedService: false
+    property bool askedToQuit: false
 
     // empty = receive everything (the widget); settings pages pass
     // ["config", "schema"] so they don't get the 60 fps bar stream
@@ -85,12 +95,25 @@ Item {
                 root.configReceived(m.data, m.issues || []);
                 root.designReceived(m.web || {});
             }
-            else if (m.type === "schema")
+            else if (m.type === "schema") {
+                const old = Net.outdated(m);
+                root.outdatedService = old && m.service === true;
+                if (old && !root.outdatedService && !root.askedToQuit) {
+                    console.warn("nowplayingvisualizer: an older helper is running, restarting it");
+                    root.askedToQuit = true;
+                    root.send({ type: "quit" });
+                }
                 root.schemaReceived(m.data);
+            }
             else if (m.type === "apps")
                 root.appsReceived(m.data);
-            else if (m.type === "media")
+            else if (m.type === "media") {
                 root.mediaReceived(m.data);
+                if (Array.isArray(m.players))
+                    root.playersReceived(m.players);
+            }
+            else if (m.type === "presetFile")
+                root.presetFileReceived(m);
             else if (m.type === "presets")
                 root.presetsReceived(m.data);
             else if (m.type === "editState")

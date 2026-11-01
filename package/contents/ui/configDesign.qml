@@ -85,6 +85,55 @@ KCM.SimpleKCM {
     // error code from the helper for the last change, e.g. "preset_limit"
     property string saveError: ""
 
+    // ---- preset files ---------------------------------------------------------
+    // The helper reads and writes the file (QML can't); it checks the path and
+    // keeps only valid options from an imported file.
+    // last reply: { op: "import" | "export", error?, name?, ignored? }
+    property var fileResult: null
+
+    function localPath(url) {
+        const s = url.toString();
+        return s.startsWith("file://") ? decodeURIComponent(s.slice(7)) : "";
+    }
+    function fileMessage(r) {
+        if (!r)
+            return "";
+        switch (r.error || "") {
+        case "": return r.op === "export"
+            ? i18n("Design exported as \"%1\".", r.name)
+            : (r.ignored > 0
+               ? i18np("Imported as \"%2\". %1 setting in the file was not valid and was left out.",
+                       "Imported as \"%2\". %1 settings in the file were not valid and were left out.", r.ignored, r.name)
+               : i18n("Imported as \"%1\".", r.name));
+        case "file_bad_path": return i18n("That file can't be used: pick a local file ending in .json.");
+        case "file_unreadable": return i18n("The file could not be read.");
+        case "file_too_big": return i18n("The file is too big to be a preset.");
+        case "file_not_json": return i18n("The file is not valid JSON.");
+        case "file_not_preset": return i18n("The file is not a Now Playing Visualizer preset.");
+        case "file_unwritable": return i18n("The file could not be saved there.");
+        case "preset_limit": return i18n("You have reached the limit of 100 saved presets. Delete one before importing.");
+        default: return r.error;
+        }
+    }
+
+    FileDialog {
+        id: exportDialog
+        title: i18n("Export design")
+        fileMode: FileDialog.SaveFile
+        nameFilters: [i18n("Presets (*.json)")]
+        defaultSuffix: "json"
+        currentFolder: StandardPaths.standardLocations(StandardPaths.DocumentsLocation)[0]
+        onAccepted: page.act({ type: "exportPreset", path: page.localPath(selectedFile) })
+    }
+    FileDialog {
+        id: importDialog
+        title: i18n("Import preset")
+        fileMode: FileDialog.OpenFile
+        nameFilters: [i18n("Presets (*.json)")]
+        currentFolder: StandardPaths.standardLocations(StandardPaths.DocumentsLocation)[0]
+        onAccepted: page.act({ type: "importPreset", path: page.localPath(selectedFile) })
+    }
+
     function act(msg) {
         flushNow();
         helper.send(msg);
@@ -152,6 +201,7 @@ KCM.SimpleKCM {
                 page.d = web;
         }
         onPresetsReceived: list => page.presets = list
+        onPresetFileReceived: result => page.fileResult = result
         onEditStateReceived: st => {
             page.unsavedChanges = st.dirty;
             page.canUndo = st.canUndo;
@@ -575,6 +625,35 @@ KCM.SimpleKCM {
                     presetName.text = "";
                 }
             }
+        }
+        RowLayout {
+            QQC2.Button {
+                text: i18n("Import preset…")
+                icon.name: "document-import"
+                onClicked: {
+                    page.fileResult = null;
+                    importDialog.open();
+                }
+            }
+            QQC2.Button {
+                text: i18n("Export design…")
+                icon.name: "document-export"
+                QQC2.ToolTip.text: i18n("Saves the design as it looks now to a file you can share")
+                QQC2.ToolTip.visible: hovered
+                onClicked: {
+                    page.fileResult = null;
+                    exportDialog.selectedFile = exportDialog.currentFolder + "/" + encodeURIComponent(page.g("presetName", "design")) + ".json";
+                    exportDialog.open();
+                }
+            }
+        }
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            visible: page.fileResult !== null
+            type: page.fileResult && page.fileResult.error ? Kirigami.MessageType.Error : Kirigami.MessageType.Positive
+            text: page.fileMessage(page.fileResult)
+            // no close button: it would break the binding above; the message
+            // goes away with the next import or export
         }
         Kirigami.InlineMessage {
             Layout.fillWidth: true
