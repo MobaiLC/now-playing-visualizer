@@ -648,8 +648,15 @@ def sync_links(wanted):
 MPRIS_PATH = "/org/mpris/MediaPlayer2"
 
 
-def busctl_json(*args):
-    r = run(["busctl", "--user", "--json=short", *args])
+def busctl(verb, *args, fmt=()):
+    """busctl command line. "--" after the verb: bus names, track ids and other
+    values come from the players, and busctl would take one starting with "-"
+    (e.g. a track id "--address=...") as an option."""
+    return ["busctl", "--user", *fmt, verb, "--", *args]
+
+
+def busctl_json(verb, *args):
+    r = run(busctl(verb, *args, fmt=("--json=short",)))
     out = []
     for line in r.stdout.splitlines():
         try:
@@ -790,13 +797,15 @@ def media_action(action, value):
     if not p:
         return
     iface = "org.mpris.MediaPlayer2.Player"
-    call = ["busctl", "--user", "call", p["bus"], MPRIS_PATH]
+    call = busctl("call", p["bus"], MPRIS_PATH)
     if action in ("playPause", "next", "previous"):
         method = {"playPause": "PlayPause", "next": "Next", "previous": "Previous"}[action]
         run(call + [iface, method])
     elif action == "raise":
         run(call + ["org.mpris.MediaPlayer2", "Raise"])
-    elif action == "seek" and isinstance(value, (int, float)) and not isinstance(value, bool):
+    elif (action == "seek" and isinstance(value, (int, float)) and not isinstance(value, bool)
+          and str(p["trackId"]).startswith("/")):
+        # SetPosition needs an object path; anything else would be refused anyway
         run(call + [iface, "SetPosition", "ox", p["trackId"], str(max(0, int(value)))])
     elif action == "volume" and isinstance(value, (int, float)) and not isinstance(value, bool):
         change_volume(p["bus"], p["identity"], float(value))
@@ -817,12 +826,12 @@ def change_volume(bus, identity, delta):
     changed instead, like Plasma's volume mixer does."""
     delta = max(-1.0, min(1.0, delta))
     iface = "org.mpris.MediaPlayer2.Player"
-    intro = run(["busctl", "--user", "introspect", bus, MPRIS_PATH, iface]).stdout
+    intro = run(busctl("introspect", bus, MPRIS_PATH, iface)).stdout
     if re.search(r"^\.Volume\s+property\s+d\s.*\bwritable\b", intro, re.M):
         vol = busctl_prop(bus, iface, "Volume", None)
         if isinstance(vol, (int, float)):
             new = min(1.0, max(0.0, vol + delta))
-            run(["busctl", "--user", "set-property", bus, MPRIS_PATH, iface, "Volume", "d", str(new)])
+            run(busctl("set-property", bus, MPRIS_PATH, iface, "Volume", "d", str(new)))
             return
     pid = bus_pid(bus)
     ident = (identity or "").lower()

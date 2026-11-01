@@ -423,6 +423,20 @@ class MediaActionTests(unittest.TestCase):
         helper.state["media_player"] = None
         helper.media_action("next", None)  # must not raise
 
+    def test_player_values_never_become_busctl_options(self):
+        helper.state["media_player"] = {"bus": "org.mpris.MediaPlayer2.x", "identity": "x",
+                                        "trackId": "--address=unix:path=/tmp/evil"}
+        with mock.patch.object(helper, "run") as run:
+            helper.media_action("seek", 1000)
+            run.assert_not_called()  # not an object path: no SetPosition at all
+            helper.media_action("next", None)
+        cmd = run.call_args.args[0]
+        self.assertEqual(cmd[:4], ["busctl", "--user", "call", "--"])
+        with mock.patch.object(helper, "run") as run:
+            run.return_value.stdout = ""
+            helper.busctl_json("get-property", "-x", "/p", "i", "P")
+        self.assertEqual(run.call_args.args[0][:5], ["busctl", "--user", "--json=short", "get-property", "--"])
+
     def test_icon_names_only(self):
         self.assertEqual(helper.icon_name("spotify"), "spotify")
         self.assertEqual(helper.icon_name("/etc/passwd"), "")
