@@ -7,6 +7,14 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 ### Added
 - **Follow the player:** an option under **Audio** that makes the bars listen only to the player shown in the widget, whichever it is, instead of a fixed list of apps (`audio.followPlayer`).
 
+### Changed
+- Lower CPU use:
+  - The D-Bus media reader reads each player with one `GetAll` call instead of one process per property: about 5 processes a second instead of 23 with two players.
+  - With **Follow the player**, the active player is looked up every 3 seconds instead of every second, so a player switch can take up to 3 seconds to reach the bars.
+  - `schema.json`, the presets and the preset thumbnails are reused until they change, instead of being rebuilt on every slider step in **Design**.
+  - Bar frames no longer wait on each widget: one that falls behind skips frames instead of holding up the others, and repeated frames (silence) are sent only once.
+  - The bars stop redrawing once they stand still (paused music with **Hide when silent** off), except in the animated hue colour mode, and the palette and gradient are reused between frames.
+
 ### Fixed
 - Stopping or restarting the helper service hung for about 10 seconds until systemd killed it, whenever a widget was connected. It now stops right away.
 

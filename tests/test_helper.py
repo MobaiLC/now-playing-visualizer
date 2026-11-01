@@ -298,21 +298,124 @@ class FollowPlayerTests(unittest.TestCase):
     def test_follow_player_overrides_the_app_list(self):
         liner = {"application.process.binary": "liner"}
         riff = {"application.name": "Riff", "application.process.id": 42}
-        with mock.patch.object(helper, "active_player", return_value=(42, "riff")):
+        with mock.patch.object(helper, "followed_player", return_value=(42, "riff")):
             wanted = helper.link_filter()
         self.assertTrue(wanted(riff))
         self.assertFalse(wanted(liner))
-        with mock.patch.object(helper, "active_player", return_value=None):
+        with mock.patch.object(helper, "followed_player", return_value=None):
             self.assertFalse(helper.link_filter()(riff))
         helper.state["config"]["audio"]["followPlayer"] = False
         self.assertTrue(helper.link_filter()(liner))
         self.assertFalse(helper.link_filter()(riff))
+
+    def test_active_player_is_reused_for_a_while(self):
+        helper.forget_followed_player()
+        with mock.patch.object(helper, "active_player", return_value=(42, "riff")) as ask:
+            self.assertEqual(helper.followed_player(), (42, "riff"))
+            self.assertEqual(helper.followed_player(), (42, "riff"))
+            self.assertEqual(ask.call_count, 1)
+            helper.forget_followed_player()
+            helper.followed_player()
+            self.assertEqual(ask.call_count, 2)
+        helper.forget_followed_player()
 
     def test_capture_mode_when_following(self):
         cfg = {"audio": {"apps": [], "followPlayer": True}, "bars": {}}
         self.assertIn("source=" + helper.CAPTURE_TARGET, helper.cava_config(cfg))
         cfg["audio"]["followPlayer"] = False
         self.assertIn("source=auto", helper.cava_config(cfg))
+
+
+GETALL_PLAYER = {"type": "a{sv}", "data": [{
+    "CanControl": {"type": "b", "data": True}, "CanPause": {"type": "b", "data": True},
+    "CanGoNext": {"type": "b", "data": True}, "PlaybackStatus": {"type": "s", "data": "Playing"},
+    "Position": {"type": "x", "data": 5000000}, "Rate": {"type": "d", "data": 1.0},
+    "Metadata": {"type": "a{sv}", "data": {
+        "xesam:title": {"type": "s", "data": "AURORA"}, "xesam:artist": {"type": "as", "data": ["Mora"]},
+        "mpris:length": {"type": "x", "data": 192853333}}}}]}
+
+
+class MediaReaderTests(unittest.TestCase):
+    """The D-Bus fallback reads each MPRIS interface with one GetAll."""
+
+    def test_getall_gives_the_media_message(self):
+        def fake(*args):
+            if args[0] == "call" and args[-1] == "org.mpris.MediaPlayer2.Player":
+                return [GETALL_PLAYER]
+            if args[0] == "call" and args[-1] == "org.mpris.MediaPlayer2":
+                return [{"type": "a{sv}", "data": [{"Identity": {"type": "s", "data": "Riff"}}]}]
+            raise AssertionError("no per-property calls when GetAll works: %r" % (args,))
+        with mock.patch.object(helper, "busctl_json", side_effect=fake):
+            n = "org.mpris.MediaPlayer2.chromium.instance1"
+            m = helper.media_of(n, helper.player_props(n, "org.mpris.MediaPlayer2"),
+                                helper.player_props(n, "org.mpris.MediaPlayer2.Player"))
+        self.assertEqual((m["track"], m["artist"], m["identity"]), ("AURORA", "Mora", "Riff"))
+        self.assertEqual((m["position"], m["length"]), (5000000, 192853333))
+        self.assertTrue(m["playing"] and m["canPlayPause"] and m["canGoNext"])
+        self.assertFalse(m["canSeek"] or m["canRaise"])
+
+    def test_players_without_getall_are_read_one_by_one(self):
+        def fake(*args):
+            if args[0] == "call":
+                return []
+            return [{"type": "s", "data": "Paused"}] if args[-1] == "PlaybackStatus" else []
+        with mock.patch.object(helper, "busctl_json", side_effect=fake):
+            get = helper.player_props("org.mpris.MediaPlayer2.x", "org.mpris.MediaPlayer2.Player")
+            self.assertEqual(get("PlaybackStatus", ""), "Paused")
+            self.assertEqual(get("Rate", 1), 1)
+
+
+class CachingTests(unittest.TestCase):
+    def setUp(self):
+        write_user(helper.default_user_config())
+
+    def test_preset_thumbnails_are_reused_when_only_overrides_change(self):
+        helper.load_config()
+        before = helper.state["presets"]
+        helper.apply_design({"type": "setDesign", "changes": {"bars.count": 40}})
+        helper.load_config()
+        self.assertIs(helper.state["presets"], before)
+        helper.apply_design({"type": "savePreset", "name": "mine"})
+        helper.load_config()
+        self.assertIn("mine", [p["name"] for p in helper.state["presets"]])
+
+    def test_schema_is_read_again_when_it_changes(self):
+        self.assertIs(helper.load_schema(), helper.load_schema())
+        with mock.patch.object(helper, "SCHEMA_FILE", Path(TMP.name) / "schema.json"):
+            helper.SCHEMA_FILE.write_text('{"v": 1}')
+            self.assertEqual(helper.load_schema(), {"v": 1})
+            helper.SCHEMA_FILE.write_text('{"v": 2}')
+            os.utime(helper.SCHEMA_FILE, ns=(0, 1))  # a different mtime even on coarse clocks
+            self.assertEqual(helper.load_schema(), {"v": 2})
+
+
+class FakeTransport:
+    def __init__(self, queued=0):
+        self.queued = queued
+
+    def is_closing(self):
+        return False
+
+    def get_write_buffer_size(self):
+        return self.queued
+
+
+class BarStreamTests(unittest.TestCase):
+    def make_client(self, queued=0):
+        writer = mock.Mock()
+        writer.transport = FakeTransport(queued)
+        return helper.WsConn(None, writer)
+
+    def test_slow_clients_skip_frames_and_repeats_are_not_sent(self):
+        fast, slow = self.make_client(), self.make_client(helper.BAR_BACKLOG + 1)
+        with mock.patch.object(helper, "clients", {fast, slow}):
+            helper.state["last_bars"] = None
+            helper.send_bars("B1;2")
+            helper.send_bars("B1;2")
+            helper.send_bars("B3;4")
+        self.assertEqual([c.args[0] for c in fast.writer.write.call_args_list],
+                         [helper.ws_frame(1, b"B1;2"), helper.ws_frame(1, b"B3;4")])
+        slow.writer.write.assert_not_called()
 
 
 class MediaActionTests(unittest.TestCase):

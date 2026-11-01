@@ -26,6 +26,11 @@ Item {
     property var peakHold: []
     property bool silent: true
     property real elapsed: 0
+    // true once the bars and peaks have caught up with the targets: nothing
+    // moves, so the animation stops until something changes
+    property bool settled: false
+    // the hue colour mode with a speed is the only thing that moves by itself
+    readonly property bool animatedColors: cfg.colorMode === "hue" && !!cfg.hue && cfg.hue.speed !== 0
 
     readonly property var glow: cfg.glow || {}
     readonly property var peakCfg: cfg.peaks || {}
@@ -49,6 +54,8 @@ Item {
             silent = false;
             silenceTimer.restart();
         }
+        if (settled && (targets.length !== shown.length || targets.some((v, i) => Math.abs(v - shown[i]) > 0.5)))
+            settled = false;
     }
 
     Timer {
@@ -63,7 +70,7 @@ Item {
     }
 
     FrameAnimation {
-        running: root.live && root.visible && root.opacity > 0
+        running: root.live && root.visible && root.opacity > 0 && (!root.settled || root.animatedColors)
         onTriggered: {
             const sec = Math.min(frameTime, 0.1);
             const dt = sec * 60;
@@ -78,6 +85,7 @@ Item {
             const holdTime = root.peakCfg.hold;
             const fall = root.peakCfg.fallSpeed * sec;
             const out = new Array(n);
+            let moving = false;
             for (let i = 0; i < n; i++) {
                 out[i] = s[i] + (t[i] - s[i]) * (t[i] > s[i] ? up : down);
                 if (out[i] >= pk[i]) {
@@ -88,19 +96,44 @@ Item {
                 } else {
                     pk[i] = Math.max(out[i], pk[i] - fall);
                 }
+                // values are 0..1000: half a unit is far below a pixel
+                if (Math.abs(t[i] - out[i]) > 0.5 || pk[i] > out[i])
+                    moving = true;
             }
             root.shown = out;
             root.peaks = pk;
             root.peakHold = hold;
             canvas.requestPaint();
+            if (!moving)
+                root.settled = true;
         }
     }
 
     // colours and drawing live in renderers/: palette.js and one file per style
-    readonly property var env: ({ elapsed: elapsed, coverColors: coverColors, accentColor: accentColor })
+    function env() {
+        return { elapsed: elapsed, coverColors: coverColors, accentColor: accentColor };
+    }
 
-    onCfgChanged: if (!live) canvas.requestPaint()
-    onWidthChanged: if (!live) canvas.requestPaint()
+    // palette, fill and geometry built by the last paint; they only change
+    // with the config, the size, the cover or the accent (or with time, in
+    // the animated hue mode, which isn't cached)
+    property var paintCache: null
+    function invalidate() {
+        paintCache = null;
+        settled = false;
+        if (!live)
+            canvas.requestPaint();
+    }
+    onCfgChanged: invalidate()
+    onWidthChanged: invalidate()
+    onHeightChanged: invalidate()
+    onCoverColorsChanged: invalidate()
+    onAccentColorChanged: invalidate()
+
+    // reads elapsed only in the animated hue mode, so it isn't re-evaluated every frame otherwise
+    readonly property color glowColor: glow.enabled !== true ? "transparent"
+        : (glow.color && glow.color !== "auto") ? glow.color
+        : Palette.paletteFor(cfg, 1, { elapsed: animatedColors ? elapsed : 0, coverColors: coverColors, accentColor: accentColor })[0]
 
     Canvas {
         id: canvas
@@ -112,7 +145,7 @@ Item {
         layer.effect: MultiEffect {
             autoPaddingEnabled: true
             shadowEnabled: true
-            shadowColor: (root.glow.color && root.glow.color !== "auto") ? root.glow.color : Palette.paletteFor(root.cfg, 1, root.env)[0]
+            shadowColor: root.glowColor
             shadowBlur: root.glow.blur
             shadowOpacity: root.glow.strength
             shadowHorizontalOffset: 0
@@ -126,13 +159,22 @@ Item {
             const v = Common.displayed(root.shown, root.cfg);
             if (!v.length || width <= 0 || height <= 0)
                 return;
-            const geo = root.circleCfg.enabled ? Circle.geometry(root.cfg, width, height) : { circle: false };
-            const colors = Palette.paletteFor(root.cfg, v.length, root.env);
+            let c = root.paintCache;
+            if (!c || c.n !== v.length || root.animatedColors) {
+                const geo = root.circleCfg.enabled ? Circle.geometry(root.cfg, width, height) : { circle: false };
+                const colors = Palette.paletteFor(root.cfg, v.length, root.env());
+                c = {
+                    n: v.length, geo: geo, colors: colors, perBar: Palette.isPerBar(root.cfg),
+                    fill: Palette.makeFill(ctx, colors, geo, root.cfg, width, height)
+                };
+                if (!root.animatedColors)
+                    root.paintCache = c;
+            }
+            const geo = c.geo;
             Renderers.draw({
                 ctx: ctx, w: width, h: height, cfg: root.cfg, geo: geo,
                 v: v, peaks: Common.displayed(root.peaks, root.cfg),
-                colors: colors, perBar: Palette.isPerBar(root.cfg),
-                fill: Palette.makeFill(ctx, colors, geo, root.cfg, width, height),
+                colors: c.colors, perBar: c.perBar, fill: c.fill,
                 makeFill: list => Palette.makeFill(ctx, list, geo, root.cfg, width, height)
             });
         }

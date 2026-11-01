@@ -50,6 +50,9 @@ COLOR_RE = re.compile(r"^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
 MAX_MESSAGE = 256 * 1024
 MAX_NAME = 128
 MAX_APPS = 64
+# bytes of bar frames a client may have queued before it skips frames (a
+# second or so at 60 fps); a slow client then never holds up the others
+BAR_BACKLOG = 64 * 1024
 
 clients = set()
 state = {
@@ -97,12 +100,26 @@ def set_path(d, path, value):
 
 # ------------------------------------------------------------------ Schema --
 
+# schema.json and the presets only change when the package is upgraded, but
+# they were read on every slider step; keep them until their mtime changes.
+# Callers must not modify what these return.
+_json_cache = {}
+
+
+def read_json_cached(path):
+    mtime = path.stat().st_mtime_ns
+    hit = _json_cache.get(path)
+    if hit is None or hit[0] != mtime:
+        hit = _json_cache[path] = (mtime, json.loads(path.read_text()))
+    return hit[1]
+
+
 def load_builtin_presets():
-    return {f.stem: json.loads(f.read_text()) for f in sorted(PRESETS_DIR.glob("*.json"))}
+    return {f.stem: read_json_cached(f) for f in sorted(PRESETS_DIR.glob("*.json"))}
 
 
 def load_schema():
-    return json.loads(SCHEMA_FILE.read_text())
+    return read_json_cached(SCHEMA_FILE)
 
 
 def schema_defaults(schema):
@@ -236,7 +253,8 @@ def load_config():
     if name not in presets:
         issues.append({"code": "preset_missing", "detail": name})
         name = "lookas"
-    eff = deep_merge(schema_defaults(schema), presets[name])
+    defaults = schema_defaults(schema)
+    eff = deep_merge(defaults, presets[name])
     eff = deep_merge(eff, user.get("overrides", {}))
     eff["audio"] = deep_merge(eff.get("audio", {}), user.get("audio", {}))
     validate(eff, schema, issues)
@@ -244,13 +262,17 @@ def load_config():
     eff["presetList"] = sorted(presets)
     eff["userPresets"] = sorted(user.get("presets", {}))
     state["web"] = copy.deepcopy(eff)
-    # every preset as it looks on its own, for the thumbnails in Design
-    previews = []
-    for pname in sorted(presets):
-        pe = deep_merge(schema_defaults(schema), presets[pname])
-        validate(pe, schema, [])
-        previews.append({"name": pname, "user": pname in user.get("presets", {}), "config": pe})
-    state["presets"] = previews
+    # every preset as it looks on its own, for the thumbnails in Design; most
+    # config changes (a slider in Design) leave them alone, so reuse them
+    key = json.dumps([presets, sorted(user.get("presets", {})), defaults], sort_keys=True)
+    if state.get("presets_key") != key:
+        previews = []
+        for pname in sorted(presets):
+            pe = deep_merge(defaults, presets[pname])
+            validate(pe, schema, [])
+            previews.append({"name": pname, "user": pname in user.get("presets", {}), "config": pe})
+        state["presets"] = previews
+        state["presets_key"] = key
     state["issues"] = issues
     return to_qml_colors(eff)
 
@@ -328,19 +350,20 @@ def commit_edit():
         edit.update(owner=None, snapshot=None, revert=None)
 
 
-def push_history(kind):
-    """Remember the design before a change; slider drags coalesce into one step."""
+def push_history(kind, user=None):
+    """Remember the design before a change; slider drags coalesce into one step.
+    user: config.json as already read for this message, to read it only once."""
     now = time.monotonic()
     if kind == "setDesign" and now - edit["last_push"] < 0.8 and edit["history"]:
         edit["last_push"] = now
         return
-    edit["history"].append(design_of(read_user()))
+    edit["history"].append(design_of(user if user is not None else read_user()))
     del edit["history"][:-50]
     edit["last_push"] = now
 
 
-def edit_state():
-    dirty = edit["snapshot"] is not None and design_of(read_user()) != edit["snapshot"]
+def edit_state(user=None):
+    dirty = edit["snapshot"] is not None and design_of(user if user is not None else read_user()) != edit["snapshot"]
     return {"type": "editState", "dirty": dirty, "canUndo": bool(edit["history"])}
 
 
@@ -358,9 +381,11 @@ def end_edit_later(ws):
     edit["revert"] = asyncio.get_running_loop().call_later(REVERT_GRACE, revert)
 
 
-def apply_design(msg):
-    """Changes coming from the Design settings page."""
-    user = read_user()
+def apply_design(msg, user=None):
+    """Changes coming from the Design settings page. Writes user (or a fresh
+    read of config.json) with the change applied."""
+    if user is None:
+        user = read_user()
     kind = msg.get("type")
     overrides = user.setdefault("overrides", {})
     if kind == "setDesign":
@@ -408,6 +433,17 @@ class WsClosed(Exception):
     pass
 
 
+def ws_frame(opcode, payload):
+    n = len(payload)
+    if n < 126:
+        head = struct.pack("!BB", 0x80 | opcode, n)
+    elif n < 65536:
+        head = struct.pack("!BBH", 0x80 | opcode, 126, n)
+    else:
+        head = struct.pack("!BBQ", 0x80 | opcode, 127, n)
+    return head + payload
+
+
 class WsConn:
     def __init__(self, reader, writer):
         self.reader = reader
@@ -440,18 +476,21 @@ class WsConn:
         await self.writer.drain()
 
     async def _frame(self, opcode, payload):
-        n = len(payload)
-        if n < 126:
-            head = struct.pack("!BB", 0x80 | opcode, n)
-        elif n < 65536:
-            head = struct.pack("!BBH", 0x80 | opcode, 126, n)
-        else:
-            head = struct.pack("!BBQ", 0x80 | opcode, 127, n)
         async with self.lock:
             if self.closed:
                 raise WsClosed()
-            self.writer.write(head + payload)
+            self.writer.write(ws_frame(opcode, payload))
             await self.writer.drain()
+
+    def send_nowait(self, frame):
+        """Queues a ready-made frame without waiting; False (frame dropped)
+        while more than BAR_BACKLOG bytes are still waiting to go out. A whole
+        frame is written at once, so it can't end up inside another one."""
+        transport = self.writer.transport
+        if self.closed or transport.is_closing() or transport.get_write_buffer_size() > BAR_BACKLOG:
+            return False
+        self.writer.write(frame)
+        return True
 
     async def send(self, text):
         await self._frame(0x1, text.encode())
@@ -625,6 +664,15 @@ def busctl_prop(name, iface, prop, default=None):
     return res[0]["data"] if res else default
 
 
+def busctl_all(name, iface):
+    """Every property of iface in one call: {name: value}, {} if it fails."""
+    res = busctl_json("call", name, MPRIS_PATH, "org.freedesktop.DBus.Properties", "GetAll", "s", iface)
+    try:
+        return {k: v["data"] for k, v in res[0]["data"][0].items()}
+    except (IndexError, KeyError, TypeError, AttributeError):
+        return {}
+
+
 def mpris_names():
     names = busctl_json("call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
                         "org.freedesktop.DBus", "ListNames")
@@ -674,33 +722,64 @@ def active_player():
     return (bus_pid(p["bus"]), (p["identity"] or "").lower()) if p else None
 
 
+# link_loop runs every second; asking D-Bus for the active player costs a few
+# processes, so the answer is reused for a while (a player switch is followed
+# within PLAYER_TTL seconds)
+PLAYER_TTL = 3
+followed = {"at": None, "player": None}
+
+
+def followed_player():
+    now = time.monotonic()
+    if followed["at"] is None or now - followed["at"] >= PLAYER_TTL:
+        followed.update(at=now, player=active_player())
+    return followed["player"]
+
+
+def forget_followed_player():
+    followed["at"] = None
+
+
+def player_props(name, iface):
+    """All the properties of one MPRIS interface as a getter. GetAll is one
+    process instead of one per property; players whose GetAll fails get the
+    properties one by one, as before."""
+    props = busctl_all(name, iface)
+    if props:
+        return lambda prop, default: props.get(prop, default)
+    return lambda prop, default: busctl_prop(name, iface, prop, default)
+
+
+def media_of(n, root, player):
+    """The "media" message data for player n; root and player come from player_props()."""
+    meta = player("Metadata", {})
+    meta = {k: v.get("data") for k, v in meta.items() if isinstance(v, dict)} if isinstance(meta, dict) else {}
+    artist = meta.get("xesam:artist") or []
+    can_control = bool(player("CanControl", False))
+    return {
+        "bus": n,
+        "track": meta.get("xesam:title") or "",
+        "artist": ", ".join(artist) if isinstance(artist, list) else str(artist),
+        "album": meta.get("xesam:album") or "",
+        "artUrl": meta.get("mpris:artUrl") or "",
+        "length": meta.get("mpris:length") or 0,
+        "identity": root("Identity", n.split(".")[-1]),
+        "position": player("Position", 0),
+        "rate": player("Rate", 1) or 1,
+        "playing": player("PlaybackStatus", "") == "Playing",
+        "trackId": meta.get("mpris:trackid") or "/org/mpris/MediaPlayer2/TrackList/NoTrack",
+        "canControl": can_control,
+        "canPlayPause": can_control and bool(player("CanPause", False) or player("CanPlay", False)),
+        "canGoNext": bool(player("CanGoNext", False)),
+        "canGoPrevious": bool(player("CanGoPrevious", False)),
+        "canSeek": bool(player("CanSeek", False)),
+        "canRaise": bool(root("CanRaise", False)),
+    }
+
+
 def read_media():
-    players = []
-    for n in mpris_names():
-        player_iface = "org.mpris.MediaPlayer2.Player"
-        meta = busctl_prop(n, player_iface, "Metadata", {})
-        meta = {k: v.get("data") for k, v in meta.items()} if isinstance(meta, dict) else {}
-        artist = meta.get("xesam:artist") or []
-        players.append({
-            "bus": n,
-            "track": meta.get("xesam:title") or "",
-            "artist": ", ".join(artist) if isinstance(artist, list) else str(artist),
-            "album": meta.get("xesam:album") or "",
-            "artUrl": meta.get("mpris:artUrl") or "",
-            "length": meta.get("mpris:length") or 0,
-            "identity": busctl_prop(n, "org.mpris.MediaPlayer2", "Identity", n.split(".")[-1]),
-            "position": busctl_prop(n, player_iface, "Position", 0),
-            "rate": busctl_prop(n, player_iface, "Rate", 1) or 1,
-            "playing": busctl_prop(n, player_iface, "PlaybackStatus", "") == "Playing",
-            "trackId": meta.get("mpris:trackid") or "/org/mpris/MediaPlayer2/TrackList/NoTrack",
-            "canControl": bool(busctl_prop(n, player_iface, "CanControl", False)),
-            "canGoNext": bool(busctl_prop(n, player_iface, "CanGoNext", False)),
-            "canGoPrevious": bool(busctl_prop(n, player_iface, "CanGoPrevious", False)),
-            "canSeek": bool(busctl_prop(n, player_iface, "CanSeek", False)),
-            "canRaise": bool(busctl_prop(n, "org.mpris.MediaPlayer2", "CanRaise", False)),
-        })
-        players[-1]["canPlayPause"] = players[-1]["canControl"] and bool(
-            busctl_prop(n, player_iface, "CanPause", False) or busctl_prop(n, player_iface, "CanPlay", False))
+    players = [media_of(n, player_props(n, "org.mpris.MediaPlayer2"), player_props(n, "org.mpris.MediaPlayer2.Player"))
+               for n in mpris_names()]
     state["media_player"] = pick_player(players)
     return state["media_player"]
 
@@ -801,6 +880,17 @@ def bar_clients():
     return [ws for ws in clients if ws.topics is None or "bars" in ws.topics]
 
 
+def send_bars(line):
+    """Bar frames go out without waiting on anybody, and an unchanged frame
+    (CAVA keeps sending zeros during silence) isn't sent again."""
+    if line == state.get("last_bars"):
+        return
+    state["last_bars"] = line
+    frame = ws_frame(0x1, line.encode())
+    for ws in bar_clients():
+        ws.send_nowait(frame)
+
+
 async def broadcast(msg, topic):
     dead = []
     for ws in list(clients):
@@ -844,7 +934,9 @@ async def cava_loop():
             await asyncio.sleep(10)
             continue
         if per_app_audio():
-            # drop WirePlumber's fallback link (the default mic) right away
+            # drop WirePlumber's fallback link (the default mic) right away,
+            # linking the player that is active now
+            forget_followed_player()
             asyncio.get_running_loop().call_later(
                 0.3, lambda: asyncio.ensure_future(asyncio.to_thread(sync_now)))
         got_data = False
@@ -855,7 +947,9 @@ async def cava_loop():
                 if not got_data:
                     got_data = True
                     await set_error(None)
-                await broadcast("B" + line.decode().strip().rstrip(";"), "bars")
+                send_bars("B" + line.decode().strip().rstrip(";"))
+                # send_bars never awaits: let the other tasks run between frames
+                await asyncio.sleep(0)
         finally:
             if cava_proc.returncode is None:
                 cava_proc.kill()
@@ -884,7 +978,11 @@ async def send_config(ws=None):
             await ws.send(previews)
     else:
         await broadcast(msg, "config")
-        await broadcast(previews, "presets")
+        # the thumbnails are the biggest message and rarely change; new
+        # subscribers get them on subscribe
+        if previews != state.get("presets_sent"):
+            state["presets_sent"] = previews
+            await broadcast(previews, "presets")
 
 
 async def config_watch_loop():
@@ -925,7 +1023,7 @@ def link_filter():
     (nothing while there is no player), else the selected apps."""
     a = audio_config()
     if a.get("followPlayer"):
-        player = active_player()
+        player = followed_player()
         return (lambda props: player_stream(props, *player)) if player else (lambda props: False)
     apps = {x.lower() for x in a.get("apps", [])}
     return lambda props: app_key(props) in apps
@@ -971,6 +1069,8 @@ async def accept(reader, writer):
 
 async def handler(ws):
     clients.add(ws)
+    # a new widget has no bars yet: send the next frame even if unchanged
+    state["last_bars"] = None
     try:
         await ws.send(json.dumps({"type": "schema", "data": schema_for_clients()}))
         await send_config(ws)
@@ -989,6 +1089,7 @@ async def handler(ws):
                 stop_future.done() or stop_future.set_result(None)
             elif msg.get("type") == "subscribe":
                 ws.topics = set(msg.get("topics") or [])
+                state["last_bars"] = None
                 if "presets" in ws.topics:
                     await ws.send(json.dumps({"type": "presets", "data": state.get("presets", [])}))
             elif msg.get("type") == "wantMedia":
@@ -1010,10 +1111,11 @@ async def handler(ws):
             elif msg.get("type") == "setFollowPlayer" and isinstance(msg.get("value"), bool):
                 save_user_audio("followPlayer", msg["value"])
             elif msg.get("type") in ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset"):
+                user = read_user()
                 if edit["owner"] is ws:
-                    push_history(msg["type"])
-                apply_design(msg)
-                await ws.send(json.dumps(edit_state()))
+                    push_history(msg["type"], user)
+                apply_design(msg, user)
+                await ws.send(json.dumps(edit_state(user)))
             elif msg.get("type") == "beginEdit":
                 begin_edit(ws)
                 await ws.send(json.dumps(edit_state()))
