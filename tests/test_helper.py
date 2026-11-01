@@ -245,6 +245,34 @@ class WebSocketTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("403", status)
 
 
+class ShutdownTests(unittest.IsolatedAsyncioTestCase):
+    async def test_stops_promptly_with_a_widget_connected(self):
+        # systemd used to SIGKILL the service after its stop timeout
+        with socket.socket() as s:
+            s.bind((helper.HOST, 0))
+            port = s.getsockname()[1]
+        old_port, helper.PORT = helper.PORT, port
+        try:
+            with mock.patch.object(helper, "remove_legacy_sink"):
+                main = asyncio.create_task(helper.main())
+                for _ in range(50):
+                    try:
+                        reader, writer = await asyncio.open_connection(helper.HOST, port)
+                        break
+                    except OSError:
+                        await asyncio.sleep(0.05)
+                writer.write((f"GET / HTTP/1.1\r\nHost: {helper.HOST}:{port}\r\nUpgrade: websocket\r\n"
+                              "Connection: Upgrade\r\nSec-WebSocket-Key: AAAAAAAAAAAAAAAAAAAAAA==\r\n"
+                              "Sec-WebSocket-Version: 13\r\n\r\n").encode())
+                await writer.drain()
+                await asyncio.wait_for(reader.readuntil(b"\r\n\r\n"), 2)
+                helper.stop_future.set_result(None)
+                await asyncio.wait_for(main, 3)
+                writer.close()
+        finally:
+            helper.PORT = old_port
+
+
 class FollowPlayerTests(unittest.TestCase):
     def setUp(self):
         self.saved = helper.state["config"]

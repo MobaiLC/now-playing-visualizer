@@ -7,6 +7,9 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 ### Added
 - **Follow the player:** an option under **Audio** that makes the bars listen only to the player shown in the widget, whichever it is, instead of a fixed list of apps (`audio.followPlayer`).
 
+### Fixed
+- Stopping or restarting the helper service hung for about 10 seconds until systemd killed it, whenever a widget was connected. It now stops right away.
+
 ### Tested
 - Follow the player, by hand: Riff, Spotify and Haruna. Song info and bars also checked on those three; their controls were not tested by hand.
 - mpv has no MPRIS without the `mpv-mpris` plugin, so the widget can't show it or follow it; it can still drive the bars through the app list.

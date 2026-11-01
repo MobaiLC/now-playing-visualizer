@@ -1081,6 +1081,11 @@ async def main():
     tasks = [asyncio.create_task(c) for c in (cava_loop(), config_watch_loop(), link_loop(), media_loop(), idle_loop(stop))]
     async with server:
         await stop
+        # leaving this block waits for every connection handler (Python
+        # 3.12+), and widgets never hang up by themselves: without this,
+        # SIGTERM hangs until systemd kills us
+        for ws in list(clients):
+            ws.close()
     for t in tasks:
         t.cancel()
     if cava_proc and cava_proc.returncode is None:
