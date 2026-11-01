@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Now Playing Visualizer\n"
 "Report-Msgid-Bugs-To: https://github.com/MobaiLC/now-playing-visualizer/"
 "issues\n"
-"POT-Creation-Date: 2026-11-01 11:20+0100\n"
+"POT-Creation-Date: 2026-11-01 12:41+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -66,69 +66,75 @@ msgid "Refresh list"
 msgstr ""
 
 #: package/contents/ui/configApps.qml:118
-#: package/contents/ui/configDesign.qml:605
+#: package/contents/ui/configDesign.qml:615
 msgid "Open config.json"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:169
+#: package/contents/ui/configDesign.qml:173
 msgid "Song title"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:169
+#: package/contents/ui/configDesign.qml:173
 msgid "Artist"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:169
+#: package/contents/ui/configDesign.qml:173
 msgid "Album"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:373
+#: package/contents/ui/configDesign.qml:377
 msgid "Add color"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:380
+#: package/contents/ui/configDesign.qml:384
 msgid "Remove the last one"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:402
+#: package/contents/ui/configDesign.qml:406
 msgid "comma separated"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:465
+#: package/contents/ui/configDesign.qml:469
 msgid "Undo"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:471
+#: package/contents/ui/configDesign.qml:475
 msgid "Reset"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:472
+#: package/contents/ui/configDesign.qml:476
 msgid "Drop your changes and use the preset as it is"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:537
+#: package/contents/ui/configDesign.qml:541
 msgid "Delete this preset"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:557
+#: package/contents/ui/configDesign.qml:561
 msgid "Save current design as:"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:562
+#: package/contents/ui/configDesign.qml:566
 msgid "preset name"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:566
+#: package/contents/ui/configDesign.qml:570
 msgid "Save"
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:580
+#: package/contents/ui/configDesign.qml:583
+msgid ""
+"You have reached the limit of 100 saved presets. Delete one, or save over an "
+"existing name."
+msgstr ""
+
+#: package/contents/ui/configDesign.qml:590
 msgid ""
 "Picking a preset replaces your bar settings; Undo brings them back. Nothing "
 "is kept until you press Apply or OK."
 msgstr ""
 
-#: package/contents/ui/configDesign.qml:604
+#: package/contents/ui/configDesign.qml:614
 msgid "config.json:"
 msgstr ""
 
@@ -164,531 +170,531 @@ msgstr ""
 msgid "Click to open the settings"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:1
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:1
 msgid "Bars"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:2
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:2
 msgid "Blocks"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:3
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:3
 msgid "Wave"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:4
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:4
 msgid "Bar colors"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:5
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:5
 msgid "Peaks"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:6
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:6
 msgid "Glow"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:7
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:7
 msgid "Motion"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:8
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:8
 msgid "Panel and song"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:9
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:9
 msgid "Layout and controls"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:10
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:10
 msgid "Audio analysis"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:11
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:11
 msgid "Advanced"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:12
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:12
 msgid "Show bars"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:13
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:13
 msgid "Style"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:14
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:14
 msgid "Side"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:15
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:15
 msgid "Right"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:16
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:16
 msgid "Left"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:17
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:17
 msgid "Circular"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:18
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:18
 msgid "Center hole"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:19
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:19
 msgid "Rotation"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:20
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:20
 msgid "Number of bars"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:21
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:21
 msgid "Width of the bar area"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:22
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:22
 msgid "Bar width (0 = automatic)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:23
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:23
 msgid "Gap"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:24
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:24
 msgid "Corner radius"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:25
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:25
 msgid "Alignment"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:26
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:26
 msgid "Bottom"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:27
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:27
 msgid "Center (mirrored)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:28
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:28
 msgid "Top"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:29
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:29
 msgid "Reverse order"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:30
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:30
 msgid "Symmetric (bass in the middle)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:31
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:31
 msgid "Minimum height"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:32
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:32
 msgid "Height"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:33
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:33
 msgid "Opacity"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:34
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:34
 msgid "Block height"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:35
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:35
 msgid "Block gap"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:36
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:36
 msgid "Show unlit blocks"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:37
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:37
 msgid "Unlit block color"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:38
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:38
 msgid "Wave shape"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:39
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:39
 msgid "Curve"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:40
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:40
 msgid "Square"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:41
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:41
 msgid "Triangle"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:42
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:42
 msgid "Line width"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:43
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:43
 msgid "Fill"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:44
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:44
 msgid "Fill opacity"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:45
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:45
 msgid "Fill colors (empty = same as line)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:46
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:46
 msgid "Mode"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:47
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:47
 msgid "Gradient / solid"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:48
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:48
 msgid "One color per bar"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:49
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:49
 msgid "Rainbow"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:50
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:50
 msgid "Cover art colors"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:51
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:51
 msgid "Plasma accent color"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:52
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:52
 msgid "Colors"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:53
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:53
 msgid "Gradient direction"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:54
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:54
 msgid "Vertical"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:55
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:55
 msgid "Horizontal"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:56
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:56
 msgid "Radial"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:57
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:57
 msgid "Smooth gradient"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:58
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:58
 msgid "Reverse colors"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:59
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:59
 msgid "Cover colors to use"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:60
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:60
 msgid "Start hue"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:61
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:61
 msgid "End hue"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:62
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:62
 msgid "Saturation"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:63
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:63
 msgid "Lightness"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:64
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:64
 msgid "Rotation speed"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:65
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:65
 msgid "Peak markers"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:66
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:66
 msgid "Peak color"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:67
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:67
 msgid "Same as the bar"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:68
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:68
 msgid "Peak thickness"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:69
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:69
 msgid "Hold time"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:70
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:70
 msgid "Peak fall speed"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:71
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:71
 msgid "Glow color"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:72
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:72
 msgid "Automatic"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:73
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:73
 msgid "Strength"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:74
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:74
 msgid "Blur"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:75
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:75
 msgid "Rise speed"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:76
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:76
 msgid "Drop speed"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:77
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:77
 msgid "Frame rate"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:78
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:78
 msgid "Monstercat smoothing"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:79
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:79
 msgid "Stereo (left and right channels)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:80
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:80
 msgid "Hide when silent"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:81
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:81
 msgid "Seconds of silence"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:82
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:82
 msgid "Layout"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:83
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:83
 msgid "Automatic (follows the widget's shape)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:84
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:84
 msgid "Vertical (bars below)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:85
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:85
 msgid "Compact (cover, title and bars)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:86
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:86
 msgid "Player controls"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:87
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:87
 msgid "On hover"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:88
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:88
 msgid "Always"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:89
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:89
 msgid "Never"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:90
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:90
 msgid "Scroll to change the volume"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:91
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:91
 msgid "Scroll long titles"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:92
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:92
 msgid "Never (cut with …)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:93
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:93
 msgid "Background"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:94
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:94
 msgid "Background opacity"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:95
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:95
 msgid "Border"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:96
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:96
 msgid "Border width"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:97
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:97
 msgid "Panel corner radius"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:98
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:98
 msgid "Inner margin"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:99
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:99
 msgid "Spacing between song and bars"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:100
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:100
 msgid "When nothing is playing"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:101
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:101
 msgid "Show the last song, dimmed"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:102
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:102
 msgid "Show \"Nothing playing\""
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:103
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:103
 msgid "Hide the widget"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:104
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:104
 msgid "Opacity when idle"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:105
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:105
 msgid "Preferred players"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:106
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:106
 msgid "Font (empty = system font)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:107
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:107
 msgid "Header text"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:108
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:108
 msgid "Header template (empty = \"Listening to {title}\")"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:109
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:109
 msgid "Header color"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:110
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:110
 msgid "Header size"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:111
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:111
 msgid "Cover art"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:112
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:112
 msgid "Cover corner radius"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:113
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:113
 msgid "Title color"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:114
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:114
 msgid "Title size"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:115
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:115
 msgid "Bold title"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:116
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:116
 msgid "Text color"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:117
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:117
 msgid "Text size"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:118
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:118
 msgid "Show album / source"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:119
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:119
 msgid "Progress bar"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:120
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:120
 msgid "Progress color"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:121
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:121
 msgid "Progress background"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:122
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:122
 msgid "Progress thickness"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:123
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:123
 msgid "Show times"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:124
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:124
 msgid "Time color"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:125
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:125
 msgid "Time size"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:126
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:126
 msgid "Sensitivity"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:127
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:127
 msgid "Noise reduction"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:128
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:128
 msgid "Lowest frequency"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:129
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:129
 msgid "Highest frequency"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:130
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:130
 msgid "Apps to listen to (empty = whole system)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:131
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:131
 msgid "Listen only to the player shown in the widget (overrides audio.apps)"
 msgstr ""
 
-#: /tmp/tmp.iQzCWzCxSA/schema-strings.js:132
+#: /tmp/tmp.PVFHW1gsVw/schema-strings.js:132
 msgid "Read the song over D-Bus instead of Plasma's module"
 msgstr ""
 

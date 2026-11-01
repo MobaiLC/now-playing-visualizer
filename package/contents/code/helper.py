@@ -51,6 +51,8 @@ COLOR_RE = re.compile(r"^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
 MAX_MESSAGE = 256 * 1024
 MAX_NAME = 128
 MAX_APPS = 64
+# saved presets; each one is a thumbnail in Design and part of every undo step
+MAX_PRESETS = 100
 # bytes of bar frames a client may have queued before it skips frames (a
 # second or so at 60 fps); a slow client then never holds up the others
 BAR_BACKLOG = 64 * 1024
@@ -384,7 +386,8 @@ def end_edit_later(ws):
 
 def apply_design(msg, user=None):
     """Changes coming from the Design settings page. Writes user (or a fresh
-    read of config.json) with the change applied."""
+    read of config.json) with the change applied. Returns an error code for
+    the page when the change was refused, else None."""
     if user is None:
         user = read_user()
     kind = msg.get("type")
@@ -410,6 +413,9 @@ def apply_design(msg, user=None):
         name = str(msg.get("name", "")).strip()
         if not name or len(name) > MAX_NAME:
             return
+        if name not in user.get("presets", {}) and len(user.get("presets", {})) >= MAX_PRESETS:
+            # overwriting one still works; existing presets are never dropped
+            return "preset_limit"
         presets = deep_merge(load_builtin_presets(), user.get("presets", {}))
         base = presets.get(user.get("preset", "lookas"), {})
         user.setdefault("presets", {})[name] = deep_merge(base, overrides)
@@ -1171,8 +1177,13 @@ async def handler(ws):
                 user = read_user()
                 if edit["owner"] is ws:
                     push_history(msg["type"], user)
-                apply_design(msg, user)
-                await ws.send(json.dumps(edit_state(user)))
+                error = apply_design(msg, user)
+                reply = edit_state(user)
+                if error:
+                    if edit["owner"] is ws and edit["history"]:
+                        edit["history"].pop()  # nothing changed: no undo step
+                    reply["error"] = error
+                await ws.send(json.dumps(reply))
             elif msg.get("type") == "beginEdit":
                 begin_edit(ws)
                 await ws.send(json.dumps(edit_state()))

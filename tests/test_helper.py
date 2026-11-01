@@ -174,6 +174,15 @@ class DesignEditTests(unittest.TestCase):
         helper.apply_design({"type": "deletePreset", "name": "mine"})
         self.assertEqual(read_user()["preset"], "lookas")
 
+    def test_preset_limit_refuses_new_names_only(self):
+        user = helper.default_user_config()
+        user["presets"] = {f"p{i}": {} for i in range(helper.MAX_PRESETS)}
+        write_user(user)
+        self.assertEqual(helper.apply_design({"type": "savePreset", "name": "new"}), "preset_limit")
+        self.assertNotIn("new", read_user()["presets"])
+        self.assertIsNone(helper.apply_design({"type": "savePreset", "name": "p0"}))
+        self.assertEqual(len(read_user()["presets"]), helper.MAX_PRESETS)
+
     def test_undo_and_cancel(self):
         ws = object()
         helper.begin_edit(ws)

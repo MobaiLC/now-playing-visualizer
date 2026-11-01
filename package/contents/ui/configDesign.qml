@@ -82,6 +82,9 @@ KCM.SimpleKCM {
             pending = {};
         }
     }
+    // error code from the helper for the last change, e.g. "preset_limit"
+    property string saveError: ""
+
     function act(msg) {
         flushNow();
         helper.send(msg);
@@ -152,6 +155,7 @@ KCM.SimpleKCM {
         onEditStateReceived: st => {
             page.unsavedChanges = st.dirty;
             page.canUndo = st.canUndo;
+            page.saveError = st.error || "";
         }
         onBarsReceived: values => {
             page.liveBars = values;
@@ -571,6 +575,12 @@ KCM.SimpleKCM {
                     presetName.text = "";
                 }
             }
+        }
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            visible: page.saveError === "preset_limit"
+            type: Kirigami.MessageType.Warning
+            text: i18n("You have reached the limit of 100 saved presets. Delete one, or save over an existing name.")
         }
         QQC2.Label {
             Layout.fillWidth: true
