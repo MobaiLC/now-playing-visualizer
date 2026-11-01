@@ -37,6 +37,27 @@ function spanY(h, cfg, height) {
     return height - h;
 }
 
+// Points of a linear wave through values: pts is the line, low its mirror
+// below the middle (center alignment only). lw keeps a line of that width
+// inside the canvas. Shared by the wave and its peak line.
+function wavePoints(values, cfg, width, height, lw) {
+    const n = values.length;
+    const pts = [], low = [];
+    for (let i = 0; i < n; i++) {
+        const x = i * width / (n - 1);
+        const a = norm(values[i], cfg);
+        if (cfg.align === "center") {
+            pts.push({ x: x, y: height / 2 - a * (height / 2 - lw) });
+            low.push({ x: x, y: height / 2 + a * (height / 2 - lw) });
+        } else if (cfg.align === "top") {
+            pts.push({ x: x, y: lw / 2 + a * (height - lw) });
+        } else {
+            pts.push({ x: x, y: height - lw / 2 - a * (height - lw) });
+        }
+    }
+    return { pts: pts, low: low };
+}
+
 // Traces a curve / square / triangle line through pts.
 function trace(ctx, pts, mode, move) {
     if (move)

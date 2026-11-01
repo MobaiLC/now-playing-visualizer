@@ -22,9 +22,11 @@ function draw(f) {
     const cfg = f.cfg;
     if (cfg.circle.enabled) {
         Circle.draw(f);
+        if (cfg.peaks.enabled)
+            Peaks.drawCircle(f);
         return;
     }
     (styles[cfg.style] || BarsStyle.draw)(f);
-    if (cfg.peaks.enabled && cfg.style !== "wave")
-        Peaks.draw(f);
+    if (cfg.peaks.enabled)
+        (cfg.style === "wave" ? Peaks.drawWave : Peaks.draw)(f);
 }

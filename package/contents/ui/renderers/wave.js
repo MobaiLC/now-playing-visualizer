@@ -13,19 +13,7 @@ function draw(f) {
         return;
     const lw = wave.lineWidth;
     const mode = wave.mode || "curve";
-    const pts = [], low = [];
-    for (let i = 0; i < n; i++) {
-        const x = i * f.w / (n - 1);
-        const a = Common.norm(f.v[i], cfg);
-        if (cfg.align === "center") {
-            pts.push({ x: x, y: f.h / 2 - a * (f.h / 2 - lw) });
-            low.push({ x: x, y: f.h / 2 + a * (f.h / 2 - lw) });
-        } else if (cfg.align === "top") {
-            pts.push({ x: x, y: lw / 2 + a * (f.h - lw) });
-        } else {
-            pts.push({ x: x, y: f.h - lw / 2 - a * (f.h - lw) });
-        }
-    }
+    const { pts, low } = Common.wavePoints(f.v, cfg, f.w, f.h, lw);
     if (wave.fill) {
         const fc = wave.fillColors;
         ctx.globalAlpha = wave.fillOpacity;

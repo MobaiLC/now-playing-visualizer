@@ -72,7 +72,7 @@ warning icon on the widget. Colours use web notation; `AA` is opacity (`00` invi
 |---|---|---|---|---|---|
 | `bars.colorMode` | enum | `"gradient"` | `gradient` — Gradient / solid<br>`perBar` — One color per bar<br>`hue` — Rainbow<br>`cover` — Cover art colors<br>`accent` — Plasma accent color |  | Mode |
 | `bars.colors` | colorList | `["#f2f2f2"]` | list of colours | `bars.colorMode` is gradient / perBar | Colors |
-| `bars.gradient` | enum | `"vertical"` | `vertical` — Vertical<br>`horizontal` — Horizontal<br>`radial` — Radial | `bars.colorMode` is gradient / cover / accent | Gradient direction |
+| `bars.gradient` | enum | `"vertical"` | `vertical` — Vertical (outward when circular)<br>`horizontal` — Horizontal (around the ring when circular)<br>`radial` — Radial (outward when circular) | `bars.colorMode` is gradient / cover / accent | Gradient direction |
 | `bars.smoothGradient` | bool | `true` | bool | `bars.colorMode` is gradient / cover / accent | Smooth gradient |
 | `bars.reverseColors` | bool | `false` | bool |  | Reverse colors |
 | `bars.coverColorCount` | int | `3` | 1 … 6 | `bars.colorMode` is cover | Cover colors to use |
@@ -88,11 +88,11 @@ warning icon on the widget. Colours use web notation; `AA` is opacity (`00` invi
 
 | Option | Type | Default | Values | Shown when | Description |
 |---|---|---|---|---|---|
-| `bars.peaks.enabled` | bool | `false` | bool | `bars.style` is not wave; `bars.circle.enabled` is not true | Peak markers |
-| `bars.peaks.color` | colorOrAuto | *(empty)* | colour, or `""` = same as the bar | `bars.peaks.enabled` is true; `bars.style` is not wave; `bars.circle.enabled` is not true | Peak color |
-| `bars.peaks.height` | int | `2` | 1 … 10 px | `bars.peaks.enabled` is true; `bars.style` is not wave; `bars.circle.enabled` is not true | Peak thickness |
-| `bars.peaks.hold` | real | `0.4` | 0 … 3 s | `bars.peaks.enabled` is true; `bars.style` is not wave; `bars.circle.enabled` is not true | Hold time |
-| `bars.peaks.fallSpeed` | int | `600` | 100 … 2000 | `bars.peaks.enabled` is true; `bars.style` is not wave; `bars.circle.enabled` is not true | Peak fall speed |
+| `bars.peaks.enabled` | bool | `false` | bool |  | Peak markers |
+| `bars.peaks.color` | colorOrAuto | *(empty)* | colour, or `""` = same as the bar | `bars.peaks.enabled` is true | Peak color |
+| `bars.peaks.height` | int | `2` | 1 … 10 px | `bars.peaks.enabled` is true | Peak thickness |
+| `bars.peaks.hold` | real | `0.4` | 0 … 3 s | `bars.peaks.enabled` is true | Hold time |
+| `bars.peaks.fallSpeed` | int | `600` | 100 … 2000 | `bars.peaks.enabled` is true | Peak fall speed |
 
 ## Glow
 
@@ -125,8 +125,12 @@ warning icon on the widget. Colours use web notation; `AA` is opacity (`00` invi
 
 | Option | Type | Default | Values | Shown when | Description |
 |---|---|---|---|---|---|
+| `panel.colorSource` | enum | `"manual"` | `manual` — The ones chosen below<br>`cover` — From the cover art (readable, the ones below when there is none) |  | Card colors |
 | `panel.color` | color | `"#1a1b26a8"` | `#RRGGBB` or `#RRGGBBAA` |  | Background |
 | `panel.opacity` | real | `1` | 0 … 1 (shown as %) |  | Background opacity |
+| `panel.coverBackground` | bool | `false` | bool |  | Blurred cover art as the background |
+| `panel.coverBlur` | real | `0.8` | 0 … 1 (shown as %) | `panel.coverBackground` is true | Cover blur |
+| `panel.coverDim` | real | `0.6` | 0 … 1 (shown as %) | `panel.coverBackground` is true | Background color over the cover |
 | `panel.borderColor` | color | `"#ffffff1a"` | `#RRGGBB` or `#RRGGBBAA` |  | Border |
 | `panel.borderWidth` | int | `1` | 0 … 6 px |  | Border width |
 | `panel.radius` | int | `14` | 0 … 40 px |  | Panel corner radius |
@@ -173,7 +177,11 @@ warning icon on the widget. Colours use web notation; `AA` is opacity (`00` invi
 
 | Option | Type | Default | Values | Shown when | Description |
 |---|---|---|---|---|---|
+| `audio.autoSensitivity` | bool | `true` | bool |  | Automatic sensitivity (adapts to the volume) |
 | `audio.sensitivity` | int | `100` | 10 … 300 % |  | Sensitivity |
+| `audio.eq.bass` | real | `1` | 0.2 … 3 (shown as %) |  | Bass |
+| `audio.eq.mid` | real | `1` | 0.2 … 3 (shown as %) |  | Mids |
+| `audio.eq.treble` | real | `1` | 0.2 … 3 (shown as %) |  | Treble |
 | `audio.noiseReduction` | int | `77` | 0 … 100 |  | Noise reduction |
 | `audio.lowCutoff` | int | `50` | 20 … 500 Hz |  | Lowest frequency |
 | `audio.highCutoff` | int | `12000` | 2000 … 20000 Hz |  | Highest frequency |

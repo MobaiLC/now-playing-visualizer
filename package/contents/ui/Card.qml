@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 import org.kde.kirigami as Kirigami
+import "theme.js" as Theme
 
 // The now-playing card: cover, song info, progress, controls and bars. Pure
 // view: everything comes in through properties and every user action goes
@@ -92,10 +93,38 @@ Rectangle {
         return m === "always" || hover.hovered;
     }
 
-    color: fade(panelCfg.color, panelCfg.opacity)
+    // ---- colours -------------------------------------------------------------------
+    // With "panel.colorSource": "cover" the card takes its colours from the
+    // cover (theme.js keeps them readable); with no cover, or before its
+    // colours are known, it uses the configured ones. The previous cover's
+    // colours stay while the next one loads, so songs fade into each other.
+    readonly property string artUrl: media?.artUrl ?? ""
+    readonly property var theme: panelCfg.colorSource === "cover" && artUrl !== "" && cover.status !== Image.Error
+        ? Theme.fromCover(coverPalette.colors, coverPalette.dominant, Qt.color(panelCfg.color).a,
+                          backdropShown ? { average: coverPalette.average, dim: panelCfg.coverDim } : null)
+        : null
+    property color bgColor: theme ? theme.background : panelCfg.color
+    property color borderColor: theme ? theme.border : panelCfg.borderColor
+    property color headerColor: theme ? theme.header : cfg.header.color
+    property color titleColor: theme ? theme.title : cfg.title.color
+    property color subtitleColor: theme ? theme.subtitle : cfg.subtitle.color
+    property color timeColor: theme ? theme.time : cfg.progress.timeColor
+    property color progressColor: theme ? theme.progress : cfg.progress.color
+    property color trackColor: theme ? theme.track : cfg.progress.trackColor
+    component Fade: ColorAnimation { duration: 600; easing.type: Easing.InOutQuad }
+    Behavior on bgColor { enabled: card.interactive; Fade {} }
+    Behavior on borderColor { enabled: card.interactive; Fade {} }
+    Behavior on headerColor { enabled: card.interactive; Fade {} }
+    Behavior on titleColor { enabled: card.interactive; Fade {} }
+    Behavior on subtitleColor { enabled: card.interactive; Fade {} }
+    Behavior on timeColor { enabled: card.interactive; Fade {} }
+    Behavior on progressColor { enabled: card.interactive; Fade {} }
+    Behavior on trackColor { enabled: card.interactive; Fade {} }
+
+    color: backdrop.visible ? "transparent" : fade(bgColor, panelCfg.opacity)
     radius: panelCfg.radius
     border.width: panelCfg.borderWidth
-    border.color: fade(panelCfg.borderColor, panelCfg.opacity)
+    border.color: fade(borderColor, panelCfg.opacity)
 
     HoverHandler {
         id: hover
@@ -185,6 +214,55 @@ Rectangle {
         }
     }
 
+    // ---- blurred cover behind everything ("panel.coverBackground") ---------------
+    // Off in the preset thumbnails, which never show a cover. A 64 px source is
+    // plenty for a blur and keeps it cheap; it is only redrawn when the cover
+    // or the size changes.
+    readonly property bool backdropShown: interactive && panelCfg.coverBackground === true && artUrl !== ""
+    Item {
+        id: backdrop
+        anchors.fill: parent
+        anchors.margins: card.border.width
+        visible: card.backdropShown && backdropImage.status === Image.Ready
+        opacity: card.panelCfg.opacity
+        Image {
+            id: backdropImage
+            anchors.fill: parent
+            source: card.backdropShown ? card.artUrl : ""
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+            sourceSize.width: 64
+            sourceSize.height: 64
+            visible: false
+        }
+        Rectangle {
+            id: backdropMask
+            anchors.fill: parent
+            radius: Math.max(0, card.radius - card.border.width)
+            visible: false
+            layer.enabled: true
+            layer.smooth: true
+        }
+        MultiEffect {
+            anchors.fill: parent
+            source: backdropImage
+            autoPaddingEnabled: false
+            blurEnabled: true
+            blurMax: 64
+            blur: card.panelCfg.coverBlur
+            maskEnabled: true
+            maskSource: backdropMask
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
+        }
+        // the card's own background colour over it, so the text stays readable
+        Rectangle {
+            anchors.fill: parent
+            radius: backdropMask.radius
+            color: card.fade(card.bgColor, card.panelCfg.coverDim)
+        }
+    }
+
     // ---- content ------------------------------------------------------------------
     GridLayout {
         anchors.fill: parent
@@ -209,7 +287,7 @@ Rectangle {
                 visible: card.headerShown
                 text: card.fillTemplate(card.cfg.header.text || i18n("Listening to {title}"))
                 textFormat: Text.PlainText
-                color: card.cfg.header.color
+                color: card.headerColor
                 font.family: card.fontFamily
                 font.pixelSize: card.cfg.header.size
                 elide: Text.ElideRight
@@ -230,7 +308,7 @@ Rectangle {
                     Image {
                         id: cover
                         anchors.fill: parent
-                        source: card.media?.artUrl ?? ""
+                        source: card.artUrl
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         sourceSize.width: 256
@@ -327,7 +405,7 @@ Rectangle {
                     MarqueeText {
                         Layout.fillWidth: true
                         text: card.media ? card.media.track : i18n("Nothing playing")
-                        color: card.cfg.title.color
+                        color: card.titleColor
                         font.pixelSize: card.cfg.title.size
                         font.bold: card.cfg.title.bold
                     }
@@ -335,7 +413,7 @@ Rectangle {
                         Layout.fillWidth: true
                         visible: text !== ""
                         text: card.media?.artist ?? ""
-                        color: card.cfg.subtitle.color
+                        color: card.subtitleColor
                         font.pixelSize: card.cfg.subtitle.size
                     }
                     Text {
@@ -343,7 +421,7 @@ Rectangle {
                         visible: card.cfg.subtitle.showAlbum && text !== "" && card.mode !== "compact"
                         text: card.media?.album ?? ""
                         textFormat: Text.PlainText
-                        color: card.cfg.subtitle.color
+                        color: card.subtitleColor
                         font.family: card.fontFamily
                         font.pixelSize: card.cfg.subtitle.size
                         elide: Text.ElideRight
@@ -363,7 +441,7 @@ Rectangle {
                         Text {
                             visible: card.cfg.progress.showTimes
                             text: card.fmt(seek.pressed ? seek.previewMs : card.positionMs)
-                            color: card.cfg.progress.timeColor
+                            color: card.timeColor
                             font.family: card.fontFamily
                             font.pixelSize: card.cfg.progress.timeSize
                             font.features: { "tnum": 1 }
@@ -379,12 +457,12 @@ Rectangle {
                                 width: parent.width
                                 height: card.cfg.progress.height
                                 radius: height / 2
-                                color: card.cfg.progress.trackColor
+                                color: card.trackColor
                                 Rectangle {
                                     width: card.lengthMs > 0 ? parent.width * progress.shownMs / card.lengthMs : 0
                                     height: parent.height
                                     radius: parent.radius
-                                    color: card.cfg.progress.color
+                                    color: card.progressColor
                                 }
                             }
                             Rectangle {
@@ -393,7 +471,7 @@ Rectangle {
                                 width: Math.max(8, card.cfg.progress.height * 3)
                                 height: width
                                 radius: width / 2
-                                color: card.cfg.progress.color
+                                color: card.progressColor
                                 anchors.verticalCenter: parent.verticalCenter
                                 x: (card.lengthMs > 0 ? parent.width * progress.shownMs / card.lengthMs : 0) - width / 2
                             }
@@ -418,7 +496,7 @@ Rectangle {
                         Text {
                             visible: card.cfg.progress.showTimes
                             text: card.fmt(card.lengthMs)
-                            color: card.cfg.progress.timeColor
+                            color: card.timeColor
                             font.family: card.fontFamily
                             font.pixelSize: card.cfg.progress.timeSize
                             font.features: { "tnum": 1 }

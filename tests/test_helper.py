@@ -412,6 +412,89 @@ GETALL_PLAYER = {"type": "a{sv}", "data": [{
         "mpris:length": {"type": "x", "data": 192853333}}}}]}
 
 
+class CavaConfigTests(unittest.TestCase):
+    # what 0.2.0 sent CAVA with every option at its default: new options must
+    # not change it, or every user's bars would change after an update
+    DEFAULT_CONFIG = (
+        "[general]\nframerate=60\nbars=24\nlower_cutoff_freq=50\nhigher_cutoff_freq=12000\n"
+        "autosens=1\nsensitivity=100\nsleep_timer=0\n[input]\nmethod=pipewire\nsource=auto\n"
+        "virtual=1\n[output]\nmethod=raw\nraw_target=/dev/stdout\ndata_format=ascii\n"
+        "ascii_max_range=1000\nchannels=mono\nmono_option=average\n[smoothing]\n"
+        "noise_reduction=77\nmonstercat=0\n")
+
+    def defaults(self):
+        return helper.schema_defaults(helper.load_schema())
+
+    def test_defaults_give_the_same_config_as_before(self):
+        self.assertEqual(helper.cava_config(self.defaults()), self.DEFAULT_CONFIG)
+
+    def test_config_from_an_older_helper_still_works(self):
+        # a config without the new keys, as an older schema would build it
+        cfg = self.defaults()
+        del cfg["audio"]["eq"], cfg["audio"]["autoSensitivity"]
+        self.assertEqual(helper.cava_config(cfg), self.DEFAULT_CONFIG)
+
+    def test_equalizer(self):
+        cfg = self.defaults()
+        cfg["audio"]["eq"]["bass"] = 1.5
+        conf = helper.cava_config(cfg)
+        self.assertTrue(conf.endswith("[eq]\n1=1.50\n2=1.00\n3=1.00\n"), conf)
+
+    def test_fixed_sensitivity(self):
+        cfg = self.defaults()
+        cfg["audio"]["autoSensitivity"] = False
+        cfg["audio"]["sensitivity"] = 150
+        conf = helper.cava_config(cfg)
+        self.assertIn("autosens=0\nsensitivity=150\n", conf)
+
+
+class CavaRestartTests(unittest.TestCase):
+    """CAVA is restarted once its config settles, not on every slider step."""
+
+    def setUp(self):
+        self.proc = mock.Mock(returncode=None)
+        cfg = helper.schema_defaults(helper.load_schema())
+        state = {"config": cfg}
+        patches = [mock.patch.object(helper, "cava_proc", self.proc),
+                   mock.patch.object(helper, "cava_key", helper.cava_config(cfg)),
+                   mock.patch.dict(helper.state, state)]
+        for p in patches:
+            p.start()
+            self.addCleanup(p.stop)
+        self.cfg = cfg
+
+    def set_sensitivity(self, value):
+        self.cfg["audio"]["sensitivity"] = value
+
+    def test_unchanged_config_never_restarts(self):
+        for t in range(10):
+            helper.restart_cava_if_needed(t)
+        self.proc.terminate.assert_not_called()
+
+    def test_restarts_once_the_change_settles(self):
+        self.set_sensitivity(120)
+        helper.restart_cava_if_needed(0.0)
+        self.proc.terminate.assert_not_called()
+        helper.restart_cava_if_needed(0.5)
+        self.proc.terminate.assert_called_once()
+
+    def test_a_drag_restarts_only_at_the_end(self):
+        for i, t in enumerate((0.0, 0.5, 1.0, 1.5)):
+            self.set_sensitivity(110 + i * 10)
+            helper.restart_cava_if_needed(t)
+        self.proc.terminate.assert_not_called()
+        helper.restart_cava_if_needed(2.0)
+        self.proc.terminate.assert_called_once()
+
+    def test_going_back_to_the_running_config_cancels_the_restart(self):
+        self.set_sensitivity(120)
+        helper.restart_cava_if_needed(0.0)
+        self.set_sensitivity(100)
+        helper.restart_cava_if_needed(0.5)
+        helper.restart_cava_if_needed(1.0)
+        self.proc.terminate.assert_not_called()
+
+
 class MediaReaderTests(unittest.TestCase):
     """The D-Bus fallback reads each MPRIS interface with one GetAll."""
 

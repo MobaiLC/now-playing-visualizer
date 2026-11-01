@@ -13,7 +13,15 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 - CI: actions are pinned by commit and the new container by digest, checkouts keep no token, and every job has a time limit.
 
 ### Added
-- QML tests (`tests/qml/`, run with `qmltestrunner`) for the port and message checks and the renderers' geometry and colours, in CI on Arch.
+- **Card colours from the cover art** (`panel.colorSource`): background, border, texts and progress bar follow the song's cover and fade into the next one. The text is white or near-black, whichever contrasts more (WCAG ratio), and the accent is nudged until it stands out; with no cover the configured colours are used. Off by default.
+- **Blurred cover art as the background** (`panel.coverBackground`, `coverBlur`, `coverDim`), with the card's own colour laid over it so the text stays readable. Off by default, and never drawn in the preset thumbnails.
+- **Peak markers for every style:** a thin line over the wave, and marks around the ring in circular mode. They were limited to linear bars and blocks.
+- **Equalizer** for the bars (`audio.eq.bass`, `mid`, `treble`) and the option to turn off CAVA's automatic sensitivity (`audio.autoSensitivity`). With the defaults, CAVA gets exactly the same config as before.
+- QML tests (`tests/qml/`, run with `qmltestrunner`) for the port and message checks, the renderers' geometry and colours, and the readable cover colours, in CI on Arch.
+
+### Changed
+- CAVA restarts only once its settings stop changing (0.4 s), so dragging a slider such as Sensitivity no longer blanks the bars on every step.
+- In circular mode the "Horizontal" gradient (conical) now starts at the first bar, so it turns with **Rotation**; it used to stay at the top. At rotation 0 nothing changes. The gradient directions say what they do in circular mode.
 
 ## [0.2.0] - 2026-11-01
 

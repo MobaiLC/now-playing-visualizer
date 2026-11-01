@@ -13,7 +13,8 @@ A KDE Plasma 6 desktop widget that shows the song you're listening to — cover 
 - **Now playing card** — cover art, title, artist, album/source and a progress bar, read from any player that supports MPRIS (the Linux standard for media players).
 - **Player controls** — previous, play/pause and next on hover; click or drag the progress bar to seek; click the cover to bring the player forward; mouse wheel for volume. Each control follows what the player says it supports.
 - **Per-app audio** — pick which apps the bars react to, OBS-style. The apps are linked straight into CAVA through PipeWire; no extra audio device appears in your sound menu.
-- **Three styles** — bars, blocks and wave, each also available in a circular mode, with five colour modes: gradient, one colour per bar, rainbow (optionally animated), colours taken from the cover art, or your Plasma accent colour. Falling peaks and glow are optional.
+- **Colours from the song** — the card can take its colours from the cover art (always readable) and show the cover blurred behind it.
+- **Three styles** — bars, blocks and wave, each also available in a circular mode, with five colour modes: gradient, one colour per bar, rainbow (optionally animated), colours taken from the cover art, or your Plasma accent colour. Falling peaks and glow are optional, and an equalizer shapes the bars.
 - **Adapts to its shape** — horizontal, vertical (bars below) or compact, chosen automatically from the widget's size or fixed by hand.
 - **Visual settings** — a live preview, presets shown as cards, tabs, Undo, and Cancel that really reverts. Under the hood, every option lives in a JSON file you can also edit by hand.
 - **Idle state** — when nothing plays it can show the last song dimmed, a "Nothing playing" card, or hide.
