@@ -4,6 +4,8 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-01
+
 ### Fixed
 - After an update, an older helper could keep running: the systemd service until it was restarted, or one the widget started, which outlived a Plasma restart. The helper now says which protocol it speaks; the widget replaces an outdated helper it started, and warns (with the command) when the outdated one is the service. `tools/install.sh` also restarts the service when it is running.
 - The `NPV_PORT` variable only moved the helper: the widget kept connecting to 47811 and was left without a connection. The widget now reads it too (see [PROTOCOL.md](docs/PROTOCOL.md#port)).
@@ -27,6 +29,10 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 ### Changed
 - CAVA restarts only once its settings stop changing (0.4 s), so dragging a slider such as Sensitivity no longer blanks the bars on every step.
 - In circular mode the "Horizontal" gradient (conical) now starts at the first bar, so it turns with **Rotation**; it used to stay at the top. At rotation 0 nothing changes. The gradient directions say what they do in circular mode.
+
+### Tested
+- Pick the player and shuffle/repeat: by hand with Spotify on Plasma 6.8, and automatically with fake MPRIS players (with and without shuffle/repeat) and mpv with mpv-mpris, through the helper and Plasma's MPRIS module, in CI and on a clean Arch in Docker. Liner, Riff, Haruna and Zen were not re-tested by hand for this release.
+- Cover colours, blurred background, peaks and equalizer: by hand on Plasma 6.8 with Spotify.
 
 ## [0.2.0] - 2026-11-01
 
