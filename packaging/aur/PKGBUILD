@@ -4,7 +4,7 @@
 pkgname=plasma6-applets-now-playing-visualizer-git
 _pkgname=now-playing-visualizer
 _id=com.github.mobailc.nowplayingvisualizer
-pkgver=0.2.0
+pkgver=0.3.0
 pkgrel=1
 pkgdesc="Plasma 6 widget: now playing card with cover art, progress and a CAVA audio visualizer that can listen to selected apps only"
 arch=('any')
@@ -23,7 +23,7 @@ pkgver() {
     if git describe --tags --long >/dev/null 2>&1; then
         git describe --tags --long --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
     else
-        printf "0.2.0.r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+        printf "0.3.0.r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
     fi
 }
 

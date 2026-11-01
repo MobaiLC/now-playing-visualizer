@@ -10,7 +10,7 @@
         "Id": "com.github.mobailc.nowplayingvisualizer",
         "License": "GPL-3.0-or-later",
         "Name": "Now Playing Visualizer",
-        "Version": "0.2.0",
+        "Version": "0.3.0",
         "Website": "https://github.com/MobaiLC/now-playing-visualizer"
     },
     "X-Plasma-API-Minimum-Version": "6.0"

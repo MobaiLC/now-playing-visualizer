@@ -6,7 +6,7 @@ Un widget de escritorio para KDE Plasma 6 que muestra la canción que estás esc
 
 ![Los diez presets incluidos](docs/images/presets.png)
 
-> **Estado: versión temprana (0.2.0).** Se usa a diario en un escritorio con CachyOS y Plasma 6.8. Todavía no se ha probado en otras distribuciones; mira [Limitaciones](#limitaciones).
+> **Estado: versión temprana (0.3.0).** Se usa a diario en un escritorio con CachyOS y Plasma 6.8. Todavía no se ha probado en otras distribuciones; mira [Limitaciones](#limitaciones).
 
 ## Funciones
 
@@ -98,11 +98,11 @@ Los controles solo aparecen si el reproductor dice que los admite. El volumen (r
 | Liner | ✅ | ✅ | ✅ | en directo |
 | Zen / Firefox (YouTube, etc.) | ✅ | ✅ | ✅ | en directo |
 | Riff | ✅ | ✅ (si hay canción siguiente o anterior en la cola) | ✅ | en directo: datos de la canción y barras; controles solo leyendo su código |
-| Spotify (cliente oficial) | ✅ | ✅ | ⚠️ | en directo: datos de la canción y barras; controles sin probar a mano. Según informes, su MPRIS está incompleto (la posición puede quedarse en 0) |
+| Spotify (cliente oficial) | ✅ | ✅ | ⚠️ | en directo: datos de la canción, barras, y aleatorio/repetición; los demás controles sin probar a mano. Según informes, su MPRIS está incompleto (la posición puede quedarse en 0) |
 | Haruna | ? | ? | ? | en directo: datos de la canción y barras; controles sin probar |
 | mpv | – | – | – | necesita el plugin `mpv-mpris` para que el widget lo vea; sin él solo funcionan las barras, con la lista de apps |
 
-Se agradecen informes de otros reproductores.
+Los botones de aleatorio y repetición solo aparecen en los reproductores que los ofrecen (Spotify, mpv con `mpv-mpris`…; Firefox, Zen y Chromium no). Se agradecen informes de otros reproductores.
 
 ## Cómo funciona
 

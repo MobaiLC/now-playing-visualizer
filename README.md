@@ -6,7 +6,7 @@ A KDE Plasma 6 desktop widget that shows the song you're listening to — cover 
 
 ![The ten built-in presets](docs/images/presets.png)
 
-> **Status: early (0.2.0).** It works daily on one CachyOS + Plasma 6.8 desktop. It has not been tested on other distributions yet; see [Limitations](#limitations).
+> **Status: early (0.3.0).** It works daily on one CachyOS + Plasma 6.8 desktop. It has not been tested on other distributions yet; see [Limitations](#limitations).
 
 ## Features
 
@@ -98,11 +98,11 @@ Controls are offered only when the player reports it supports them. Volume (mous
 | Liner | ✅ | ✅ | ✅ | live |
 | Zen / Firefox (YouTube, etc.) | ✅ | ✅ | ✅ | live |
 | Riff | ✅ | ✅ (when the queue has a next/previous track) | ✅ | live: song info and bars; controls only from its source code |
-| Spotify (official client) | ✅ | ✅ | ⚠️ | live: song info and bars; controls not tested by hand. Its MPRIS support is reported to be incomplete (position may stay at 0) |
+| Spotify (official client) | ✅ | ✅ | ⚠️ | live: song info, bars, and shuffle/repeat; the other controls not tested by hand. Its MPRIS support is reported to be incomplete (position may stay at 0) |
 | Haruna | ? | ? | ? | live: song info and bars; controls not tested |
 | mpv | – | – | – | needs the `mpv-mpris` plugin to show up at all; without it only the bars work, through the app list |
 
-Reports for other players are very welcome.
+Shuffle and repeat buttons show up only for players that offer them (Spotify, mpv with `mpv-mpris`…; not Firefox, Zen or Chromium). Reports for other players are very welcome.
 
 ## How it works
 
