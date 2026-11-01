@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtWebSockets
+import "net.js" as Net
 
 // Connection to helper.py (launched on demand, shared by every widget).
 Item {
@@ -21,6 +22,13 @@ Item {
     // ["config", "schema"] so they don't get the 60 fps bar stream
     property var topics: []
 
+    // from NPV_PORT, like the helper. The socket waits until it is known, so
+    // the widget never talks to whatever holds the default port meanwhile.
+    property int port: Net.DEFAULT_PORT
+    property bool portKnown: false
+    property bool portAsked: false
+    readonly property string url: Net.helperUrl(port)
+
     readonly property bool connected: socket.status === WebSocket.Open
     onConnectedChanged: {
         if (connected && topics.length)
@@ -33,6 +41,29 @@ Item {
             socket.sendTextMessage(JSON.stringify(obj));
     }
 
+    function usePort(text) {
+        if (portKnown)
+            return;
+        port = Net.parsePort(text);
+        if (text !== "" && String(port) !== text)
+            console.warn(`nowplayingvisualizer: ignoring NPV_PORT, not a port between ${Net.MIN_PORT} and ${Net.MAX_PORT}; using ${port}`);
+        portKnown = true;
+        portTimeout.stop();
+        socket.active = true;
+    }
+
+    function findPort() {
+        if (portKnown || portAsked)
+            return;
+        if (launcher.status === Loader.Ready) {
+            portAsked = true;
+            portTimeout.start();
+            launcher.item.readPort();
+        } else if (launcher.status === Loader.Error) {
+            usePort("");
+        }
+    }
+
     function launch() {
         if (launcher.item)
             launcher.item.launch(helperPath);
@@ -40,14 +71,16 @@ Item {
 
     WebSocket {
         id: socket
-        url: "ws://127.0.0.1:47811"
+        url: root.url
         active: false
         onTextMessageReceived: message => {
             if (message.charAt(0) === "B") {
-                root.barsReceived(message.slice(1).split(";").map(Number));
+                root.barsReceived(Net.parseBars(message));
                 return;
             }
-            const m = JSON.parse(message);
+            const m = Net.parseMessage(message);
+            if (!m)
+                return;
             if (m.type === "config") {
                 root.configReceived(m.data, m.issues || []);
                 root.designReceived(m.web || {});
@@ -80,10 +113,24 @@ Item {
         }
     }
 
+    // Plasma5Support stuck: go on with the default port
+    Timer {
+        id: portTimeout
+        interval: 3000
+        onTriggered: root.usePort("")
+    }
+
     Loader {
         id: launcher
         source: "Launcher.qml"
+        onStatusChanged: root.findPort()
+    }
+    Connections {
+        target: launcher.item
+        function onPortRead(text) {
+            root.usePort(text);
+        }
     }
 
-    Component.onCompleted: socket.active = true
+    Component.onCompleted: findPort()
 }

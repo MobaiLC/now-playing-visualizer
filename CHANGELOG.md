@@ -4,6 +4,17 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Fixed
+- The `NPV_PORT` variable only moved the helper: the widget kept connecting to 47811 and was left without a connection. The widget now reads it too (see [PROTOCOL.md](docs/PROTOCOL.md#port)).
+
+### Security
+- `NPV_PORT` must be a plain number from 1024 to 65535, checked the same way by the helper and the widget; anything else falls back to 47811 with a warning instead of crashing the helper. The widget waits to know the port before connecting, and the value never reaches a shell command.
+- The widget no longer trusts what arrives on the port: malformed messages are dropped and bar values are clamped, so a program listening there instead of the helper can't break the widget with bad data.
+- CI: actions are pinned by commit and the new container by digest, checkouts keep no token, and every job has a time limit.
+
+### Added
+- QML tests (`tests/qml/`, run with `qmltestrunner`) for the port and message checks and the renderers' geometry and colours, in CI on Arch.
+
 ## [0.2.0] - 2026-11-01
 
 ### Added

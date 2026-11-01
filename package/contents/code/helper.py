@@ -32,7 +32,25 @@ import time
 from pathlib import Path
 
 HOST = "127.0.0.1"
-PORT = int(os.environ.get("NPV_PORT", "47811"))
+DEFAULT_PORT = 47811
+# below 1024 needs root; the widget (ui/net.js) applies the same rule, so
+# both sides always agree on the port
+MIN_PORT, MAX_PORT = 1024, 65535
+PORT_RE = re.compile(r"[0-9]{1,5}", re.ASCII)
+
+
+def parse_port(text):
+    """NPV_PORT as a port number, or None when it isn't a plain number in
+    MIN_PORT..MAX_PORT. int() alone would also take " 80", "+80", "4_7811"
+    or non-ASCII digits."""
+    if not isinstance(text, str) or not PORT_RE.fullmatch(text):
+        return None
+    port = int(text)
+    return port if MIN_PORT <= port <= MAX_PORT else None
+
+
+PORT_ENV = os.environ.get("NPV_PORT", "")
+PORT = parse_port(PORT_ENV) or DEFAULT_PORT
 # CAVA asks PipeWire for this (non-existent) target in per-app mode, which
 # also lets us find its capture stream among the nodes.
 CAPTURE_TARGET = "nowplaying-viz-capture"
@@ -1227,6 +1245,8 @@ async def ask_to_quit():
 
 async def main():
     global stop_future
+    if PORT_ENV and parse_port(PORT_ENV) is None:
+        log(f"ignoring NPV_PORT={PORT_ENV[:16]!r}: not a port between {MIN_PORT} and {MAX_PORT}; using {DEFAULT_PORT}")
     await asyncio.to_thread(remove_legacy_sink)
     loop = asyncio.get_running_loop()
     stop = stop_future = loop.create_future()

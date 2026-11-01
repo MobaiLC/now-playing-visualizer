@@ -11,18 +11,25 @@ on:
 permissions:
   contents: read
 
+# Third-party code is pinned so a moved tag can't change what runs here:
+# actions by commit (the comment says which release it is), the container by
+# digest. To update one, look the new commit or digest up and replace both.
 jobs:
   helper:
     name: Helper tests (Python ${{ matrix.python }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         # the oldest we claim to support, and the newest
         python: ["3.10", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # no token left in .git for later steps to read
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: ${{ matrix.python }}
       - name: Unit tests
@@ -30,11 +37,33 @@ jobs:
       - name: helper.py and check.py compile
         run: python -m py_compile package/contents/code/helper.py package/contents/code/check.py
 
+  qml:
+    name: QML tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Arch ships the same Qt 6 as the desktops the widget runs on
+    container:
+      image: archlinux:base@sha256:e82623936fa1a69700b48e98b058df6eaab18b737c27473a7234a40fdecb9413
+    steps:
+      - name: Install Qt
+        # pacman checks every package's signature
+        run: pacman -Syu --noconfirm --needed qt6-declarative
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: QML tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: /usr/lib/qt6/bin/qmltestrunner -input tests/qml
+
   repo:
     name: Docs, data and translations
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Install gettext
         run: sudo apt-get update && sudo apt-get install -y gettext
       - name: JSON files are valid

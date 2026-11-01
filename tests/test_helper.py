@@ -14,6 +14,7 @@ import importlib
 import json
 import os
 import socket
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -35,6 +36,27 @@ def write_user(user):
 
 def read_user():
     return json.loads(helper.CONFIG_FILE.read_text())
+
+
+class PortTests(unittest.TestCase):
+    """NPV_PORT: the same cases as tests/qml/tst_net.qml, so the helper and
+    the widget always agree on the port."""
+
+    def test_valid_ports(self):
+        for text, port in (("47811", 47811), ("47899", 47899), ("1024", 1024), ("65535", 65535)):
+            self.assertEqual(helper.parse_port(text), port, text)
+
+    def test_anything_else_is_refused(self):
+        for text in ("", "80", "0", "65536", " 47899", "47899\n", "+47899", "-1", "47899.5",
+                     "0xbb1b", "4e4", "4_7899", "047899", "٤٧٨٩٩", "47899; rm -rf ~", None, 47899):
+            self.assertIsNone(helper.parse_port(text), repr(text))
+
+    def test_bad_value_falls_back_to_the_default(self):
+        code = f"import sys; sys.path.insert(0, {str(CODE)!r}); import helper; print(helper.PORT)"
+        for env, want in (({"NPV_PORT": "47899"}, "47899"), ({"NPV_PORT": "80"}, "47811"), ({}, "47811")):
+            out = subprocess.run([sys.executable, "-I", "-c", code], capture_output=True, text=True,
+                                 env={k: v for k, v in os.environ.items() if k != "NPV_PORT"} | env)
+            self.assertEqual(out.stdout.strip(), want, env)
 
 
 class SchemaTests(unittest.TestCase):

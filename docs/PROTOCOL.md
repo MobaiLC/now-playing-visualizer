@@ -1,6 +1,14 @@
 # Widget ↔ helper protocol
 
-WebSocket on `ws://127.0.0.1:47811` (override with the `NPV_PORT` environment variable). Text frames only.
+WebSocket on `ws://127.0.0.1:47811`. Text frames only.
+
+## Port
+
+The `NPV_PORT` environment variable changes the port, for the helper and for the widget. The widget reads it from plasmashell's environment, and a helper the widget starts inherits it, so set it where both see it, for example in `~/.config/environment.d/nowplaying-viz.conf` (`NPV_PORT=47899`), then log out and back in. The systemd service reads the same file.
+
+Only a plain number from 1024 to 65535 is accepted; anything else (spaces, signs, other characters) is ignored with a warning, and both sides use 47811. The widget connects only once it knows the port, and the value never goes into a shell command.
+
+The widget can't check who is listening on the port, so it treats every message as untrusted: invalid JSON or a message without a string `type` is dropped, and bar values are clamped to 0–1000, at most 256 per frame.
 
 The helper refuses the handshake (HTTP 403) when it has an `Origin` header or a `Host` other than `127.0.0.1:<port>` / `localhost:<port>`, so web pages can't connect. Messages larger than 256 KB close the connection.
 
