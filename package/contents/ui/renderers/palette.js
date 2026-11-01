@@ -59,6 +59,14 @@ function addStops(g, list, smooth) {
     }
 }
 
+// Where the conical gradient starts and ends: at the first bar, so turning
+// the ring turns the colours with it. Qt measures the angle counter-clockwise
+// from 3 o'clock; the ring's rotation goes clockwise from 12.
+function conicalStart(cfg) {
+    const rotation = cfg.circle ? cfg.circle.rotation : 0;
+    return Math.PI / 2 - rotation * Math.PI / 180;
+}
+
 // One fill for the whole visualizer. geo.circle selects radial/conical.
 function makeFill(ctx, list, geo, cfg, width, height) {
     if (list.length === 1)
@@ -67,7 +75,7 @@ function makeFill(ctx, list, geo, cfg, width, height) {
     let g;
     if (geo.circle) {
         g = dir === "horizontal"
-            ? ctx.createConicalGradient(geo.cx, geo.cy, Math.PI / 2)
+            ? ctx.createConicalGradient(geo.cx, geo.cy, conicalStart(cfg))
             : ctx.createRadialGradient(geo.cx, geo.cy, geo.inner, geo.cx, geo.cy, geo.outer);
     } else if (dir === "horizontal") {
         g = ctx.createLinearGradient(0, 0, width, 0);

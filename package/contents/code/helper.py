@@ -74,6 +74,8 @@ MAX_PRESETS = 100
 # bytes of bar frames a client may have queued before it skips frames (a
 # second or so at 60 fps); a slow client then never holds up the others
 BAR_BACKLOG = 64 * 1024
+# seconds CAVA's config must stay unchanged before CAVA is restarted with it
+CAVA_SETTLE = 0.4
 
 clients = set()
 state = {
@@ -888,7 +890,7 @@ def cava_config(cfg):
         f"bars={int(b.get('count', 24))}",
         f"lower_cutoff_freq={int(a.get('lowCutoff', 50))}",
         f"higher_cutoff_freq={int(a.get('highCutoff', 12000))}",
-        "autosens=1",
+        f"autosens={0 if a.get('autoSensitivity') is False else 1}",
         f"sensitivity={int(a.get('sensitivity', 100))}",
         "sleep_timer=0",
         "[input]",
@@ -907,6 +909,13 @@ def cava_config(cfg):
         f"noise_reduction={int(a.get('noiseReduction', 77))}",
         f"monstercat={1 if b.get('monstercat') else 0}",
     ]
+    # CAVA spreads these multipliers over the bars, bass to treble; left out
+    # when flat so the default config stays exactly as it was
+    eq = a.get("eq", {})
+    gains = [eq.get(k, 1) for k in ("bass", "mid", "treble")]
+    if any(g != 1 for g in gains):
+        lines.append("[eq]")
+        lines += [f"{i}={float(g):.2f}" for i, g in enumerate(gains, 1)]
     return "\n".join(lines) + "\n"
 
 
@@ -997,8 +1006,24 @@ async def cava_loop():
         await asyncio.sleep(0.3 if time.monotonic() - started > 5 else 3)
 
 
-def restart_cava_if_needed():
-    if cava_proc and cava_proc.returncode is None and cava_key != cava_config(state["config"]):
+def restart_cava_if_needed(now=None):
+    """Restarts CAVA once its config has changed and then stayed the same for
+    CAVA_SETTLE seconds. Each restart blanks the bars for a moment, so a
+    slider dragged in Design restarts it once, when it stops, instead of on
+    every step. Called on every tick of the config watcher."""
+    now = time.monotonic() if now is None else now
+    if not (cava_proc and cava_proc.returncode is None):
+        state.pop("cava_pending", None)
+        return
+    want = cava_config(state["config"])
+    if want == cava_key:
+        state.pop("cava_pending", None)
+        return
+    pending = state.get("cava_pending")
+    if not pending or pending[0] != want:
+        state["cava_pending"] = (want, now)
+    elif now - pending[1] >= CAVA_SETTLE:
+        state.pop("cava_pending", None)
         cava_proc.terminate()
 
 
@@ -1037,9 +1062,9 @@ async def config_watch_loop():
                 cfg = None
             if cfg is not None:
                 state["config"] = cfg
-                restart_cava_if_needed()
             await send_config()
             mtime = CONFIG_FILE.stat().st_mtime if CONFIG_FILE.exists() else None
+        restart_cava_if_needed()
         await asyncio.sleep(0.5)
 
 
