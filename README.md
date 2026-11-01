@@ -6,7 +6,7 @@ A KDE Plasma 6 desktop widget that shows the song you're listening to — cover 
 
 ![The ten built-in presets](docs/images/presets.png)
 
-> **Status: early (0.1.0).** It works daily on one CachyOS + Plasma 6.8 desktop. It has not been tested on other distributions yet; see [Limitations](#limitations).
+> **Status: early (0.2.0).** It works daily on one CachyOS + Plasma 6.8 desktop. It has not been tested on other distributions yet; see [Limitations](#limitations).
 
 ## Features
 

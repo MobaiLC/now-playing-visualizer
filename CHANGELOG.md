@@ -4,6 +4,8 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-01
+
 ### Added
 - **Follow the player:** an option under **Audio** that makes the bars listen only to the player shown in the widget, whichever it is, instead of a fixed list of apps (`audio.followPlayer`).
 
@@ -17,6 +19,12 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 
 ### Fixed
 - Stopping or restarting the helper service hung for about 10 seconds until systemd killed it, whenever a widget was connected. It now stops right away.
+
+### Security
+- The helper refuses connections from other users of the computer. `127.0.0.1` is shared by every local user, so before this anyone logged in could read the config, see what was playing and pause players or change their volume.
+- Values that come from the players (bus names, track ids) can no longer be read by `busctl` as options.
+- Saved presets are limited to 100; past the limit, **Design** asks you to delete one or save over an existing name.
+- The CI workflow runs with a read-only token.
 
 ### Tested
 - Follow the player, by hand: Riff, Spotify and Haruna. Song info and bars also checked on those three; their controls were not tested by hand.

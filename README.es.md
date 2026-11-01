@@ -6,7 +6,7 @@ Un widget de escritorio para KDE Plasma 6 que muestra la canción que estás esc
 
 ![Los diez presets incluidos](docs/images/presets.png)
 
-> **Estado: versión temprana (0.1.0).** Se usa a diario en un escritorio con CachyOS y Plasma 6.8. Todavía no se ha probado en otras distribuciones; mira [Limitaciones](#limitaciones).
+> **Estado: versión temprana (0.2.0).** Se usa a diario en un escritorio con CachyOS y Plasma 6.8. Todavía no se ha probado en otras distribuciones; mira [Limitaciones](#limitaciones).
 
 ## Funciones
 
