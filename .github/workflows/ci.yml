@@ -6,6 +6,11 @@ on:
   push:
   pull_request:
 
+# the jobs only check out the code and run checks: a compromised action
+# gets a token that can't write to the repository
+permissions:
+  contents: read
+
 jobs:
   helper:
     name: Helper tests (Python ${{ matrix.python }})
