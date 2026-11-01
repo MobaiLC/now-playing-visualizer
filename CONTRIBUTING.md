@@ -23,12 +23,14 @@ Useful while working:
 ```bash
 python3 -m unittest discover -s tests -v      # helper tests
 QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input tests/qml   # QML/JS tests
+tests/integration/run.sh                       # MPRIS: fake players (+ mpv) on a private D-Bus
+tools/test-in-docker.sh                        # everything again on a clean Arch, with mpv-mpris and Plasma's MPRIS module
 python3 tools/gen-config-doc.py --check       # docs/CONFIG.md matches schema.json
 tools/extract-messages.sh                      # if you changed any UI text
 msgfmt --check -o /dev/null translate/*.po
 ```
 
-The QML tests cover the pure parts (`ui/net.js`, `ui/renderers/`); keep new logic there, out of the `.qml` files, so it can be tested. CI runs the same checks. In the PR, say how you tested the change, and what you couldn't test.
+`tests/integration/run.sh` starts its own D-Bus session, so it never touches your real players; it needs PyGObject. The QML tests cover the pure parts (`ui/net.js`, `ui/renderers/`); keep new logic there, out of the `.qml` files, so it can be tested. CI runs the same checks. In the PR, say how you tested the change, and what you couldn't test.
 
 ## Recipes
 

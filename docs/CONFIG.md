@@ -168,6 +168,7 @@ warning icon on the widget. Colours use web notation; `AA` is opacity (`00` invi
 |---|---|---|---|---|---|
 | `layout.mode` | enum | `"auto"` | `auto` — Automatic (follows the widget's shape)<br>`horizontal` — Horizontal<br>`vertical` — Vertical (bars below)<br>`compact` — Compact (cover, title and bars) |  | Layout |
 | `controls.show` | enum | `"hover"` | `hover` — On hover<br>`always` — Always<br>`never` — Never |  | Player controls |
+| `controls.shuffleRepeat` | bool | `true` | bool |  | Shuffle and repeat buttons (only for players that have them) |
 | `controls.scrollVolume` | bool | `true` | bool |  | Scroll to change the volume |
 | `title.marquee` | enum | `"hover"` | `hover` — On hover<br>`always` — Always<br>`never` — Never (cut with …) |  | Scroll long titles |
 

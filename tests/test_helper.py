@@ -603,5 +603,298 @@ class MediaActionTests(unittest.TestCase):
         self.assertEqual(helper.icon_name("https://example.com/x.png"), "")
 
 
+class FakeWs:
+    """A client for handler(): yields the given messages, records replies."""
+    def __init__(self, *messages, topics=None):
+        self.messages = [json.dumps(m) for m in messages]
+        self.sent = []
+        self.topics = topics
+        self.pinned = ""
+        self.media_player = None
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if not self.messages:
+            raise StopAsyncIteration
+        return self.messages.pop(0)
+
+    async def send(self, text):
+        self.sent.append(json.loads(text))
+
+    def close(self):
+        pass
+
+    def replies(self, kind):
+        return [m for m in self.sent if m.get("type") == kind]
+
+
+def player(identity, playing=False, bus=None, **extra):
+    p = {"bus": bus or "org.mpris.MediaPlayer2." + identity.lower(), "identity": identity,
+         "playing": playing, "trackId": "/t/1", "canControl": True, "shuffle": None, "loop": None}
+    p.update(extra)
+    return p
+
+
+class PinnedPlayerTests(unittest.IsolatedAsyncioTestCase):
+    """The player picked in the widget's menu wins while it is open."""
+
+    def setUp(self):
+        write_user(helper.default_user_config())
+        helper.state["config"] = helper.load_config()
+
+    def test_pinned_wins_over_the_playing_one(self):
+        players = [player("Spotify", playing=True), player("Zen")]
+        self.assertEqual(helper.pick_player(players, "zen")["identity"], "Zen")
+        self.assertEqual(helper.pick_player(players, "")["identity"], "Spotify")
+
+    def test_pinned_but_closed_falls_back_to_automatic(self):
+        players = [player("Spotify", playing=True), player("Zen")]
+        self.assertEqual(helper.pick_player(players, "Liner")["identity"], "Spotify")
+
+    def test_pinned_is_matched_exactly(self):
+        # "Zen" must not catch "Zen Browser Nightly": the menu lists exact names
+        players = [player("Zen Browser Nightly", playing=True), player("Spotify")]
+        self.assertEqual(helper.pick_player(players, "Zen")["identity"], "Zen Browser Nightly")
+        self.assertIsNone(helper.pick_player([], "Zen"))
+
+    def test_bad_pin_values_are_ignored(self):
+        players = [player("Spotify", playing=True)]
+        for bad in (None, 7, ["Spotify"], {"a": 1}):
+            self.assertEqual(helper.pick_player(players, bad)["identity"], "Spotify")
+
+    async def test_each_client_gets_its_own_pick_and_the_list(self):
+        a, b = FakeWs(), FakeWs()
+        a.pinned, b.pinned = "Zen", ""
+        players = [player("Spotify", playing=True), player("Zen")]
+        with mock.patch.object(helper, "clients", {a, b}):
+            await helper.send_media(players)
+        self.assertEqual(a.sent[0]["data"]["identity"], "Zen")
+        self.assertEqual(b.sent[0]["data"]["identity"], "Spotify")
+        self.assertEqual(a.sent[0]["players"], [{"identity": "Spotify", "playing": True},
+                                                {"identity": "Zen", "playing": False}])
+        self.assertEqual(a.media_player["identity"], "Zen")
+
+    async def test_schema_says_which_protocol_and_whether_it_is_the_service(self):
+        ws = FakeWs()
+        await helper.handler(ws)
+        schema = ws.replies("schema")[0]
+        self.assertEqual(schema["protocol"], helper.PROTOCOL)
+        self.assertIs(schema["service"], helper.SERVICE)
+
+    async def test_pin_message(self):
+        ws = FakeWs({"type": "pinPlayer", "identity": "Zen"}, {"type": "pinPlayer", "identity": 42},
+                    {"type": "pinPlayer", "identity": "x" * 1000})
+        with mock.patch.dict(helper.state, {"pinned_player": ""}):
+            await helper.handler(ws)
+            self.assertEqual(ws.pinned, "x" * helper.MAX_NAME)
+            self.assertEqual(helper.state["pinned_player"], ws.pinned)
+
+    def test_follow_player_uses_the_pin(self):
+        players = {"org.mpris.MediaPlayer2.spotify": ("Spotify", "Playing"),
+                   "org.mpris.MediaPlayer2.zen": ("Zen", "Paused")}
+        def prop(name, iface, key, default=None):
+            return players[name][0] if key == "Identity" else players[name][1]
+        with mock.patch.object(helper, "mpris_names", return_value=list(players)), \
+             mock.patch.object(helper, "busctl_prop", side_effect=prop), \
+             mock.patch.object(helper, "bus_pid", return_value=99), \
+             mock.patch.dict(helper.state, {"pinned_player": "zen"}):
+            self.assertEqual(helper.active_player(), (99, "zen"))
+
+
+class ShuffleRepeatTests(unittest.TestCase):
+    def media(self, props):
+        root = lambda k, d: {"Identity": "P"}.get(k, d)
+        base = {"CanControl": True, "PlaybackStatus": "Playing", "Metadata": {}}
+        base.update(props)
+        return helper.media_of("org.mpris.MediaPlayer2.p", root, lambda k, d: base.get(k, d))
+
+    def test_read_when_the_player_has_them(self):
+        m = self.media({"Shuffle": True, "LoopStatus": "Track"})
+        self.assertIs(m["shuffle"], True)
+        self.assertEqual(m["loop"], "Track")
+
+    def test_none_when_missing_or_invalid(self):
+        m = self.media({})
+        self.assertIsNone(m["shuffle"])
+        self.assertIsNone(m["loop"])
+        m = self.media({"Shuffle": "yes", "LoopStatus": "Forever"})
+        self.assertIsNone(m["shuffle"])
+        self.assertIsNone(m["loop"])
+
+    def commands(self, action, value, **p):
+        with mock.patch.object(helper, "run") as run:
+            helper.media_action(action, value, player("P", **p))
+        return [c.args[0] for c in run.call_args_list]
+
+    def test_set_shuffle_and_loop(self):
+        cmd = self.commands("shuffle", True, shuffle=False)
+        self.assertEqual(cmd, [["busctl", "--user", "set-property", "--", "org.mpris.MediaPlayer2.p",
+                                helper.MPRIS_PATH, "org.mpris.MediaPlayer2.Player", "Shuffle", "b", "true"]])
+        cmd = self.commands("loop", "Playlist", loop="None")
+        self.assertEqual(cmd[0][-3:], ["LoopStatus", "s", "Playlist"])
+
+    def test_only_valid_values_reach_busctl(self):
+        for value in ("true", 1, None, ["x"]):
+            self.assertEqual(self.commands("shuffle", value, shuffle=False), [], value)
+        for value in ("Shuffle", "none", "--help", 1, None):
+            self.assertEqual(self.commands("loop", value, loop="None"), [], value)
+
+    def test_nothing_for_players_without_them(self):
+        self.assertEqual(self.commands("shuffle", True), [])
+        self.assertEqual(self.commands("loop", "Track"), [])
+        self.assertEqual(self.commands("shuffle", True, shuffle=False, canControl=False), [])
+
+    def test_the_clients_own_player_is_used(self):
+        helper.state["media_player"] = player("Other", shuffle=False)
+        cmd = self.commands("shuffle", True, shuffle=False)
+        self.assertIn("org.mpris.MediaPlayer2.p", cmd[0])
+
+
+class PresetFileTests(unittest.IsolatedAsyncioTestCase):
+    """Import and export: any file may be hostile, nothing in it is trusted."""
+
+    def setUp(self):
+        write_user(helper.default_user_config())
+        helper.state["config"] = helper.load_config()
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.dir = Path(tmp.name)
+
+    def file(self, name, content):
+        path = self.dir / name
+        path.write_text(content if isinstance(content, str) else json.dumps(content))
+        return str(path)
+
+    def read_error(self, path):
+        with self.assertRaises(helper.PresetFileError) as cm:
+            helper.read_preset_file(path)
+        return cm.exception.code
+
+    def test_reads_our_format_and_bare_presets(self):
+        doc = {"format": helper.PRESET_FORMAT, "version": 1, "name": "Mine", "design": {"bars": {"count": 40}}}
+        self.assertEqual(helper.read_preset_file(self.file("a.json", doc))["name"], "Mine")
+        bare = helper.read_preset_file(self.file("b.json", {"bars": {"count": 40}}))
+        self.assertEqual(bare, {"name": None, "design": {"bars": {"count": 40}}})
+
+    def test_refuses_what_is_not_a_preset(self):
+        self.assertEqual(self.read_error(self.file("x.json", "not json")), "file_not_json")
+        self.assertEqual(self.read_error(self.file("x.json", "[1, 2]")), "file_not_preset")
+        self.assertEqual(self.read_error(self.file("x.json", {"format": "other", "design": {}})), "file_not_preset")
+        self.assertEqual(self.read_error(self.file("x.json", {"format": helper.PRESET_FORMAT, "design": 3})),
+                         "file_not_preset")
+        (self.dir / "bin.json").write_bytes(b"\xff\xfe{}")
+        self.assertEqual(self.read_error(str(self.dir / "bin.json")), "file_not_json")
+        self.assertEqual(self.read_error(self.file("deep.json", "[" * 100000 + "]" * 100000)), "file_not_json")
+
+    def test_refuses_big_files_without_reading_them_whole(self):
+        path = self.file("big.json", " " * (helper.MAX_PRESET_FILE + 10))
+        self.assertEqual(self.read_error(path), "file_too_big")
+
+    def test_refuses_bad_paths_and_special_files(self):
+        for bad in (None, 3, "", "relative.json", "/tmp/a\0b.json", "/" + "a" * 5000):
+            self.assertEqual(self.read_error(bad), "file_bad_path", bad)
+        self.assertEqual(self.read_error(str(self.dir)), "file_unreadable")
+        self.assertEqual(self.read_error(str(self.dir / "missing.json")), "file_unreadable")
+        fifo = self.dir / "fifo.json"
+        os.mkfifo(fifo)
+        # a FIFO with no writer would block a plain open() forever
+        self.assertEqual(self.read_error(str(fifo)), "file_unreadable")
+
+    def test_only_valid_visible_options_are_kept(self):
+        design = {
+            "bars": {"count": 40, "colors": ["#ff0000", "red"], "glow": {"enabled": "yes"}, "style": "lasers"},
+            "panel": {"color": "#00000080", "unknown": 1},
+            "audio": {"apps": ["spotify"], "followPlayer": True, "sensitivity": 150},
+            "header": {"text": "x" * 5000},
+            "evil": {"__proto__": {"polluted": True}},
+        }
+        clean, dropped = helper.clean_design(design)
+        self.assertEqual(clean["bars"], {"count": 40})
+        self.assertEqual(clean["panel"], {"color": "#00000080"})
+        # the app list and follow-the-player are personal, never imported
+        self.assertEqual(clean["audio"], {"sensitivity": 150})
+        self.assertEqual(len(clean["header"]["text"]), helper.MAX_IMPORT_TEXT)
+        self.assertNotIn("evil", clean)
+        # colors (one bad entry drops the list), glow.enabled, style, panel.unknown,
+        # audio.apps, audio.followPlayer, evil.__proto__.polluted
+        self.assertEqual(dropped, 7)
+
+    def test_names_are_cleaned_and_never_clash(self):
+        taken = {"lookas", "Mine", "Mine 2"}
+        self.assertEqual(helper.preset_name("Mine", "f", taken), "Mine 3")
+        self.assertEqual(helper.preset_name("lookas", "f", taken), "lookas 2")
+        self.assertEqual(helper.preset_name("a\nb\x1b[31m", "f", set()), "ab[31m")
+        self.assertEqual(helper.preset_name("", "from-file", set()), "from-file")
+        self.assertEqual(helper.preset_name(None, "", set()), "Imported")
+        self.assertEqual(len(helper.preset_name("n" * 500, "f", set())), 64)
+
+    def test_export_then_import_gives_the_same_design(self):
+        user = helper.read_user()
+        user["preset"] = "neon"
+        user["overrides"] = {"bars": {"count": 33}, "panel": {"radius": 20}}
+        write_user(user)
+        path = str(self.dir / "out.json")
+        self.assertEqual(helper.write_preset_file(path, user), "neon")
+        self.assertEqual(os.stat(path).st_mode & 0o777, 0o644)
+        before = helper.effective_design(user)
+        found = helper.read_preset_file(path)
+        self.assertEqual(found["design"], before)
+        self.assertEqual(helper.apply_design({"type": "importPreset", **found}, user), None)
+        self.assertEqual(user["preset"], "neon 2")
+        self.assertEqual(user["overrides"], {})
+        self.assertEqual(helper.effective_design(user), before)
+
+    def test_export_refuses_other_files(self):
+        user = helper.read_user()
+        for bad in (str(self.dir / "notes.txt"), "relative.json"):
+            with self.assertRaises(helper.PresetFileError) as cm:
+                helper.write_preset_file(bad, user)
+            self.assertEqual(cm.exception.code, "file_bad_path")
+        os.mkdir(self.dir / "dir.json")
+        target = self.dir / "real.json"
+        target.write_text("keep")
+        os.symlink(target, self.dir / "link.json")
+        for special in ("dir.json", "link.json"):
+            with self.assertRaises(helper.PresetFileError) as cm:
+                helper.write_preset_file(str(self.dir / special), user)
+            self.assertEqual(cm.exception.code, "file_unwritable")
+        self.assertEqual(target.read_text(), "keep")
+        self.assertEqual([f for f in os.listdir(self.dir) if f.startswith(".npv-preset-")], [])
+
+    def test_import_respects_the_preset_limit(self):
+        user = helper.read_user()
+        user["presets"] = {f"p{i}": {} for i in range(helper.MAX_PRESETS)}
+        self.assertEqual(helper.apply_design({"type": "importPreset", "design": {}, "name": "x"}, user),
+                         "preset_limit")
+
+    async def test_import_through_the_helper(self):
+        path = self.file("Cool Look.json", {"bars": {"count": 50, "bogus": 1}})
+        ws = FakeWs({"type": "importPreset", "path": path})
+        await helper.handler(ws)
+        result = ws.replies("presetFile")[-1]
+        self.assertEqual(result, {"type": "presetFile", "op": "import", "name": "Cool Look", "ignored": 1})
+        user = helper.read_user()
+        self.assertEqual(user["preset"], "Cool Look")
+        self.assertEqual(user["presets"]["Cool Look"], {"bars": {"count": 50}})
+
+    async def test_a_client_cant_skip_the_file(self):
+        # "design" in the message is ignored: only what is read from a file counts
+        ws = FakeWs({"type": "importPreset", "design": {"bars": {"count": 99}}, "name": "x"})
+        await helper.handler(ws)
+        self.assertEqual(ws.replies("presetFile")[-1]["error"], "file_bad_path")
+        self.assertNotIn("x", helper.read_user().get("presets", {}))
+
+    async def test_export_through_the_helper(self):
+        path = str(self.dir / "mine.json")
+        ws = FakeWs({"type": "exportPreset", "path": path}, {"type": "exportPreset", "path": "/etc/x.json"})
+        await helper.handler(ws)
+        ok, failed = ws.replies("presetFile")
+        self.assertEqual(ok, {"type": "presetFile", "op": "export", "name": "lookas"})
+        self.assertEqual(json.loads(Path(path).read_text())["format"], helper.PRESET_FORMAT)
+        self.assertEqual(failed["error"], "file_unwritable")
+
+
 if __name__ == "__main__":
     unittest.main()

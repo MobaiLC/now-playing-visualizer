@@ -22,4 +22,8 @@ if [ "${1:-}" = "--systemd" ]; then
     systemctl --user enable --now nowplaying-viz.service nowplaying-viz-check.path
     systemctl --user restart nowplaying-viz.service
 fi
+# a service already running keeps the old helper until it is restarted
+if systemctl --user is-active --quiet nowplaying-viz.service 2>/dev/null; then
+    systemctl --user restart nowplaying-viz.service
+fi
 echo "Done. Plasma caches widget code: log out and back in, or run 'systemctl --user restart plasma-plasmashell'."

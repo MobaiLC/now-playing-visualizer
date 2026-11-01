@@ -10,6 +10,16 @@ var DEFAULT_PORT = 47811;
 // same rule as parse_port() in helper.py, so both sides pick the same port
 var MIN_PORT = 1024;
 var MAX_PORT = 65535;
+// the helper protocol this widget needs (PROTOCOL in helper.py); helpers
+// before it don't send one, which counts as 1
+var PROTOCOL = 2;
+
+// true when a helper's schema message says it is older than this widget
+function outdated(message) {
+    const p = message ? message.protocol : undefined;
+    return !(typeof p === "number" && p >= PROTOCOL);
+}
+
 // bars.count tops out at 128; stereo doesn't add any
 var MAX_BARS = 256;
 

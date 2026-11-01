@@ -5,6 +5,7 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 ## [Unreleased]
 
 ### Fixed
+- After an update, an older helper could keep running: the systemd service until it was restarted, or one the widget started, which outlived a Plasma restart. The helper now says which protocol it speaks; the widget replaces an outdated helper it started, and warns (with the command) when the outdated one is the service. `tools/install.sh` also restarts the service when it is running.
 - The `NPV_PORT` variable only moved the helper: the widget kept connecting to 47811 and was left without a connection. The widget now reads it too (see [PROTOCOL.md](docs/PROTOCOL.md#port)).
 
 ### Security
@@ -13,11 +14,15 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 - CI: actions are pinned by commit and the new container by digest, checkouts keep no token, and every job has a time limit.
 
 ### Added
+- **Pick the player:** right-click the widget to show a given player instead of whichever is playing ("Automatic", the default). The choice is kept per widget; while that player is closed the widget goes back to automatic, and the menu still lists it so it can be unpinned. *Follow the player* and the D-Bus fallback follow the same pick.
+- **Shuffle and repeat buttons**, on hover with the other controls, only for players that have them and allow control (Spotify, mpv with mpv-mpris…; not Firefox, Zen or Chromium, which don't). Repeat cycles off → playlist → track. On the cover they sit on a second, smaller row. Can be turned off (`controls.shuffleRepeat`).
+- **Import and export presets** in **Design → Presets**: export the design as it looks to a `.json` file, import one as a new preset. An imported file is never trusted: only known options with valid values are kept (the count of the rest is shown), text is cut to 256 characters, the app list and follow-the-player are never imported, and only regular files up to 256 KB are read. Undo and Cancel bring the previous design back.
 - **Card colours from the cover art** (`panel.colorSource`): background, border, texts and progress bar follow the song's cover and fade into the next one. The text is white or near-black, whichever contrasts more (WCAG ratio), and the accent is nudged until it stands out; with no cover the configured colours are used. Off by default.
 - **Blurred cover art as the background** (`panel.coverBackground`, `coverBlur`, `coverDim`), with the card's own colour laid over it so the text stays readable. Off by default, and never drawn in the preset thumbnails.
 - **Peak markers for every style:** a thin line over the wave, and marks around the ring in circular mode. They were limited to linear bars and blocks.
 - **Equalizer** for the bars (`audio.eq.bass`, `mid`, `treble`) and the option to turn off CAVA's automatic sensitivity (`audio.autoSensitivity`). With the defaults, CAVA gets exactly the same config as before.
-- QML tests (`tests/qml/`, run with `qmltestrunner`) for the port and message checks, the renderers' geometry and colours, and the readable cover colours, in CI on Arch.
+- QML tests (`tests/qml/`, run with `qmltestrunner`) for the port and message checks, the renderers' geometry and colours, the readable cover colours and the player choice, in CI on Arch.
+- MPRIS integration tests (`tests/integration/run.sh`): fake players with and without shuffle/repeat, and mpv with mpv-mpris, on a private D-Bus session, checked through the helper and through Plasma's own MPRIS module. `tools/test-in-docker.sh` runs every test on a clean Arch. Both run in CI.
 
 ### Changed
 - CAVA restarts only once its settings stop changing (0.4 s), so dragging a slider such as Sensitivity no longer blanks the bars on every step.
