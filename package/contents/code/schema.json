@@ -19,6 +19,7 @@
     { "id": "motion", "tab": "motion", "label": "Motion" },
     { "id": "panel", "tab": "panel", "label": "Panel and song" },
     { "id": "controls", "tab": "panel", "label": "Layout and controls" },
+    { "id": "desktop", "tab": "panel", "label": "Desktop card (Hyprland)" },
     { "id": "analysis", "tab": "motion", "label": "Audio analysis" },
     { "id": "advanced", "tab": "advanced", "label": "Advanced" }
   ],
@@ -201,6 +202,21 @@
     "progress.showTimes": { "group": "panel", "type": "bool", "default": true, "label": "Show times", "when": { "progress.show": true } },
     "progress.timeColor": { "group": "panel", "type": "color", "default": "#ffffffd9", "label": "Time color", "when": { "progress.show": true, "progress.showTimes": true } },
     "progress.timeSize": { "group": "panel", "type": "int", "default": 11, "min": 8, "max": 24, "unit": "px", "label": "Time size", "when": { "progress.show": true, "progress.showTimes": true } },
+
+    "desktop.monitor": { "group": "desktop", "type": "string", "default": "", "hidden": true, "label": "Monitor name, e.g. DP-1 (empty = first screen) (Hyprland card)" },
+    "desktop.anchor": {
+      "group": "desktop", "type": "enum", "default": "bottomRight", "hidden": true, "label": "Corner (Hyprland card)",
+      "values": [
+        { "value": "topLeft", "label": "Top left" },
+        { "value": "topRight", "label": "Top right" },
+        { "value": "bottomLeft", "label": "Bottom left" },
+        { "value": "bottomRight", "label": "Bottom right" }
+      ]
+    },
+    "desktop.marginX": { "group": "desktop", "type": "int", "default": 24, "min": 0, "max": 4000, "unit": "px", "hidden": true, "label": "Horizontal margin (Hyprland card)" },
+    "desktop.marginY": { "group": "desktop", "type": "int", "default": 24, "min": 0, "max": 4000, "unit": "px", "hidden": true, "label": "Vertical margin (Hyprland card)" },
+    "desktop.width": { "group": "desktop", "type": "int", "default": 540, "min": 200, "max": 3000, "unit": "px", "hidden": true, "label": "Width (Hyprland card)" },
+    "desktop.height": { "group": "desktop", "type": "int", "default": 162, "min": 80, "max": 2000, "unit": "px", "hidden": true, "label": "Height (Hyprland card)" },
 
     "audio.autoSensitivity": { "group": "analysis", "type": "bool", "default": true, "label": "Automatic sensitivity (adapts to the volume)" },
     "audio.sensitivity": { "group": "analysis", "type": "int", "default": 100, "min": 10, "max": 300, "unit": "%", "slider": true, "label": "Sensitivity" },

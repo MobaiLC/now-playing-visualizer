@@ -94,8 +94,17 @@ class SchemaTests(unittest.TestCase):
     def test_config_version_matches_schema(self):
         self.assertEqual(self.schema["version"], helper.CONFIG_VERSION)
 
+    def test_desktop_options_have_defaults(self):
+        defaults = helper.schema_defaults(self.schema)
+        self.assertEqual(defaults["desktop"]["anchor"], "bottomRight")
+        self.assertEqual(defaults["desktop"]["width"], 540)
+
 
 class PresetTests(unittest.TestCase):
+    def test_desktop_options_never_in_presets(self):
+        self.assertNotIn("desktop.anchor", helper.design_options())
+        self.assertEqual(helper.clean_design({"desktop": {"anchor": "topLeft"}}), ({}, 1))
+
     def test_every_builtin_preset_is_valid(self):
         schema = helper.load_schema()
         presets = helper.load_builtin_presets()

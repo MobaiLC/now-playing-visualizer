@@ -172,6 +172,19 @@ warning icon on the widget. Colours use web notation; `AA` is opacity (`00` invi
 | `controls.scrollVolume` | bool | `true` | bool |  | Scroll to change the volume |
 | `title.marquee` | enum | `"hover"` | `hover` — On hover<br>`always` — Always<br>`never` — Never (cut with …) |  | Scroll long titles |
 
+## Desktop card (Hyprland)
+
+*Design → Panel*
+
+| Option | Type | Default | Values | Shown when | Description |
+|---|---|---|---|---|---|
+| `desktop.monitor` | string | *(empty)* | string |  | Monitor name, e.g. DP-1 (empty = first screen) (Hyprland card) *(not in the UI)* |
+| `desktop.anchor` | enum | `"bottomRight"` | `topLeft` — Top left<br>`topRight` — Top right<br>`bottomLeft` — Bottom left<br>`bottomRight` — Bottom right |  | Corner (Hyprland card) *(not in the UI)* |
+| `desktop.marginX` | int | `24` | 0 … 4000 px |  | Horizontal margin (Hyprland card) *(not in the UI)* |
+| `desktop.marginY` | int | `24` | 0 … 4000 px |  | Vertical margin (Hyprland card) *(not in the UI)* |
+| `desktop.width` | int | `540` | 200 … 3000 px |  | Width (Hyprland card) *(not in the UI)* |
+| `desktop.height` | int | `162` | 80 … 2000 px |  | Height (Hyprland card) *(not in the UI)* |
+
 ## Audio analysis
 
 *Design → Motion*
