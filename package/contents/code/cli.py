@@ -333,8 +333,8 @@ def doctor(notify):
             list=", ".join(p["identity"] + (" ▶" if p["playing"] else "") for p in players),
             followed=followed[1] if followed else "-"))
 
-    if "pw-dump" in missing:
-        add("links", "skip", _("pw-dump is not installed"))
+    if "pw-dump" in missing or "busctl" in missing:  # busctl: following the player asks D-Bus
+        add("links", "skip", _("pw-dump or busctl is not installed"))
     else:
         add("links", *links_check())
 
