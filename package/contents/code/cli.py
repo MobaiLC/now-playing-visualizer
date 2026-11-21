@@ -3,17 +3,27 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """nowplaying-viz: command line for Now Playing Visualizer.
 
-  nowplaying-viz check [--json]    validate ~/.config/nowplaying-viz/config.json
+  nowplaying-viz check [--json]             validate ~/.config/nowplaying-viz/config.json
+  nowplaying-viz doctor [--json] [--notify] diagnose programs, QML modules, the helper,
+                                            players, per-app links and whether CAVA hears sound
 
-check only reads: it never creates or rewrites the config file.
-Exit codes: 0 clean (or no file yet), 1 issues, 2 the file is not valid JSON.
+Both only read: check never creates or rewrites the config file, and doctor
+never subscribes to bars (so it cannot start CAVA or make links).
+check exit codes: 0 clean (or no file yet), 1 issues, 2 the file is not valid JSON.
+doctor exit codes: 0 nothing failed, 1 something failed.
+doctor --notify runs after every pacman transaction (nowplaying-viz-check.service)
+and sends one desktop notification only when something is wrong.
 """
 
+import copy
 import gettext
+import http.client
 import json
+import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -22,6 +32,33 @@ import helper  # noqa: E402
 
 DOMAIN = "plasma_applet_com.github.mobailc.nowplayingvisualizer"
 _ = gettext.translation(DOMAIN, HERE.parent / "locale", fallback=True).gettext
+QML = shutil.which("qml6") or "/usr/lib/qt6/bin/qml"
+
+# module -> (what breaks, has a fallback?, host that needs it: "all", "plasma" or "quickshell")
+QML_MODULES = {
+    "QtQuick": (_("the whole widget"), False, "all"),
+    "QtQuick.Layouts": (_("the whole widget"), False, "all"),
+    "QtQuick.Effects": (_("rounded cover art and glow"), False, "all"),
+    "QtWebSockets": (_("connection to the helper (no bars)"), False, "all"),
+    "org.kde.plasma.plasmoid": (_("the whole widget"), False, "plasma"),
+    "org.kde.plasma.core": (_("the whole widget"), False, "plasma"),
+    # Card.qml, shared with the quickshell card, imports Kirigami
+    "org.kde.kirigami": (_("the whole widget"), False, "all"),
+    "org.kde.kcmutils": (_("settings pages"), False, "plasma"),
+    "QtQuick.Dialogs": (_("color picker in Design"), False, "plasma"),
+    "org.kde.plasma.private.mpris": (_("reading the song (D-Bus is used instead)"), True, "all"),
+    "org.kde.plasma.plasma5support": (_("starting the helper from the widget (systemd starts it)"), True, "plasma"),
+    "Quickshell": (_("the whole desktop card"), False, "quickshell"),
+    "Quickshell.Wayland": (_("the whole desktop card"), False, "quickshell"),
+}
+
+COMMANDS = {
+    "cava": _("audio bars"),
+    "pw-dump": _("list of audio apps"),
+    "pw-link": _("per-app audio"),
+    "busctl": _("reading the song over D-Bus"),
+    "wpctl": _("volume for players without MPRIS volume"),
+}
 
 
 def issue(code, option, value=None, used=None, **extra):
@@ -106,6 +143,232 @@ def describe(i):
     return _("{option}: {value} is not valid, using {used}").format(option=opt, value=val, used=used)
 
 
+def check_qml(module):
+    with tempfile.TemporaryDirectory() as tmp:
+        f = Path(tmp) / "t.qml"
+        f.write_text(f"import QtQuick\nimport {module}\nItem {{ Component.onCompleted: Qt.quit() }}\n")
+        try:
+            r = subprocess.run([QML, "-platform", "offscreen", str(f)],
+                               capture_output=True, text=True, timeout=20)
+        except (OSError, subprocess.TimeoutExpired) as e:
+            return str(e)
+        out = (r.stdout + r.stderr).strip()
+        if r.returncode != 0 or "is not installed" in out or "module" in out.lower() and "error" in out.lower():
+            return out.splitlines()[-1] if out else f"exit code {r.returncode}"
+    return None
+
+
+def detect_host():
+    if "KDE" in os.environ.get("XDG_CURRENT_DESKTOP", ""):
+        return "plasma"
+    try:
+        if subprocess.run(["pgrep", "-x", "-u", str(os.getuid()), "plasmashell"],
+                          capture_output=True).returncode == 0:
+            return "plasma"
+    except OSError:
+        pass
+    return "quickshell" if shutil.which("quickshell") else "none"
+
+
+def fetch_status():
+    """The helper's /status. OSError when nothing listens, ValueError for an answer that is not it."""
+    conn = http.client.HTTPConnection("127.0.0.1", helper.PORT, timeout=3)  # sends Host: 127.0.0.1:<port>
+    try:
+        conn.request("GET", "/status")
+        r = conn.getresponse()
+        body = r.read()
+    except http.client.HTTPException as e:
+        raise ValueError(str(e)) from e
+    finally:
+        conn.close()
+    if r.status != 200:
+        raise ValueError(f"HTTP {r.status}")
+    status = json.loads(body)  # JSONDecodeError is a ValueError
+    if not isinstance(status, dict):
+        raise ValueError("not a status object")
+    return status
+
+
+def list_players():
+    return [{"identity": helper.busctl_prop(n, "org.mpris.MediaPlayer2", "Identity", n.split(".")[-1]),
+             "playing": helper.busctl_prop(n, "org.mpris.MediaPlayer2.Player", "PlaybackStatus", "") == "Playing"}
+            for n in helper.mpris_names()]
+
+
+def effective_config():
+    """The config the helper would use, read-only; defaults when the file is missing or broken."""
+    user = helper.read_user()
+    try:
+        user = copy.deepcopy(user) if isinstance(user, dict) else helper.default_user_config()
+        helper.migrate(user)
+        return helper.resolve_config(user, helper.load_schema(), helper.load_builtin_presets())[0]
+    except (AttributeError, TypeError, ValueError):  # check reports what is wrong with it
+        return helper.resolve_config(helper.default_user_config(), helper.load_schema(),
+                                     helper.load_builtin_presets())[0]
+
+
+def links_check():
+    """Per-app audio: is a stream of the followed player (or a selected app) linked into
+    CAVA's capture stream? Same matching as helper.sync_links; any channel linked into
+    CAVA counts (a stereo stream into a MONO input is how channels=mono works)."""
+    if not helper.per_app_audio():
+        return "skip", _("all system audio is captured (no per-app links needed)"), ""
+    nodes, ports, links = {}, {}, set()
+    for o in helper.pw_dump():
+        t, info = o.get("type"), o.get("info") or {}
+        p = info.get("props") or {}
+        if t == "PipeWire:Interface:Node":
+            nodes[o["id"]] = p
+        elif t == "PipeWire:Interface:Port":
+            ports[o["id"]] = (info.get("direction"), p)
+        elif t == "PipeWire:Interface:Link":
+            links.add((info.get("output-port-id"), info.get("input-port-id")))
+    capture = {i for i, p in nodes.items() if p.get("target.object") == helper.CAPTURE_TARGET}
+    if not capture:
+        return "skip", _("CAVA is not capturing (no card or widget is running)"), ""
+    wanted = helper.link_filter()
+    cava_in = {i: p.get("audio.channel") for i, (d, p) in ports.items() if d == "input" and p.get("node.id") in capture}
+    outs = {i: p.get("audio.channel") for i, (d, p) in ports.items() if d == "output"
+            and nodes.get(p.get("node.id"), {}).get("media.class") == "Stream/Output/Audio"
+            and wanted(nodes[p["node.id"]])}
+    if not outs:
+        return "skip", _("the followed player or selected apps have no audio stream right now"), ""
+    linked = {o for o, i in links if o in outs and i in cava_in}
+    if linked:
+        return "ok", _("{n} channel(s) linked into CAVA").format(n=len(linked)), ""
+    return ("fail", _("not linked into CAVA: stream channels {out}, CAVA input channels {inp}").format(
+        out=",".join(sorted({str(c) for c in outs.values()})), inp=",".join(sorted({str(c) for c in cava_in.values()}))),
+        "systemctl --user restart nowplaying-viz")
+
+
+def doctor(notify):
+    host = detect_host()
+    checks = []
+
+    def add(id_, status, message, hint=""):
+        checks.append({"id": id_, "status": status, "message": message, "hint": hint})
+
+    missing = [c for c in COMMANDS if not shutil.which(c)]
+    if missing:
+        add("commands", "fail", "; ".join(_("Missing «{cmd}» → {what}").format(cmd=c, what=COMMANDS[c]) for c in missing),
+            _("install the missing programs"))
+    else:
+        add("commands", "ok", _("all programs found: {list}").format(list=", ".join(COMMANDS)))
+
+    if "cava" in missing:
+        add("cava_version", "skip", _("cava is not installed"))
+    else:
+        try:
+            r = subprocess.run(["cava", "-v"], capture_output=True, text=True, timeout=5)
+            version = (r.stdout + r.stderr).strip().splitlines()[0] if r.returncode == 0 else ""
+        except (OSError, subprocess.SubprocessError, IndexError):
+            version = ""
+        if version:
+            add("cava_version", "ok", version)
+        else:
+            add("cava_version", "warn", _("could not read the cava version"), "cava -v")
+
+    if not os.path.exists(QML):
+        add("qml_modules", "warn", _("Qt 6 «qml» tool not found; QML modules could not be checked"),
+            _("install qt6-declarative"))
+    else:
+        broken, degraded = [], []
+        for module, (what, has_fallback, need) in QML_MODULES.items():
+            if need in ("all", host) and check_qml(module):
+                (degraded if has_fallback else broken).append(
+                    _("QML module {module} → {what}").format(module=module, what=what))
+        if broken:
+            add("qml_modules", "fail", "; ".join(broken + degraded), _("install the packages that provide them"))
+        elif degraded:
+            add("qml_modules", "warn", "; ".join(degraded))
+        else:
+            add("qml_modules", "ok", _("QML modules for {host} found").format(host=host))
+
+    code, rep = check(helper.CONFIG_FILE)
+    if code == 0:
+        add("config", "ok", _("config OK") if rep["exists"] else _("no config file yet, defaults are used"))
+    elif code == 1:
+        add("config", "warn", _("{n} config issue(s), defaults are used for them").format(n=len(rep["issues"])),
+            "nowplaying-viz check")
+    else:
+        add("config", "fail", describe(rep["issues"][0]), "nowplaying-viz check")
+
+    try:
+        active = subprocess.run(["systemctl", "--user", "is-active", "nowplaying-viz"],
+                                capture_output=True, text=True).stdout.strip() == "active"
+    except OSError:
+        active = False
+    if active:
+        add("service", "ok", _("the nowplaying-viz service is running"))
+    elif host == "quickshell":
+        add("service", "fail", _("the nowplaying-viz service is not running"),
+            "systemctl --user enable --now nowplaying-viz")
+    else:
+        add("service", "warn", _("the nowplaying-viz service is not running (the widget starts the helper itself)"),
+            "systemctl --user enable --now nowplaying-viz")
+
+    status = None
+    try:
+        status = fetch_status()
+        if status.get("protocol") != helper.PROTOCOL:
+            raise ValueError(status.get("protocol"))
+        add("helper", "ok", _("helper answers on port {port}").format(port=helper.PORT))
+    except OSError:
+        status = None
+        add("helper", "fail", _("the helper is not running (nothing on port {port})").format(port=helper.PORT),
+            "systemctl --user start nowplaying-viz")
+    except ValueError:
+        status = None
+        add("helper", "fail", _("an outdated helper is running on port {port}").format(port=helper.PORT),
+            "systemctl --user restart nowplaying-viz")
+
+    helper.state["config"] = effective_config()  # this process only: what per-app audio follows
+    helper.forget_followed_player()
+    players = list_players() if "busctl" not in missing else []
+    if not players:
+        add("players", "skip", _("no MPRIS player is running"))
+    else:
+        followed = helper.followed_player()
+        add("players", "ok", _("players: {list}; shown: {followed}").format(
+            list=", ".join(p["identity"] + (" ▶" if p["playing"] else "") for p in players),
+            followed=followed[1] if followed else "-"))
+
+    if "pw-dump" in missing:
+        add("links", "skip", _("pw-dump is not installed"))
+    else:
+        add("links", *links_check())
+
+    cava = (status or {}).get("cava") or {}
+    if status is None:
+        add("audio", "skip", _("the helper is not reachable"))
+    elif not status.get("barClients"):
+        add("audio", "skip", _("no card or widget is running"))
+    elif not cava.get("running"):
+        add("audio", "fail", _("CAVA is not running"), "journalctl --user -u nowplaying-viz")
+    elif (cava.get("peak") or 0) > 0 and (cava.get("age") if cava.get("age") is not None else 99) < 2:
+        add("audio", "ok", _("CAVA hears sound"))
+    elif any(p["playing"] for p in players):
+        add("audio", "fail", _("CAVA hears silence"),
+            _("see the links check") if helper.per_app_audio() else "wpctl status")
+    else:
+        add("audio", "skip", _("nothing is playing"))
+
+    statuses = [c["status"] for c in checks]
+    if notify and ("fail" in statuses or "warn" in statuses) and shutil.which("notify-send"):
+        failed = "fail" in statuses
+        title = _("Now Playing Visualizer: something broke") if failed else _("Now Playing Visualizer: compatibility mode")
+        body = "\n".join(c["message"] for c in checks if c["status"] in ("fail", "warn"))
+        # where this copy lives: ~/.local/share/... or /usr/share/... (AUR package)
+        body += "\n\n" + _("Details:") + f" python3 -I {Path(__file__).resolve()} doctor"
+        subprocess.run(["notify-send", "-a", "Now Playing Visualizer", "-i", "view-media-visualization",
+                        "-u", "critical" if failed else "normal", title, body])
+    ok = "fail" not in statuses
+    return (0 if ok else 1), {"ok": ok, "host": host, "checks": checks}
+
+
+MARKS = {"ok": "✓", "warn": "!", "fail": "✗", "skip": "-"}
+
+
 def main(argv):
     args = list(argv)
     as_json = "--json" in args
@@ -120,10 +383,17 @@ def main(argv):
             if report["ok"]:
                 print(_("config OK") if report["exists"] else _("no config file yet, defaults are used"))
         return code
-    if args == ["doctor"]:
-        print(_("doctor is not available yet"), file=sys.stderr)
-        return 2
-    print(_("usage: nowplaying-viz check|doctor [--json]"), file=sys.stderr)
+    if args in (["doctor"], ["doctor", "--notify"]):
+        code, report = doctor("--notify" in args)
+        if as_json:
+            print(json.dumps(report, indent=2, ensure_ascii=False))
+        else:
+            for c in report["checks"]:
+                print(f"{MARKS[c['status']]} {c['message']}")
+                if c["hint"]:
+                    print(f"  → {c['hint']}")
+        return code
+    print(_("usage: nowplaying-viz check [--json] | doctor [--json] [--notify]"), file=sys.stderr)
     return 2
 
 

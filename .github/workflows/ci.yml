@@ -34,8 +34,8 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Unit tests
         run: python -m unittest discover -s tests -v
-      - name: helper.py and check.py compile
-        run: python -m py_compile package/contents/code/helper.py package/contents/code/check.py
+      - name: helper.py and cli.py compile
+        run: python -m py_compile package/contents/code/helper.py package/contents/code/cli.py
 
   qml:
     name: QML tests

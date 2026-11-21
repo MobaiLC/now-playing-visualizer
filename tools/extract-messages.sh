@@ -29,7 +29,7 @@ find package -name '*.qml' | sort > "$tmp/qml.txt"
 xgettext --from-code=UTF-8 -C -kde -ci18n -ki18n:1 -ki18nc:1c,2 -ki18np:1,2 -ki18ncp:1c,2,3 \
     --package-name="Now Playing Visualizer" --msgid-bugs-address="https://github.com/MobaiLC/now-playing-visualizer/issues" \
     -L JavaScript -o "$tmp/qml.pot" -f "$tmp/qml.txt" "$tmp/schema-strings.js"
-xgettext --from-code=UTF-8 -L Python -k_ -o "$tmp/py.pot" package/contents/code/check.py
+xgettext --from-code=UTF-8 -L Python -k_ -o "$tmp/py.pot" package/contents/code/cli.py
 msgcat --use-first "$tmp/qml.pot" "$tmp/py.pot" -o translate/template.pot
 sed -i "s/charset=CHARSET/charset=UTF-8/" translate/template.pot
 
