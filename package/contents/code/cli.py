@@ -56,8 +56,20 @@ def check(config_file):
         return 2, report
     helper.migrate(user)  # on our copy only
     schema = helper.load_schema()
-    eff, found = helper.resolve_config(user, schema, helper.load_builtin_presets())
     issues = report["issues"]
+    # Drop structurally wrong sections (reported once) so the merge cannot crash or flood.
+    for name in ("overrides", "presets", "audio"):
+        if name in user and not isinstance(user[name], dict):
+            issues.append(issue("invalid_option", name, user[name], {}))
+            user[name] = {}
+    for n in [n for n, p in user.get("presets", {}).items() if not isinstance(p, dict)]:
+        issues.append(issue("invalid_option", f"presets.{n}", user["presets"].pop(n), {}))
+    for name, sec in [("overrides", user.get("overrides", {}))] + \
+            [(f"presets.{n}", p) for n, p in user.get("presets", {}).items()]:
+        for k in [k for k, v in sec.items() if not isinstance(v, dict)
+                  and any(o.startswith(k + ".") for o in schema["options"])]:
+            issues.append(issue("invalid_option", k if name == "overrides" else f"{name}.{k}", sec.pop(k), {}))
+    eff, found = helper.resolve_config(user, schema, helper.load_builtin_presets())
     for i in found:
         if i["code"] == "preset_missing":
             issues.append(issue("preset_missing", "preset", i["detail"], "lookas"))

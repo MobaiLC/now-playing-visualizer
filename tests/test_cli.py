@@ -55,6 +55,22 @@ class CheckTests(unittest.TestCase):
         self.assertEqual([(i["code"], i["option"]) for i in rep["issues"]],
                          [("unknown_option", "bars.styel")])
 
+    def test_wrong_section_types_are_reported(self):
+        for name in ("overrides", "presets", "audio"):
+            code, rep = self.run_check(self.user(**{name: [1]}))
+            self.assertEqual(code, 1, name)
+            self.assertEqual([(i["code"], i["option"]) for i in rep["issues"]],
+                             [("invalid_option", name)])
+        code, rep = self.run_check(self.user(presets={"mine": [1]}))
+        self.assertEqual([(i["code"], i["option"]) for i in rep["issues"]],
+                         [("invalid_option", "presets.mine")])
+
+    def test_leaf_where_section_expected_is_one_issue(self):
+        code, rep = self.run_check(self.user(overrides={"bars": 5}))
+        self.assertEqual(code, 1)
+        self.assertEqual([(i["code"], i["option"], i["value"]) for i in rep["issues"]],
+                         [("invalid_option", "bars", 5)])
+
     def test_audio_is_not_unknown(self):
         code, _ = self.run_check(self.user(audio={"apps": ["x"]}))
         self.assertEqual(code, 0)
