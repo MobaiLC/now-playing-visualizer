@@ -418,8 +418,9 @@ QT6_QML = "/usr/lib/qt6/qml"
 
 
 def qml_runtime():
-    return shutil.which("qml6") or shutil.which("qml") or (
-        "/usr/lib/qt6/bin/qml" if os.path.exists("/usr/lib/qt6/bin/qml") else None)
+    # a bare "qml" may be Qt 5, so the Qt 6 path comes first
+    return shutil.which("qml6") or (
+        "/usr/lib/qt6/bin/qml" if os.path.exists("/usr/lib/qt6/bin/qml") else None) or shutil.which("qml")
 
 
 def settings_env(env):
@@ -435,8 +436,12 @@ def settings_main():
         print("No Qt QML runtime found (install qt6-declarative).", file=sys.stderr)
         return 1
     # after "--" the window reads --port itself (NPV_PORT reaches it)
-    os.execvpe(runtime, [runtime, str(HERE.parent / "settings" / "settings.qml"),
-                         "--", "--port", str(helper.PORT)], settings_env(os.environ))
+    try:
+        os.execvpe(runtime, [runtime, str(HERE.parent / "settings" / "settings.qml"),
+                             "--", "--port", str(helper.PORT)], settings_env(os.environ))
+    except OSError as e:
+        print(f"Can't run {runtime}: {e} (install qt6-declarative).", file=sys.stderr)
+        return 1
 
 
 MARKS = {"ok": "✓", "warn": "!", "fail": "✗", "skip": "-"}

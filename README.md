@@ -105,7 +105,7 @@ Right-click the widget → **Configure…**
 
 ### Settings window (Hyprland and other desktops)
 
-Without Plasma there is no **Configure…**: run `nowplaying-viz settings`, pick *Now Playing Visualizer Settings* in your launcher, or right-click the desktop card. It opens the same Design and Audio pages in their own window.
+Without Plasma there is no **Configure…**: run `nowplaying-viz settings`, pick *Now Playing Visualizer Settings* in your launcher, or right-click the desktop card. It opens the same Design and Audio pages in their own window (in English outside Plasma).
 
 Everything is stored in `~/.config/nowplaying-viz/config.json`, which you can also edit by hand; the widget reloads when the file is saved:
 

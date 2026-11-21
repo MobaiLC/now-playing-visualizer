@@ -292,6 +292,26 @@ class EditOwnershipTests(unittest.IsolatedAsyncioTestCase):
         self.assertIs(helper.edit["owner"], b)
         self.assertIsNone(helper.edit["revert"])
         self.assertEqual(read_user()["preset"], "neon")
+        self.assertTrue(b.sent[-1]["dirty"])  # the inherited draft is unapplied
+        with mock.patch.object(helper, "REVERT_GRACE", 0):
+            helper.end_edit_later(b)
+            await asyncio.sleep(0.01)
+        self.assertEqual(read_user()["preset"], "lookas")
+
+    async def test_takeover_with_unreadable_config_keeps_the_revert(self):
+        a, b = FakeWs({"type": "beginEdit"}, {"type": "setPreset", "name": "neon"}), FakeWs()
+        good = helper.CONFIG_FILE.read_bytes()
+        with mock.patch.object(helper, "REVERT_GRACE", 30):
+            await helper.handler(a)
+            helper.CONFIG_FILE.write_text("{ not json")
+            with self.assertRaises(helper.ConfigUnreadable):
+                await helper.on_message(b, {"type": "beginEdit"})
+        self.assertIs(helper.edit["owner"], b)
+        helper.CONFIG_FILE.write_bytes(good)
+        with mock.patch.object(helper, "REVERT_GRACE", 0):
+            helper.end_edit_later(b)
+            await asyncio.sleep(0.01)
+        self.assertEqual(read_user()["preset"], "lookas")
 
     async def test_failed_revert_write_still_frees_the_edit(self):
         a, b = FakeWs({"type": "beginEdit"}, {"type": "setPreset", "name": "neon"}), FakeWs()

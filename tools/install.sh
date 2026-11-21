@@ -29,7 +29,7 @@ install -m 755 tools/nowplaying-viz ~/.local/bin/nowplaying-viz
 
 # the card's right-click and the launcher open this; Plasma has its own Configure…
 mkdir -p ~/.local/share/applications
-sed "s|^Exec=.*|Exec=$HOME/.local/bin/nowplaying-viz settings|" packaging/now-playing-visualizer-settings.desktop \
+sed "s|^Exec=.*|Exec=\"$HOME/.local/bin/nowplaying-viz\" settings|" packaging/now-playing-visualizer-settings.desktop \
     >~/.local/share/applications/now-playing-visualizer-settings.desktop
 
 units=~/.config/systemd/user

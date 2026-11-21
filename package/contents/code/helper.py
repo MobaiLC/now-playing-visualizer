@@ -397,8 +397,10 @@ def restore_design(design):
 
 
 def begin_edit(ws):
-    if edit["revert"]:
+    if edit["revert"]:  # inherit the closed editor's draft and its snapshot: the revert stays owed
         edit["revert"].cancel()
+        edit.update(owner=ws, revert=None, last_push=0.0)
+        return
     edit.update(owner=ws, snapshot=design_of(read_user()), history=[], last_push=0.0, revert=None)
 
 

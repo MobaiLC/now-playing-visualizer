@@ -105,7 +105,7 @@ Clic derecho en el widget → **Configurar…**
 
 ### Ventana de ajustes (Hyprland y otros escritorios)
 
-Sin Plasma no hay **Configurar…**: ejecuta `nowplaying-viz settings`, elige *Ajustes de Now Playing Visualizer* en tu lanzador o haz clic derecho en la tarjeta del escritorio. Abre las mismas páginas de Diseño y Audio en su propia ventana.
+Sin Plasma no hay **Configurar…**: ejecuta `nowplaying-viz settings`, elige *Ajustes de Now Playing Visualizer* en tu lanzador o haz clic derecho en la tarjeta del escritorio. Abre las mismas páginas de Diseño y Audio en su propia ventana (en inglés fuera de Plasma).
 
 Todo se guarda en `~/.config/nowplaying-viz/config.json`, que también puedes editar a mano; el widget se actualiza al guardar el archivo:
 

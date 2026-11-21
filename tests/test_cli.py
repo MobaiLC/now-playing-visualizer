@@ -445,10 +445,6 @@ class CrashTests(unittest.TestCase):
         self.assertIn("'cava'", calls[0][-1])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class SettingsTests(unittest.TestCase):
     def test_settings_without_runtime(self):
         err = io.StringIO()
@@ -469,6 +465,23 @@ class SettingsTests(unittest.TestCase):
                                 "--", "--port", str(cli.helper.PORT)])
         self.assertIn("QT_QUICK_CONTROLS_STYLE", env)
 
+    def test_settings_runtime_not_executable(self):
+        err = io.StringIO()
+        with mock.patch.object(cli, "qml_runtime", return_value="/x/qml6"), \
+                mock.patch.object(cli.os, "execvpe", side_effect=PermissionError("denied")), \
+                mock.patch("sys.stderr", err):
+            self.assertEqual(cli.settings_main(), 1)
+        self.assertIn("/x/qml6", err.getvalue())
+
+    def test_qml_runtime_prefers_qt6(self):
+        which = {"qml": "/usr/bin/qml"}
+        with mock.patch.object(cli.shutil, "which", side_effect=which.get), \
+                mock.patch.object(cli.os.path, "exists", return_value=True):
+            self.assertEqual(cli.qml_runtime(), "/usr/lib/qt6/bin/qml")
+        with mock.patch.object(cli.shutil, "which", side_effect=which.get), \
+                mock.patch.object(cli.os.path, "exists", return_value=False):
+            self.assertEqual(cli.qml_runtime(), "/usr/bin/qml")
+
     def test_style_respects_user_choice(self):
         self.assertEqual(cli.settings_env({"QT_QUICK_CONTROLS_STYLE": "Material"})["QT_QUICK_CONTROLS_STYLE"], "Material")
         with mock.patch.object(cli.os.path, "isdir", return_value=False):
@@ -481,3 +494,7 @@ class SettingsTests(unittest.TestCase):
         with mock.patch("sys.stderr", err):
             self.assertEqual(cli.main([]), 2)
         self.assertIn("settings", err.getvalue())
+
+
+if __name__ == "__main__":
+    unittest.main()
