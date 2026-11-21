@@ -13,12 +13,14 @@ version=$(python3 -c 'import json; print(json.load(open("package/metadata.json")
 mkdir -p build
 out="build/now-playing-visualizer-$version.plasmoid"
 python3 -I - "$out" <<'PY'
-import sys, zipfile
+import os, sys, zipfile
 from pathlib import Path
 root = Path("package")
+# followlinks: contents/quickshell/ui is a symlink to ../ui; the zip gets a real copy
+files = sorted(Path(d, f) for d, _, fs in os.walk(root, followlinks=True) for f in fs)
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as z:
-    for f in sorted(root.rglob("*")):
-        if f.is_file() and "__pycache__" not in f.parts:
+    for f in files:
+        if "__pycache__" not in f.parts:
             z.write(f, f.relative_to(root))
 PY
 echo "built $out"

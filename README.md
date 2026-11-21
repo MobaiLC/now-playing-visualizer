@@ -178,7 +178,7 @@ package/            the plasmoid (installed as-is)
   contents/ui/        QML: main, NowPlaying, Card, Bars, Design and Audio pages, MprisSource
   contents/ui/renderers/  one JS file per bar style, colours, shared geometry
   contents/code/      helper.py, cli.py, schema.json, presets/*.json
-packaging/          systemd user units, AUR PKGBUILD
+packaging/          systemd user units, AUR PKGBUILDs, install.sh
 tests/              helper unit tests (python3 -m unittest discover -s tests)
 tools/              install, make-plasmoid, translations, config docs
 translate/          gettext template and translations

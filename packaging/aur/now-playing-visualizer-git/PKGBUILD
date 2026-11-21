@@ -1,0 +1,43 @@
+# Maintainer: MobaiLC <https://github.com/MobaiLC>
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Shared fields must match ../now-playing-visualizer/PKGBUILD (tests/test_pkgbuild.py).
+
+pkgname=now-playing-visualizer-git
+_pkgname=now-playing-visualizer
+pkgver=0.4.0
+pkgrel=1
+pkgdesc="Now playing card with cover art, progress and a CAVA audio visualizer, for KDE Plasma and Hyprland (quickshell)"
+arch=('any')
+url="https://github.com/MobaiLC/now-playing-visualizer"
+license=('GPL-3.0-or-later')
+depends=('kirigami' 'qt6-declarative' 'qt6-websockets' 'cava' 'pipewire' 'wireplumber' 'python' 'systemd')
+optdepends=('plasma-workspace: Plasma widget'
+            'plasma5support: start the helper from the widget'
+            'kcmutils: settings pages'
+            'quickshell: Hyprland desktop card'
+            'libnotify: notifications from doctor --notify')
+makedepends=('git' 'gettext')
+provides=('now-playing-visualizer')
+conflicts=('now-playing-visualizer')
+source=("$_pkgname::git+${url}.git")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "$_pkgname"
+    git describe --tags --long --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+    cd "$_pkgname"
+    tools/build-translations.sh
+}
+
+check() {
+    cd "$_pkgname"
+    python -m unittest discover -s tests
+}
+
+package() {
+    cd "$_pkgname"
+    packaging/install.sh "$pkgdir"
+}

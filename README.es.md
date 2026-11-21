@@ -178,7 +178,7 @@ package/            el plasmoide (se instala tal cual)
   contents/ui/        QML: main, NowPlaying, Card, Bars, páginas Diseño y Audio, MprisSource
   contents/ui/renderers/  un archivo JS por estilo de barras, colores, geometría común
   contents/code/      helper.py, cli.py, schema.json, presets/*.json
-packaging/          unidades de systemd, PKGBUILD de AUR
+packaging/          unidades de systemd, PKGBUILD de AUR, install.sh
 tests/              tests del helper (python3 -m unittest discover -s tests)
 tools/              instalar, crear el .plasmoid, traducciones, documentación de opciones
 translate/          plantilla de gettext y traducciones

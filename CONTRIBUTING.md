@@ -20,6 +20,8 @@ Useful while working:
 
 The user-facing `nowplaying-viz check` and `doctor` commands live in `package/contents/code/cli.py`; the agent guide is `AGENTS.md` (also shipped as a skill, with `packaging/skill-frontmatter.md` as its header). Keep that guide's commands true when you change them.
 
+What the AUR packages install is defined once, in `packaging/install.sh`; both PKGBUILDs in `packaging/aur/` call it, and `tests/test_pkgbuild.py` keeps their shared fields identical. After changing a PKGBUILD, regenerate its `.SRCINFO` with `makepkg --printsrcinfo > .SRCINFO` (`tools/test-in-docker.sh` fails on a stale one).
+
 ## Before sending a pull request
 
 ```bash
