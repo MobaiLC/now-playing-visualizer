@@ -15,7 +15,8 @@ TestCase {
 
     function test_compiles_data() {
         return ["main.qml", "NowPlaying.qml", "Card.qml", "Bars.qml", "Helper.qml", "Launcher.qml", "MprisSource.qml",
-                "configDesign.qml", "configApps.qml", "../quickshell/shell.qml"].map(f => ({ tag: f, file: f }));
+                "configDesign.qml", "configApps.qml", "DesignPage.qml", "AudioPage.qml",
+                "../quickshell/shell.qml"].map(f => ({ tag: f, file: f }));
     }
     function test_compiles(data) {
         const c = Qt.createComponent("../../package/contents/ui/" + data.file);

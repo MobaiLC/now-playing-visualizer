@@ -21,6 +21,8 @@ Item {
     signal presetFileReceived(var result)
     signal presetsReceived(var list)
     signal editStateReceived(var state)
+    // another connection owns the design edit; nothing was written
+    signal editBusyReceived()
 
     // An older helper is still running (it survived an update). One the
     // widget started is asked to quit, and the next retry starts the new
@@ -118,6 +120,8 @@ Item {
                 root.presetsReceived(m.data);
             else if (m.type === "editState")
                 root.editStateReceived(m);
+            else if (m.type === "editBusy")
+                root.editBusyReceived();
         }
         onStatusChanged: {
             if (socket.status === WebSocket.Error || socket.status === WebSocket.Closed) {

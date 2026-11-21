@@ -26,7 +26,7 @@ for label in dict.fromkeys(labels):
 PY
 
 find package -name '*.qml' | sort > "$tmp/qml.txt"
-xgettext --from-code=UTF-8 -C -kde -ci18n -ki18n:1 -ki18nc:1c,2 -ki18np:1,2 -ki18ncp:1c,2,3 \
+xgettext --from-code=UTF-8 -C -kde -ci18n -ki18n:1 -ki18nc:1c,2 -ki18np:1,2 -ki18ncp:1c,2,3 -ktr:1 -ktrp:1,2 -ktrc:1c,2 \
     --package-name="Now Playing Visualizer" --msgid-bugs-address="https://github.com/MobaiLC/now-playing-visualizer/issues" \
     -L JavaScript -o "$tmp/qml.pot" -f "$tmp/qml.txt" "$tmp/schema-strings.js"
 xgettext --from-code=UTF-8 -L Python -k_ -o "$tmp/py.pot" package/contents/code/cli.py
