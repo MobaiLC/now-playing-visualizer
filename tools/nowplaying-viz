@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 MobaiLC
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# nowplaying-viz <check|doctor> [--json] [--notify]
+set -euo pipefail
+
+case "${1:-}" in "" | -h | --help) echo "Usage: nowplaying-viz <check|doctor> [--json] [--notify]"; exit 0 ;; esac
+
+id=com.github.mobailc.nowplayingvisualizer
+for dir in ~/.local/share/plasma/plasmoids/$id /usr/share/plasma/plasmoids/$id; do
+    # -I: ignore the user's PYTHONPATH and cwd, cli.py adds its own folder
+    [ -f "$dir/contents/code/cli.py" ] && exec python3 -I "$dir/contents/code/cli.py" "$@"
+done
+echo "nowplaying-viz: widget not installed" >&2
+exit 1

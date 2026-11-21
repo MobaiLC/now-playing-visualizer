@@ -100,4 +100,4 @@ jobs:
       - name: Translations compile
         run: for po in translate/*.po; do msgfmt --check --statistics -o /dev/null "$po"; done
       - name: Shell scripts
-        run: shellcheck tools/*.sh tests/integration/run.sh
+        run: shellcheck tools/*.sh tools/nowplaying-viz tests/integration/run.sh
