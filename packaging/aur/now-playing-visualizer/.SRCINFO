@@ -23,6 +23,6 @@ pkgbase = now-playing-visualizer
 	provides = now-playing-visualizer-git
 	conflicts = now-playing-visualizer-git
 	source = now-playing-visualizer-0.4.0.tar.gz::https://github.com/MobaiLC/now-playing-visualizer/archive/refs/tags/v0.4.0.tar.gz
-	sha256sums = SKIP
+	sha256sums = 9af5e2dbe727873e3afedce52f31a096705c789d93cfafe4675d7b065c0d4fc4
 
 pkgname = now-playing-visualizer
