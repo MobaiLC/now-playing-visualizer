@@ -8,6 +8,8 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 
 After updating, restart the helper service (`systemctl --user restart nowplaying-viz`): the protocol went from 2 to 3, and the widget warns when the running service is older.
 
+Upgrading a per-user install: `tools/install.sh` now refreshes the systemd units you already have even without `--systemd`, so the post-update check stops calling the removed `check.py`. Switching to the AUR package: remove the per-user install first, it is used before the package's copy.
+
 ### Added
 - **Desktop card for Hyprland**, a quickshell component that shows the same card and bars as the Plasma widget, sharing its player and helper logic (`NowPlaying.qml`). Its size, corner, margins and monitor are the new `desktop.*` options (`desktop.monitor`, `anchor`, `marginX`, `marginY`, `width`, `height`), set in `config.json` and listed in [docs/CONFIG.md](docs/CONFIG.md).
 - **`nowplaying-viz check`** validates `config.json` (JSON syntax, unknown options, wrong types, values out of range, a monitor that is not connected) and says what falls back to a default.
@@ -25,6 +27,7 @@ After updating, restart the helper service (`systemctl --user restart nowplaying
 
 ### Fixed
 - The bars stayed flat with *Follow the player* or an app list: CAVA 1.0 opens a single mono input, and stereo streams were never linked into it. Every channel is now linked into a mono input, and PipeWire mixes them.
+- A `config.json` that does not parse is never overwritten any more. Before, closing Design without Apply, Undo, a Design change or the Audio page wrote the defaults over it, losing the app list and saved presets; now the change is refused (Design says so) and the file is left as it is.
 - A config section of the wrong type (for example a number where an object is expected) crashed `migrate` and with it the config check; it is now reported as one issue.
 
 ### Security
