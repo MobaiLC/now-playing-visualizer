@@ -48,7 +48,7 @@ tools/install.sh --systemd  # opcional: servicio del helper + comprobación tras
 Después reinicia Plasma (`systemctl --user restart plasma-plasmashell`, o cierra sesión y vuelve a entrar), haz clic derecho en el escritorio → **Añadir elementos gráficos…** → **Now Playing Visualizer**.
 
 Otras formas, cuando estén publicadas (todavía no lo están):
-- **AUR:** `now-playing-visualizer` (versiones) o `now-playing-visualizer-git` (último commit). Los PKGBUILD están en [`packaging/aur/`](packaging/aur/). Instalan el widget y la tarjeta de Hyprland para todos los usuarios, junto con las unidades de systemd, que no se activan hasta que tú lo hagas.
+- **AUR:** `now-playing-visualizer` (versiones) o `now-playing-visualizer-git` (último commit). Los PKGBUILD están en [`packaging/aur/`](packaging/aur/). Instalan el widget y la tarjeta de Hyprland para todos los usuarios, junto con las unidades de systemd, que no se activan hasta que tú lo hagas. Si antes lo instalaste desde git, quita primero esa instalación de usuario (mira [Desinstalar](#desinstalar)): la copia de `~/.local/share` se usa antes que la del paquete.
 - **KDE Store / archivo `.plasmoid`:** créalo con `tools/make-plasmoid.sh` e instálalo con `kpackagetool6 -t Plasma/Applet -i build/now-playing-visualizer-*.plasmoid`.
 
 `--systemd` instala dos unidades de usuario:
@@ -74,7 +74,10 @@ En Hyprland (sin Plasma) el mismo helper alimenta una tarjeta dibujada con [quic
 
 ```
 exec-once = quickshell -p ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/quickshell
+exec-once = systemctl --user start nowplaying-viz
 ```
+
+La segunda línea arranca el helper: sin uwsm, Hyprland nunca llega a `graphical-session.target`, que es donde se activa el servicio. Con uwsm no molesta.
 
 Con el paquete de AUR la ruta es `/usr/share/now-playing-visualizer/quickshell`. El tamaño, la esquina, los márgenes y el monitor son las opciones `desktop.*` de `config.json` (mira [docs/CONFIG.md](docs/CONFIG.md)); `hyprctl monitors` lista los nombres de los monitores. Después:
 
@@ -83,7 +86,7 @@ nowplaying-viz check    # valida config.json (salida 0 = bien)
 nowplaying-viz doctor   # revisa programas, servicio, helper, reproductores y configuración
 ```
 
-Para quitarlo: borra la línea `exec-once`, luego `systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path` y `rm -r ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer ~/.local/bin/nowplaying-viz ~/.config/systemd/user/nowplaying-viz*`.
+Para quitarlo: borra las dos líneas `exec-once`, luego `systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path` y `rm -r ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer ~/.local/bin/nowplaying-viz ~/.config/systemd/user/nowplaying-viz*`.
 
 ### Usarlo con un agente de IA
 

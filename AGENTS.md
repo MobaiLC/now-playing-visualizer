@@ -16,7 +16,7 @@ Run each verification command and read its output before the next step.
 
 ### Install, Hyprland (Arch)
 
-1. Dependencies and package. The AUR package may not be published yet: check first with `yay -Si now-playing-visualizer` (or `pacman -Si`). If it exists (`now-playing-visualizer-git` is the latest commit):
+1. Dependencies and package. The AUR package may not be published yet: check first with `yay -Si now-playing-visualizer` (or `pacman -Si`). If it exists (`now-playing-visualizer-git` is the latest commit), and `~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer` exists too, remove that per-user install before switching to the AUR package (README, Uninstall): it is used before the package's copy. Then:
    ```bash
    yay -S now-playing-visualizer      # or paru -S, or makepkg -si in a clone of the AUR repo
    pacman -Q now-playing-visualizer   # prints the version
@@ -34,9 +34,10 @@ Run each verification command and read its output before the next step.
    systemctl --user is-active nowplaying-viz    # must print: active
    ```
    (`tools/install.sh --systemd` already did this.)
-3. Add the card to Hyprland: show the user this one line for `~/.config/hypr/hyprland.conf` (see the rule at the top about when you may add it yourself):
+3. Add the card to Hyprland: show the user these two lines for `~/.config/hypr/hyprland.conf` (see the rule at the top about when you may add them yourself):
    - AUR install: `exec-once = quickshell -p /usr/share/now-playing-visualizer/quickshell`
    - git install: `exec-once = quickshell -p ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/quickshell`
+   - both: `exec-once = systemctl --user start nowplaying-viz` (without uwsm Hyprland never reaches `graphical-session.target`, so the enabled service would not start after a reboot; harmless with uwsm)
 
    Start it now without logging out: run that command after `exec-once = ` in the background, for example `quickshell -p <path> & disown`.
 4. Verify:
@@ -48,7 +49,7 @@ Run each verification command and read its output before the next step.
 
 ### Install, Plasma
 
-1. Package or git. Check the AUR first: `yay -Si now-playing-visualizer`. If it exists:
+1. Package or git. Check the AUR first: `yay -Si now-playing-visualizer`. If it exists and the widget was installed from git before, remove the per-user install before switching to the AUR package (README, Uninstall): it is used before the package's copy. Then:
    ```bash
    yay -S now-playing-visualizer
    pacman -Q now-playing-visualizer              # prints the version

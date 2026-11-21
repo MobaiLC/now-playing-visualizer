@@ -27,15 +27,23 @@ fi
 mkdir -p ~/.local/bin
 install -m 755 tools/nowplaying-viz ~/.local/bin/nowplaying-viz
 
+units=~/.config/systemd/user
 if [ "${1:-}" = "--systemd" ]; then
-    mkdir -p ~/.config/systemd/user
-    cp packaging/systemd/* ~/.config/systemd/user/
+    mkdir -p "$units"
+    cp packaging/systemd/* "$units/"
     if systemctl --user show-environment >/dev/null 2>&1; then
         systemctl --user daemon-reload
         systemctl --user enable --now nowplaying-viz.service nowplaying-viz-check.path
         systemctl --user restart nowplaying-viz.service
     else
         echo "No systemd user session here: units copied, not enabled." >&2
+    fi
+elif compgen -G "$units/nowplaying-viz*" >/dev/null; then
+    # units from an earlier install (0.3.0's check unit runs the removed check.py):
+    # refresh them, but enable nothing new
+    cp packaging/systemd/* "$units/"
+    if systemctl --user show-environment >/dev/null 2>&1; then
+        systemctl --user daemon-reload
     fi
 fi
 # a service already running keeps the old helper until it is restarted
@@ -47,5 +55,6 @@ if [ "$plasma" = 1 ]; then
 else
     echo "Done. Add to your Hyprland config:"
     echo "  exec-once = quickshell -p $dest/contents/quickshell"
+    echo "  exec-once = systemctl --user start nowplaying-viz   # starts the helper; needed without uwsm"
     echo "Then run 'nowplaying-viz doctor' (make sure ~/.local/bin is in PATH)."
 fi

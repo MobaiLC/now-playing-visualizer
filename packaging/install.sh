@@ -7,9 +7,10 @@
 #
 #   packaging/install.sh "$pkgdir"
 set -euo pipefail
+dest=${1:?usage: packaging/install.sh DESTDIR}
+dest=$(realpath -m -- "$dest") # before the cd: a relative DESTDIR means the caller's folder
 cd "$(dirname "$0")/.."
 
-dest=${1:?usage: packaging/install.sh DESTDIR}
 id=com.github.mobailc.nowplayingvisualizer
 plasmoid="$dest/usr/share/plasma/plasmoids/$id"
 
@@ -17,6 +18,9 @@ install -d "$plasmoid"
 # cp -r keeps contents/quickshell/ui as its relative symlink to ../ui
 cp -r package/. "$plasmoid/"
 find "$plasmoid" -name __pycache__ -type d -prune -exec rm -rf {} +
+# whatever the checkout's umask or modes: readable by all, writable by root only
+# (helper.py and cli.py run through python3, nothing in here needs +x)
+chmod -R u=rwX,go=rX "$plasmoid"
 install -d "$plasmoid/contents/skill"
 cat packaging/skill-frontmatter.md AGENTS.md > "$plasmoid/contents/skill/SKILL.md"
 chmod 644 "$plasmoid/contents/skill/SKILL.md"

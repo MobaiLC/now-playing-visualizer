@@ -48,7 +48,7 @@ tools/install.sh --systemd  # optional: helper service + post-update check
 Then restart Plasma (`systemctl --user restart plasma-plasmashell`, or log out and in), right-click the desktop → **Add Widgets…** → **Now Playing Visualizer**.
 
 Other ways, once they are published (not yet):
-- **AUR:** `now-playing-visualizer` (releases) or `now-playing-visualizer-git` (latest commit). The PKGBUILDs are in [`packaging/aur/`](packaging/aur/). They install the widget and the Hyprland card for every user, plus the systemd units, which stay disabled until you enable them.
+- **AUR:** `now-playing-visualizer` (releases) or `now-playing-visualizer-git` (latest commit). The PKGBUILDs are in [`packaging/aur/`](packaging/aur/). They install the widget and the Hyprland card for every user, plus the systemd units, which stay disabled until you enable them. If you installed from git before, remove the per-user install first (see [Uninstall](#uninstall)): a copy in `~/.local/share` is used before the package's.
 - **KDE Store / a `.plasmoid` file:** build one with `tools/make-plasmoid.sh` and install it with `kpackagetool6 -t Plasma/Applet -i build/now-playing-visualizer-*.plasmoid`.
 
 The `--systemd` option installs two user units:
@@ -74,7 +74,10 @@ On Hyprland (no Plasma) the same helper drives a card drawn by [quickshell](http
 
 ```
 exec-once = quickshell -p ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/quickshell
+exec-once = systemctl --user start nowplaying-viz
 ```
+
+The second line starts the helper: without uwsm, Hyprland never reaches `graphical-session.target`, where the service is enabled. It does no harm with uwsm.
 
 With the AUR package the path is `/usr/share/now-playing-visualizer/quickshell`. Size, corner, margins and monitor are the `desktop.*` options in `config.json` (see [docs/CONFIG.md](docs/CONFIG.md)); `hyprctl monitors` lists the monitor names. Then:
 
@@ -83,7 +86,7 @@ nowplaying-viz check    # validates config.json (exit 0 = fine)
 nowplaying-viz doctor   # checks programs, service, helper, players and config
 ```
 
-To remove it: delete the `exec-once` line, then `systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path`, `rm -r ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer ~/.local/bin/nowplaying-viz ~/.config/systemd/user/nowplaying-viz*`.
+To remove it: delete the two `exec-once` lines, then `systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path`, `rm -r ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer ~/.local/bin/nowplaying-viz ~/.config/systemd/user/nowplaying-viz*`.
 
 ### Using it with an AI agent
 
