@@ -8,6 +8,7 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "tr.js" as Tr
+import "edit.js" as Edit
 
 // Visual editor for config.json, generated from code/schema.json: every
 // option there becomes a control here, so adding an option needs no QML.
@@ -25,16 +26,18 @@ Item {
     // disconnects without a commit.
     property bool unsavedChanges: false
     property bool canUndo: false
+    property var edit: Edit.initial()
     // another window owns the edit: read-only until it lets go
-    property bool busy: false
-    // the next clean editState is the answer to apply()
-    property bool applying: false
+    readonly property bool busy: edit.busy
     signal committed()
 
     function apply() {
+        const next = Edit.apply(edit);
+        if (!next)
+            return;
         flushNow();
         helper.send({ type: "commitEdit" });
-        applying = true;
+        edit = next;
     }
     function undo() {
         act({ type: "undo" });
@@ -212,16 +215,14 @@ Item {
         onPresetsReceived: list => page.presets = list
         onPresetFileReceived: result => page.fileResult = result
         onEditStateReceived: st => {
-            page.busy = false;
+            page.edit = Edit.stateReceived(page.edit, st);
             page.unsavedChanges = st.dirty;
             page.canUndo = st.canUndo;
             page.saveError = st.error || "";
-            if (page.applying && !st.dirty && !st.error) {
-                page.applying = false;
+            if (page.edit.committed)
                 page.committed();
-            }
         }
-        onEditBusyReceived: page.busy = true
+        onEditBusyReceived: page.edit = Edit.busyReceived(page.edit)
         onBarsReceived: values => {
             page.liveBars = values;
             page.liveBarsAt = Date.now();

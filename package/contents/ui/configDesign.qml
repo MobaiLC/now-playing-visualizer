@@ -18,6 +18,9 @@ KCM.SimpleKCM {
     // with unsaved changes asks first.
     readonly property bool unsavedChanges: design.unsavedChanges
     function saveConfig() {
+        // read-only while another window edits: a commit would save its draft
+        if (design.busy)
+            return;
         design.apply();
         // also goes through Plasma's config, in case our socket closes first
         cfg_designCommit = String(Date.now());

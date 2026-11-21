@@ -17,7 +17,7 @@ function tr(msgid, ...args) {
 
 function trp(singular, plural, n, ...args) {
     return typeof i18np === "function" ? i18np(singular, plural, n, ...args)
-                                       : fill(n === 1 ? singular : plural, [n, ...args]);
+                                       : fill(Number(n) === 1 ? singular : plural, [n, ...args]);
 }
 
 function trc(context, msgid, ...args) {
