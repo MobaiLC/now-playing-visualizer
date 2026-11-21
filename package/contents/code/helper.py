@@ -1502,9 +1502,11 @@ DESIGN_MESSAGES = ("setDesign", "setPreset", "resetDesign", "savePreset", "delet
 
 async def on_message(ws, msg):
     # commitEdit is exempt: Plasma's Apply sends it from the widget's connection, not the owner's.
-    # A pending revert means the owner's connection is gone: a new editor may take over.
+    # A pending revert means the owner's connection is gone: only beginEdit may take over then;
+    # any other write would be silently overwritten by the revert.
     if (msg.get("type") in DESIGN_MESSAGES and msg["type"] != "commitEdit"
-            and edit["owner"] is not None and edit["owner"] is not ws and edit["revert"] is None):
+            and edit["owner"] is not None and edit["owner"] is not ws
+            and not (msg["type"] == "beginEdit" and edit["revert"] is not None)):
         await ws.send(json.dumps({"type": "editBusy"}))
     elif msg.get("type") == "listApps":
         apps = await asyncio.to_thread(lambda: list_audio_apps(pw_dump()))

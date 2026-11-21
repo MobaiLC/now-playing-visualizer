@@ -302,6 +302,19 @@ class EditOwnershipTests(unittest.IsolatedAsyncioTestCase):
         await helper.on_message(b, {"type": "beginEdit"})
         self.assertEqual(b.sent[-1]["type"], "editState")
 
+    async def test_non_owner_write_during_grace_is_refused(self):
+        a, b = FakeWs({"type": "beginEdit"}), FakeWs()
+        with mock.patch.object(helper, "REVERT_GRACE", 30):
+            await helper.handler(a)
+            before = helper.CONFIG_FILE.read_bytes()
+            await helper.on_message(b, {"type": "setDesign", "changes": {"bars.count": 40}})
+            self.assertEqual(b.sent, [{"type": "editBusy"}])
+            self.assertEqual(helper.CONFIG_FILE.read_bytes(), before)
+            await helper.on_message(b, {"type": "beginEdit"})
+            self.assertEqual(b.sent[-1]["type"], "editState")
+            await helper.on_message(b, {"type": "setDesign", "changes": {"bars.count": 40}})
+        self.assertEqual(read_user()["overrides"]["bars"], {"count": 40})
+
 
 class WebSocketTests(unittest.IsolatedAsyncioTestCase):
     """The helper must talk to the widget and refuse web pages."""
