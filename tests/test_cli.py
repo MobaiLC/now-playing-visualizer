@@ -4,6 +4,7 @@
 
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -102,6 +103,14 @@ class CheckTests(unittest.TestCase):
         code, rep = self.run_check(text='{\n "a": ,\n}')
         self.assertEqual(code, 2)
         self.assertEqual((rep["issues"][0]["code"], rep["issues"][0]["line"]), ("config_parse", 2))
+
+    def test_unreadable_file_has_no_line_number(self):
+        self.file.mkdir()  # exists, but reading it is an OSError
+        code, rep = self.run_check()
+        self.assertEqual(code, 2)
+        text = cli.describe(rep["issues"][0])
+        self.assertTrue(text.startswith("config.json could not be read: "), text)
+        self.assertNotIn("None", text)
 
     def test_check_does_not_create_config(self):
         code, rep = self.run_check()
@@ -272,7 +281,8 @@ class DoctorTests(unittest.TestCase):
         self.fake_run = lambda cmd, **kw: (mock.Mock(stdout="inactive\n", returncode=3)
                                            if cmd[0] == "systemctl" else orig(cmd, **kw))
         svc = self.by_id(self.run_doctor(host="quickshell")[1])["service"]
-        self.assertEqual((svc["status"], svc["hint"]), ("fail", "systemctl --user enable --now nowplaying-viz"))
+        self.assertEqual(svc["status"], "fail")
+        self.assertTrue(svc["hint"].startswith("systemctl --user enable --now nowplaying-viz"), svc)
         self.assertEqual(self.by_id(self.run_doctor(host="plasma")[1])["service"]["status"], "warn")
 
     def test_audio_skipped_without_card(self):
@@ -304,6 +314,53 @@ class DoctorTests(unittest.TestCase):
     def test_links_skipped_without_per_app_audio(self):
         self.dump = list(STEREO_DUMP)
         self.assertEqual(self.by_id(self.run_doctor()[1])["links"]["status"], "skip")
+
+    def test_newer_helper_is_not_called_outdated(self):
+        self.status = dict(self.status, protocol=cli.helper.PROTOCOL + 1)
+        msg = self.by_id(self.run_doctor()[1])["helper"]["message"]
+        self.assertIn("newer", msg)
+        self.assertIn(str(cli.helper.PROTOCOL + 1), msg)
+        self.assertNotIn("outdated", msg)
+        self.status = dict(self.status, protocol=cli.helper.PROTOCOL - 1)
+        msg = self.by_id(self.run_doctor()[1])["helper"]["message"]
+        self.assertIn("outdated", msg)
+        self.assertIn(str(cli.helper.PROTOCOL - 1), msg)
+
+    def test_garbage_status_does_not_crash(self):
+        for cava in ("loud", [1], {"running": True, "peak": "x", "age": "y"}, {"running": True, "peak": True}):
+            self.status = dict(self.status, cava=cava)
+            code, rep = self.run_doctor()
+            self.assertIn(self.by_id(rep)["audio"]["status"], ("fail", "skip"), cava)
+
+    def test_notify_only_for_integrity_checks(self):
+        # links and audio fail (a runtime state), everything installed is fine
+        self.dump = list(STEREO_DUMP)
+        self.status = dict(self.status, cava={"running": True, "peak": 0, "age": 0.1})
+        user = {"version": cli.helper.CONFIG_VERSION, "preset": "lookas", "overrides": {},
+                "audio": {"followPlayer": True}}
+        code, rep = self.run_doctor(notify=True, user=user)
+        checks = self.by_id(rep)
+        self.assertEqual((code, checks["links"]["status"], checks["audio"]["status"]), (1, "fail", "fail"))
+        self.assertEqual(self.notified(), [])
+
+    def test_notification_points_to_the_command(self):
+        self.status = ConnectionRefusedError()
+        self.run_doctor(notify=True)
+        body = self.notified()[0][-1]
+        self.assertTrue(body.endswith("Details: nowplaying-viz doctor"), body)
+        self.assertNotIn("helper is not reachable", body)  # audio is not an integrity check
+
+    def test_hyprland_hint_for_a_session_without_uwsm(self):
+        line = "exec-once = systemctl --user start nowplaying-viz"
+        orig = self.fake_run
+        self.fake_run = lambda cmd, **kw: (mock.Mock(stdout="inactive\n", returncode=3)
+                                           if cmd[0] == "systemctl" else orig(cmd, **kw))
+        self.status = ConnectionRefusedError()
+        checks = self.by_id(self.run_doctor(host="quickshell")[1])
+        self.assertIn(line, checks["service"]["hint"])
+        self.assertIn(line, checks["helper"]["hint"])
+        checks = self.by_id(self.run_doctor(host="plasma")[1])
+        self.assertNotIn(line, checks["service"]["hint"] + checks["helper"]["hint"])
 
     def test_doctor_json_shape(self):
         with mock.patch.object(cli, "doctor", side_effect=lambda notify: self.run_doctor(notify=notify)), \
@@ -340,6 +397,51 @@ class DoctorTests(unittest.TestCase):
                 self.assertEqual(cli.detect_host(), "quickshell")
             with mock.patch.object(cli.shutil, "which", return_value=None):
                 self.assertEqual(cli.detect_host(), "none")
+
+
+class CrashTests(unittest.TestCase):
+    """doctor --notify runs unattended after updates: a crash must still notify."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.dir = Path(tmp.name)
+
+    def test_broken_helper_import_notifies_and_exits_2(self):
+        code = self.dir / "code"
+        code.mkdir()
+        (code / "cli.py").write_text((CODE / "cli.py").read_text())
+        (code / "helper.py").write_text("raise SyntaxError('half-written update')\n")
+        bin_ = self.dir / "bin"
+        bin_.mkdir()
+        log = self.dir / "notify.log"
+        (bin_ / "notify-send").write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" > {log}\n')
+        (bin_ / "notify-send").chmod(0o755)
+        env = {"PATH": f"{bin_}:/usr/bin:/bin", "LANGUAGE": "C", "LANG": "C", "HOME": str(self.dir)}
+        r = subprocess.run([sys.executable, "-I", str(code / "cli.py"), "doctor", "--notify"],
+                           capture_output=True, text=True, env=env)
+        self.assertEqual(r.returncode, 2, r.stderr)
+        self.assertIn("half-written update", r.stderr)
+        args = log.read_text()
+        self.assertIn("critical", args)
+        self.assertIn("half-written update", args)
+        # without --notify: same exit code, no notification
+        log.unlink()
+        r = subprocess.run([sys.executable, "-I", str(code / "cli.py"), "doctor"],
+                           capture_output=True, text=True, env=env)
+        self.assertEqual(r.returncode, 2)
+        self.assertFalse(log.exists())
+
+    def test_crash_inside_doctor_notifies(self):
+        calls = []
+        with mock.patch.object(cli, "doctor", side_effect=KeyError("cava")), \
+                mock.patch.object(cli.shutil, "which", side_effect=lambda c: "/usr/bin/" + c), \
+                mock.patch.object(cli.subprocess, "run", side_effect=lambda cmd, **kw: calls.append(cmd)), \
+                mock.patch("sys.stderr"):
+            self.assertEqual(cli.run(["doctor", "--notify"]), 2)
+        self.assertEqual(calls[0][0], "notify-send")
+        self.assertIn("critical", calls[0])
+        self.assertIn("'cava'", calls[0][-1])
 
 
 if __name__ == "__main__":

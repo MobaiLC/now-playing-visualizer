@@ -5,7 +5,10 @@ Description=Now Playing Visualizer: check after package updates
 Type=oneshot
 # let pacman finish the whole transaction first
 ExecStartPre=/usr/bin/sleep 30
+# a helper from before the update (old protocol) or one that crashed gets a
+# fresh start, so doctor checks the new one; then give it time to listen
+ExecStartPre=-/usr/bin/systemctl --user try-restart nowplaying-viz.service
+ExecStartPre=/usr/bin/sleep 5
 ExecStart=/usr/bin/python3 -I %h/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/code/cli.py doctor --notify
-# a crashed helper after an update gets a fresh start
-ExecStartPost=-/usr/bin/systemctl --user try-restart nowplaying-viz.service
+# 1: doctor found a problem (and notified); 2, a crash, stays a failure
 SuccessExitStatus=1

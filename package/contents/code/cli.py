@@ -10,9 +10,10 @@
 Both only read: check never creates or rewrites the config file, and doctor
 never subscribes to bars (so it cannot start CAVA or make links).
 check exit codes: 0 clean (or no file yet), 1 issues, 2 the file is not valid JSON.
-doctor exit codes: 0 nothing failed, 1 something failed.
+doctor exit codes: 0 nothing failed, 1 something failed, 2 doctor itself crashed.
 doctor --notify runs after every pacman transaction (nowplaying-viz-check.service)
-and sends one desktop notification only when something is wrong.
+and sends one desktop notification only when the install is broken (programs,
+QML modules, config, the service or the helper; not players, links or sound).
 """
 
 import copy
@@ -24,15 +25,23 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import traceback
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))  # runs under python3 -I: no script folder on sys.path
-import helper  # noqa: E402
-
 DOMAIN = "plasma_applet_com.github.mobailc.nowplayingvisualizer"
 _ = gettext.translation(DOMAIN, HERE.parent / "locale", fallback=True).gettext
+sys.path.insert(0, str(HERE))  # runs under python3 -I: no script folder on sys.path
+try:
+    import helper
+    HELPER_ERROR = None
+except Exception as e:  # a half-finished update; run() reports it
+    helper, HELPER_ERROR = None, e
 QML = shutil.which("qml6") or "/usr/lib/qt6/bin/qml"
+
+# what --notify reports; players, links and audio depend on the moment, not the install
+INTEGRITY = ("commands", "cava_version", "qml_modules", "config", "service", "helper")
+HYPR_START = "exec-once = systemctl --user start nowplaying-viz"
 
 # module -> (what breaks, has a fallback?, host that needs it: "all", "plasma" or "quickshell")
 QML_MODULES = {
@@ -84,7 +93,7 @@ def check(config_file):
     try:
         user = json.loads(config_file.read_text())
     except OSError as e:
-        report.update(ok=False, issues=[issue("config_parse", "", str(e), line=None, column=None)])
+        report.update(ok=False, issues=[issue("config_unreadable", "", str(e))])
         return 2, report
     except json.JSONDecodeError as e:
         report.update(ok=False, issues=[issue("config_parse", "", e.msg, line=e.lineno, column=e.colno)])
@@ -131,6 +140,8 @@ def check(config_file):
 def describe(i):
     opt, val, used = i["option"], json.dumps(i["value"], ensure_ascii=False), json.dumps(i["used"], ensure_ascii=False)
     code = i["code"]
+    if code == "config_unreadable":
+        return _("config.json could not be read: {value}").format(**i)
     if code == "config_parse":
         return _("config.json is not valid JSON (line {line}, column {column}): {value}").format(**i)
     if code == "preset_missing":
@@ -199,7 +210,10 @@ def list_players():
 def effective_config():
     """The config the helper would use, read-only; defaults when the file is broken,
     {} when schema.json or a preset is (the config check reports both)."""
-    user = helper.read_user()
+    try:
+        user = helper.read_user()
+    except helper.ConfigUnreadable:
+        user = helper.default_user_config()
     for u in (user, helper.default_user_config()):
         try:
             u = copy.deepcopy(u)
@@ -247,6 +261,9 @@ def links_check():
 def doctor(notify):
     host = detect_host()
     checks = []
+    # Hyprland without uwsm never reaches graphical-session.target, where the service is wanted
+    hypr = "; " + _("without uwsm, also add to hyprland.conf: {line}").format(line=HYPR_START) \
+        if host == "quickshell" else ""
 
     def add(id_, status, message, hint=""):
         checks.append({"id": id_, "status": status, "message": message, "hint": hint})
@@ -313,25 +330,33 @@ def doctor(notify):
         add("service", "ok", _("the nowplaying-viz service is running"))
     elif host == "quickshell":
         add("service", "fail", _("the nowplaying-viz service is not running"),
-            "systemctl --user enable --now nowplaying-viz")
+            "systemctl --user enable --now nowplaying-viz" + hypr)
     else:
         add("service", "warn", _("the nowplaying-viz service is not running (the widget starts the helper itself)"),
             "systemctl --user enable --now nowplaying-viz")
 
-    status = None
     try:
         status = fetch_status()
-        if status.get("protocol") != helper.PROTOCOL:
-            raise ValueError(status.get("protocol"))
-        add("helper", "ok", _("helper answers on port {port}").format(port=helper.PORT))
     except OSError:
         status = None
         add("helper", "fail", _("the helper is not running (nothing on port {port})").format(port=helper.PORT),
-            "systemctl --user start nowplaying-viz")
-    except ValueError:
+            "systemctl --user start nowplaying-viz" + hypr)
+    except ValueError as e:
         status = None
-        add("helper", "fail", _("an outdated helper is running on port {port}").format(port=helper.PORT),
-            "systemctl --user restart nowplaying-viz")
+        add("helper", "fail", _("port {port} does not answer like the helper: {error}").format(
+            port=helper.PORT, error=e), "systemctl --user restart nowplaying-viz")
+    if status is not None:
+        got = status.get("protocol")
+        if got == helper.PROTOCOL:
+            add("helper", "ok", _("helper answers on port {port}").format(port=helper.PORT))
+        else:
+            newer = isinstance(got, int) and got > helper.PROTOCOL
+            add("helper", "fail", (_("a newer helper (protocol {got}, this widget needs {want}) is running on port {port}")
+                                   if newer else
+                                   _("an outdated helper (protocol {got}, this widget needs {want}) is running on port {port}")
+                                   ).format(got=json.dumps(got), want=helper.PROTOCOL, port=helper.PORT),
+                "systemctl --user restart nowplaying-viz")
+            status = None
 
     helper.state["config"] = effective_config()  # this process only: what per-app audio follows
     helper.forget_followed_player()
@@ -349,7 +374,12 @@ def doctor(notify):
     else:
         add("links", *links_check())
 
-    cava = (status or {}).get("cava") or {}
+    cava = (status or {}).get("cava")
+    cava = cava if isinstance(cava, dict) else {}
+    peak, age = cava.get("peak"), cava.get("age")
+    number = (int, float)
+    peak = peak if isinstance(peak, number) and not isinstance(peak, bool) else 0
+    age = age if isinstance(age, number) and not isinstance(age, bool) else 99
     if status is None:
         add("audio", "skip", _("not checked: the helper is not reachable"),
             _("start the helper, then run nowplaying-viz doctor again"))
@@ -358,7 +388,7 @@ def doctor(notify):
             _("open the card or widget, then run nowplaying-viz doctor again"))
     elif not cava.get("running"):
         add("audio", "fail", _("CAVA is not running"), "journalctl --user -u nowplaying-viz")
-    elif (cava.get("peak") or 0) > 0 and (cava.get("age") if cava.get("age") is not None else 99) < 2:
+    elif peak > 0 and age < 2:
         add("audio", "ok", _("CAVA hears sound"))
     elif any(p["playing"] for p in players):
         add("audio", "fail", _("CAVA hears silence"),
@@ -367,16 +397,20 @@ def doctor(notify):
         add("audio", "skip", _("nothing is playing"))
 
     statuses = [c["status"] for c in checks]
-    if notify and ("fail" in statuses or "warn" in statuses) and shutil.which("notify-send"):
-        failed = "fail" in statuses
+    bad = [c for c in checks if c["id"] in INTEGRITY and c["status"] in ("fail", "warn")]
+    if notify and bad:
+        failed = any(c["status"] == "fail" for c in bad)
         title = _("Now Playing Visualizer: something broke") if failed else _("Now Playing Visualizer: compatibility mode")
-        body = "\n".join(c["message"] for c in checks if c["status"] in ("fail", "warn"))
-        # where this copy lives: ~/.local/share/... or /usr/share/... (AUR package)
-        body += "\n\n" + _("Details:") + f" python3 -I {Path(__file__).resolve()} doctor"
-        subprocess.run(["notify-send", "-a", "Now Playing Visualizer", "-i", "view-media-visualization",
-                        "-u", "critical" if failed else "normal", title, body])
+        send_notification(title, "\n".join(c["message"] for c in bad), failed)
     ok = "fail" not in statuses
     return (0 if ok else 1), {"ok": ok, "host": host, "checks": checks}
+
+
+def send_notification(title, body, critical):
+    if shutil.which("notify-send"):
+        body += "\n\n" + _("Details:") + " nowplaying-viz doctor"
+        subprocess.run(["notify-send", "-a", "Now Playing Visualizer", "-i", "view-media-visualization",
+                        "-u", "critical" if critical else "normal", title, body])
 
 
 MARKS = {"ok": "✓", "warn": "!", "fail": "✗", "skip": "-"}
@@ -410,5 +444,19 @@ def main(argv):
     return 2
 
 
+def run(argv):
+    """main() that never dies silently: a crash under --notify still reaches the desktop."""
+    try:
+        if HELPER_ERROR:
+            raise HELPER_ERROR
+        return main(argv)
+    except Exception as e:
+        traceback.print_exc()
+        if "--notify" in argv:
+            send_notification(_("Now Playing Visualizer: something broke"),
+                              _("nowplaying-viz doctor crashed: {error}").format(error=f"{type(e).__name__}: {e}"), True)
+        return 2
+
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(run(sys.argv[1:]))
