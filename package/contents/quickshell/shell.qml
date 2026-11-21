@@ -3,6 +3,7 @@
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import "ui"
 import "ui/desktop.js" as Desktop
@@ -13,6 +14,12 @@ import "ui/desktop.js" as Desktop
 ShellRoot {
     NowPlaying {
         id: nowPlaying
+    }
+
+    // right-click on the card opens the settings window (own file, found from this one)
+    Process {
+        id: settingsWindow
+        command: ["python3", "-I", Qt.resolvedUrl("../code/cli.py").toString().replace("file://", ""), "settings"]
     }
 
     readonly property var desk: nowPlaying.cfg.desktop
@@ -50,6 +57,10 @@ ShellRoot {
                     lengthMs: nowPlaying.lengthMs
                     barValues: nowPlaying.barValues
                     onAction: (name, value) => nowPlaying.mediaAction(name, value)
+                    TapHandler {
+                        acceptedButtons: Qt.RightButton
+                        onTapped: settingsWindow.running = true
+                    }
                     opacity: nowPlaying.hasTrack && nowPlaying.isPlaying ? 1
                         : !nowPlaying.hasTrack && nowPlaying.whenIdle === "hide" ? 0
                         : nowPlaying.panelCfg.idleOpacity

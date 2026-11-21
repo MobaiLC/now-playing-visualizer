@@ -2,10 +2,10 @@
 # SPDX-FileCopyrightText: 2026 MobaiLC
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# nowplaying-viz <check|doctor> [--json] [--notify]
+# nowplaying-viz <check|doctor|settings> [--json] [--notify]
 set -euo pipefail
 
-case "${1:-}" in "" | -h | --help) echo "Usage: nowplaying-viz <check|doctor> [--json] [--notify]"; exit 0 ;; esac
+case "${1:-}" in "" | -h | --help) echo "Usage: nowplaying-viz <check|doctor|settings> [--json] [--notify]"; exit 0 ;; esac
 
 id=com.github.mobailc.nowplayingvisualizer
 for dir in ~/.local/share/plasma/plasmoids/$id /usr/share/plasma/plasmoids/$id; do

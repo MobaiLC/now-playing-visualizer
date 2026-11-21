@@ -4,6 +4,7 @@
 """nowplaying-viz: command line for Now Playing Visualizer.
 
   nowplaying-viz check [--json]             validate ~/.config/nowplaying-viz/config.json
+  nowplaying-viz settings                   open the settings window
   nowplaying-viz doctor [--json] [--notify] diagnose programs, QML modules, the helper,
                                             players, per-app links and whether CAVA hears sound
 
@@ -413,6 +414,31 @@ def send_notification(title, body, critical):
                         "-u", "critical" if critical else "normal", title, body])
 
 
+QT6_QML = "/usr/lib/qt6/qml"
+
+
+def qml_runtime():
+    return shutil.which("qml6") or shutil.which("qml") or (
+        "/usr/lib/qt6/bin/qml" if os.path.exists("/usr/lib/qt6/bin/qml") else None)
+
+
+def settings_env(env):
+    env = dict(env)
+    env.setdefault("QT_QUICK_CONTROLS_STYLE",
+                   "org.kde.desktop" if os.path.isdir(f"{QT6_QML}/org/kde/desktop") else "Fusion")
+    return env
+
+
+def settings_main():
+    runtime = qml_runtime()
+    if not runtime:
+        print("No Qt QML runtime found (install qt6-declarative).", file=sys.stderr)
+        return 1
+    # after "--" the window reads --port itself (NPV_PORT reaches it)
+    os.execvpe(runtime, [runtime, str(HERE.parent / "settings" / "settings.qml"),
+                         "--", "--port", str(helper.PORT)], settings_env(os.environ))
+
+
 MARKS = {"ok": "✓", "warn": "!", "fail": "✗", "skip": "-"}
 
 
@@ -440,7 +466,9 @@ def main(argv):
                 if c["hint"]:
                     print(f"  → {c['hint']}")
         return code
-    print(_("usage: nowplaying-viz check [--json] | doctor [--json] [--notify]"), file=sys.stderr)
+    if args == ["settings"]:
+        return settings_main()
+    print(_("usage: nowplaying-viz check [--json] | doctor [--json] [--notify] | settings"), file=sys.stderr)
     return 2
 
 

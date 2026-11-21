@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Tests for package/contents/code/cli.py (the `nowplaying-viz check` command)."""
 
+import io
 import json
 import os
 import subprocess
@@ -446,3 +447,37 @@ class CrashTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SettingsTests(unittest.TestCase):
+    def test_settings_without_runtime(self):
+        err = io.StringIO()
+        with mock.patch.object(cli.shutil, "which", return_value=None), \
+                mock.patch.object(cli.os.path, "exists", return_value=False), \
+                mock.patch.object(cli.os, "execvpe") as ex, mock.patch("sys.stderr", err):
+            self.assertEqual(cli.settings_main(), 1)
+        ex.assert_not_called()
+        self.assertIn("No Qt QML runtime found (install qt6-declarative).", err.getvalue())
+
+    def test_settings_execs_runtime(self):
+        with mock.patch.object(cli, "qml_runtime", return_value="/x/qml6"), \
+                mock.patch.object(cli.os, "execvpe") as ex:
+            cli.settings_main()
+        rt, argv, env = ex.call_args[0]
+        self.assertEqual(rt, "/x/qml6")
+        self.assertEqual(argv, ["/x/qml6", str(CODE.parent / "settings" / "settings.qml"),
+                                "--", "--port", str(cli.helper.PORT)])
+        self.assertIn("QT_QUICK_CONTROLS_STYLE", env)
+
+    def test_style_respects_user_choice(self):
+        self.assertEqual(cli.settings_env({"QT_QUICK_CONTROLS_STYLE": "Material"})["QT_QUICK_CONTROLS_STYLE"], "Material")
+        with mock.patch.object(cli.os.path, "isdir", return_value=False):
+            self.assertEqual(cli.settings_env({})["QT_QUICK_CONTROLS_STYLE"], "Fusion")
+        with mock.patch.object(cli.os.path, "isdir", return_value=True):
+            self.assertEqual(cli.settings_env({})["QT_QUICK_CONTROLS_STYLE"], "org.kde.desktop")
+
+    def test_usage_lists_settings(self):
+        err = io.StringIO()
+        with mock.patch("sys.stderr", err):
+            self.assertEqual(cli.main([]), 2)
+        self.assertIn("settings", err.getvalue())
