@@ -18,9 +18,9 @@ Rectangle {
     // full config as sent by the helper (Qt colour format)
     property var cfg: ({})
     // { track, artist, album, artUrl, identity, can* flags } or null for "Nothing playing"
+    property var media: null
     property string listeningText: "Listening to {title}"
     property string nothingPlayingText: "Nothing playing"
-    property var media: null
     property bool showProgress: false
     property real positionMs: 0
     property real lengthMs: 0

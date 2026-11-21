@@ -17,7 +17,6 @@ Item {
 
     readonly property var panelCfg: cfg.panel || {}
 
-
     Helper {
         id: helper
         onConfigReceived: (data, issues) => {
@@ -30,6 +29,8 @@ Item {
     }
 
     // ---- media source -------------------------------------------------------
+    // the player picked in the widget's menu; "" follows the preferred list
+    property string pinnedPlayer: ""
     // Plasma's MPRIS module is loaded in isolation; if it fails (or is turned
     // off with "advanced.forceDbusMedia") the helper reads MPRIS over D-Bus.
     Loader {
@@ -50,7 +51,6 @@ Item {
         when: mprisLoader.item !== null
     }
 
-    property string pinnedPlayer: ""
     property var fallbackPlayers: []
     readonly property var openPlayers: useFallback ? fallbackPlayers : (mprisLoader.item ? mprisLoader.item.playerList : [])
 
