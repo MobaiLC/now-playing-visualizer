@@ -65,7 +65,7 @@ CONFIG_VERSION = 2
 # Bumped whenever the widget starts relying on a new message. Sent with the
 # schema; a widget that expects more knows this helper is out of date (an
 # old one still running after an update) and replaces or reports it.
-PROTOCOL = 2
+PROTOCOL = 3
 IDLE_EXIT_SECONDS = 60
 # --service: started by systemd, stays up (CAVA still only runs while needed)
 SERVICE = "--service" in sys.argv
@@ -690,7 +690,8 @@ class WsConn:
                 k, v = line.split(":", 1)
                 headers[k.strip().lower()] = v.strip()
         key = headers.get("sec-websocket-key")
-        if not key:
+        status = head.split(b" ", 2)[:2] == [b"GET", b"/status"]
+        if not key and not status:
             raise WsClosed("not a websocket request")
         # Browsers always send Origin and Qt's WebSocket never does: this keeps
         # web pages (and DNS rebinding) from talking to the helper.
@@ -698,6 +699,13 @@ class WsConn:
             self.writer.write(b"HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n")
             await self.writer.drain()
             raise WsClosed("rejected origin " + headers.get("origin", "") + " host " + headers.get("host", ""))
+        if status:
+            # read-only: never subscribes, so it can't start CAVA or make links
+            body = json.dumps(status_snapshot()).encode()
+            self.writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
+                              b"Connection: close\r\nContent-Length: %d\r\n\r\n" % len(body) + body)
+            await self.writer.drain()
+            raise WsClosed("status")
         accept = base64.b64encode(hashlib.sha1((key + WS_GUID).encode()).digest()).decode()
         self.writer.write(("HTTP/1.1 101 Switching Protocols\r\n"
                            "Upgrade: websocket\r\nConnection: Upgrade\r\n"
@@ -1174,6 +1182,21 @@ def bar_clients():
     return [ws for ws in clients if ws.topics is None or "bars" in ws.topics]
 
 
+def note_bars(line):
+    """What CAVA last wrote, for /status: 'B' + ';'-separated heights."""
+    state["bars_peak"] = max((int(v) for v in line[1:].split(";") if v.isdigit()), default=0)
+    state["bars_at"] = time.monotonic()
+
+
+def status_snapshot():
+    at = state.get("bars_at")
+    return {"protocol": PROTOCOL, "service": SERVICE, "clients": len(clients),
+            "barClients": len(bar_clients()),
+            "cava": {"running": cava_proc is not None and cava_proc.returncode is None,
+                     "peak": state.get("bars_peak") if at else None,
+                     "age": time.monotonic() - at if at else None}}
+
+
 def send_bars(line):
     """Bar frames go out without waiting on anybody, and an unchanged frame
     (CAVA keeps sending zeros during silence) isn't sent again."""
@@ -1241,7 +1264,9 @@ async def cava_loop():
                 if not got_data:
                     got_data = True
                     await set_error(None)
-                send_bars("B" + line.decode().strip().rstrip(";"))
+                bars = "B" + line.decode().strip().rstrip(";")
+                note_bars(bars)
+                send_bars(bars)
                 # send_bars never awaits: let the other tasks run between frames
                 await asyncio.sleep(0)
         finally:

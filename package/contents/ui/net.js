@@ -12,7 +12,7 @@ var MIN_PORT = 1024;
 var MAX_PORT = 65535;
 // the helper protocol this widget needs (PROTOCOL in helper.py); helpers
 // before it don't send one, which counts as 1
-var PROTOCOL = 2;
+var PROTOCOL = 3;
 
 // true when a helper's schema message says it is older than this widget
 function outdated(message) {

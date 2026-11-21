@@ -290,6 +290,39 @@ class WebSocketTests(unittest.IsolatedAsyncioTestCase):
         status = (await asyncio.wait_for(reader.readline(), 2)).decode()
         self.assertIn("403", status)
 
+    async def get_status(self, extra=""):
+        reader, writer = await asyncio.open_connection(helper.HOST, self.port)
+        self.writers.append(writer)
+        writer.write(f"GET /status HTTP/1.1\r\nHost: {helper.HOST}:{self.port}\r\n{extra}\r\n".encode())
+        await writer.drain()
+        return await asyncio.wait_for(reader.read(), 2)
+
+    async def test_status_endpoint(self):
+        raw = await self.get_status()
+        head, body = raw.split(b"\r\n\r\n", 1)
+        self.assertIn(b"200", head.split(b"\r\n")[0])
+        data = json.loads(body)
+        self.assertEqual(data["protocol"], helper.PROTOCOL)
+        self.assertEqual(data["clients"], 0)
+        self.assertFalse(data["cava"]["running"])
+        self.assertIsNone(data["cava"]["peak"])
+
+    async def test_status_rejects_origin(self):
+        raw = await self.get_status("Origin: https://example.com\r\n")
+        self.assertIn(b"403", raw.split(b"\r\n")[0])
+
+    async def test_status_does_not_start_cava(self):
+        await self.get_status()
+        self.assertEqual(helper.bar_clients(), [])
+        self.assertIsNone(helper.cava_proc)
+
+    def test_bars_peak_is_recorded(self):
+        self.addCleanup(lambda: [helper.state.pop(k, None) for k in ("bars_peak", "bars_at")])
+        helper.note_bars("B1;0;455;3")
+        snap = helper.status_snapshot()
+        self.assertEqual(snap["cava"]["peak"], 455)
+        self.assertLess(snap["cava"]["age"], 1)
+
 
 class LocalUserTests(unittest.IsolatedAsyncioTestCase):
     """Only our own user may talk to the helper (the kernel says who owns a socket)."""
