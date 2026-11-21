@@ -1095,5 +1095,24 @@ class PresetFileTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(failed["error"], "file_unwritable")
 
 
+class MissingProgramTests(unittest.TestCase):
+    def missing(self):
+        return mock.patch.object(helper.subprocess, "run", side_effect=FileNotFoundError("no such file"))
+
+    def test_run_missing_program(self):
+        with self.missing():
+            r = helper.run(["pactl", "info"])
+        self.assertEqual((r.returncode, r.stdout), (127, ""))
+        self.assertIn("pactl", r.stderr)
+
+    def test_remove_legacy_sink_without_pactl(self):
+        with self.missing():
+            helper.remove_legacy_sink()
+
+    def test_pw_dump_without_program(self):
+        with self.missing():
+            self.assertEqual(helper.pw_dump(), [])
+
+
 if __name__ == "__main__":
     unittest.main()

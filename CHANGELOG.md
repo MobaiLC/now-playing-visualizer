@@ -7,6 +7,9 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 ### Added
 - **Settings window** for desktops without Plasma: `nowplaying-viz settings`, also opened by right-clicking the desktop card, and a "Now Playing Visualizer Settings" launcher entry (hidden in Plasma, which has Configure…). It has the same Design and Audio pages as the widget.
 
+### Fixed
+- The helper no longer crashes when `pactl` or `pw-dump` is not installed.
+
 ## [0.4.0] - 2026-11-21
 
 After updating, restart the helper service (`systemctl --user restart nowplaying-viz`): the protocol went from 2 to 3, and the widget warns when the running service is older.

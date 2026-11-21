@@ -794,7 +794,10 @@ class WsConn:
 # ---------------------------------------------------------------- PipeWire --
 
 def run(cmd):
-    return subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True)
+    except OSError as e:  # program not installed or not executable
+        return subprocess.CompletedProcess(cmd, 127, "", f"{cmd[0]}: {e}")
 
 
 def pw_dump():
