@@ -42,10 +42,20 @@ TestCase {
     }
 
     function test_port_argument() {
-        compare(Net.parsePort(Net.portArgument(["qml", "settings.qml", "--", "--port", "50123"])), 50123);
-        compare(Net.parsePort(Net.portArgument(["qml", "settings.qml", "--port", "abc"])), 47811);
-        compare(Net.portArgument(["qml", "settings.qml"]), "");
+        compare(Net.portArgument(["qml", "settings.qml", "--", "--port", "50123"]), "50123");
+        compare(Net.portArgument(["qml", "--port=50124"]), "50124");
+        compare(Net.portArgument(["qml", "--port", "abc"]), "abc");
         compare(Net.portArgument(["qml", "--port"]), "");
+        compare(Net.portArgument(["qml", "settings.qml"]), null);
+    }
+
+    // an explicit --port never falls back to the default port
+    function test_port_from_argument() {
+        compare(Net.portFromArgument("50123"), 50123);
+        compare(Net.portFromArgument("abc"), 0);
+        compare(Net.portFromArgument(""), 0);
+        compare(Net.portFromArgument("0"), 0);
+        compare(Net.portFromArgument("99999"), 0);
     }
 
     function test_url_is_always_loopback() {

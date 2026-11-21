@@ -49,6 +49,13 @@ TestCase {
         compare(Flow.next("idle", "close", false).actions, ["quit"]);
     }
 
+    function test_close_during_ok_keeps_waiting() {
+        const s = Flow.next("committing", "close", true);
+        compare(s, { state: "committing", actions: [] });
+        compare(Flow.next(s.state, "ack", false).actions, ["quit"]);
+        verify(Flow.next(s.state, "timeout", true).actions.includes("show-error"));
+    }
+
     function test_apply_stays_open() {
         const s = Flow.next("idle", "apply", true);
         compare(s.state, "idle");

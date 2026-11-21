@@ -32,11 +32,25 @@ function parsePort(text) {
     return port >= MIN_PORT && port <= MAX_PORT ? port : DEFAULT_PORT;
 }
 
-// the text after "--port" in a command line (the standalone settings window's
-// `qml settings.qml -- --port N`), or "" without one; parsePort validates it
+// the value of "--port N" or "--port=N" in a command line (the standalone
+// settings window's `qml settings.qml -- --port N`): null without --port, ""
+// when it has no value. The caller checks it with portFromArgument().
 function portArgument(args) {
-    const i = args.indexOf("--port");
-    return i >= 0 && i + 1 < args.length ? String(args[i + 1]) : "";
+    for (let i = 0; i < args.length; i++) {
+        const a = String(args[i]);
+        if (a === "--port")
+            return i + 1 < args.length ? String(args[i + 1]) : "";
+        if (a.startsWith("--port="))
+            return a.slice(7);
+    }
+    return null;
+}
+
+// the port an explicit --port value names, or 0 when it is not a valid one:
+// unlike NPV_PORT there is no fallback to DEFAULT_PORT
+function portFromArgument(text) {
+    const port = parsePort(text);
+    return String(port) === text ? port : 0;
 }
 
 function helperUrl(port) {

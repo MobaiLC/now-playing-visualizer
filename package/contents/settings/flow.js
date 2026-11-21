@@ -28,6 +28,9 @@ function next(state, event, unsavedChanges) {
         // the helper reverts the draft when the window's connection closes
         return { state: state, actions: ["quit"] };
     case "close":
+        // OK's answer is still coming: it quits, or its timeout shows the error
+        if (state === "committing")
+            return { state: state, actions: [] };
         return unsavedChanges ? { state: "closing", actions: ["ask"] } : { state: state, actions: ["quit"] };
     }
     return { state: state, actions: [] };

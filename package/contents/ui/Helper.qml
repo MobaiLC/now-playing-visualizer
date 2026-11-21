@@ -53,26 +53,36 @@ Item {
             socket.sendTextMessage(JSON.stringify(obj));
     }
 
-    function usePort(text, source = "NPV_PORT") {
+    function usePort(text) {
         if (portKnown)
             return;
         port = Net.parsePort(text);
         if (text !== "" && String(port) !== text)
-            console.warn(`nowplayingvisualizer: ignoring ${source}, not a port between ${Net.MIN_PORT} and ${Net.MAX_PORT}; using ${port}`);
+            console.warn(`nowplayingvisualizer: ignoring NPV_PORT, not a port between ${Net.MIN_PORT} and ${Net.MAX_PORT}; using ${port}`);
         portKnown = true;
         portTimeout.stop();
         socket.active = true;
     }
 
     // `--port N` (the standalone settings window) wins over NPV_PORT: outside
-    // plasmashell Launcher.qml can still load and would read the default port
-    readonly property string portArgument: Net.portArgument(Qt.application.arguments)
+    // plasmashell Launcher.qml can still load and would read the default port.
+    // A bad --port connects nowhere rather than to the default port.
+    property var commandLine: Qt.application.arguments
+    readonly property var portArgument: Net.portArgument(commandLine)
+    // for tests: a stand-in for Launcher.qml
+    property url launcherSource: "Launcher.qml"
+    readonly property bool socketActive: socket.active
 
     function findPort() {
         if (portKnown || portAsked)
             return;
-        if (portArgument !== "") {
-            usePort(portArgument, "--port");
+        if (portArgument !== null) {
+            portKnown = true;
+            port = Net.portFromArgument(portArgument);
+            if (port)
+                socket.active = true;
+            else
+                console.warn(`nowplayingvisualizer: --port ${JSON.stringify(portArgument)} is not a port between ${Net.MIN_PORT} and ${Net.MAX_PORT}; not connecting`);
         } else if (launcher.status === Loader.Ready) {
             portAsked = true;
             portTimeout.start();
@@ -84,7 +94,7 @@ Item {
 
     function launch() {
         // a helper started here would not get that port
-        if (launcher.item && portArgument === "")
+        if (launcher.item && portArgument === null)
             launcher.item.launch(helperPath);
     }
 
@@ -156,7 +166,7 @@ Item {
 
     Loader {
         id: launcher
-        source: "Launcher.qml"
+        source: root.launcherSource
         onStatusChanged: root.findPort()
     }
     Connections {
