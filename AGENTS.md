@@ -2,7 +2,7 @@
 
 Now Playing Visualizer shows the current song (cover, title, artist, progress) next to a real-time audio visualizer. It runs as a KDE Plasma 6 widget or, on Hyprland, as a quickshell desktop card. Both draw the same card and talk to one helper (`nowplaying-viz.service`), and both read one config file: `~/.config/nowplaying-viz/config.json`.
 
-You cannot see the screen. Work from command output: `nowplaying-viz doctor` and `nowplaying-viz check` tell you what is wrong. Do not edit anything under `~/.config/hypr` or `~/.claude` yourself: show the user the line to add.
+You cannot see the screen. Work from command output: `nowplaying-viz doctor` and `nowplaying-viz check` tell you what is wrong. Never touch `~/.claude`. Add the `exec-once` line to `~/.config/hypr` only when the user explicitly asks you to; otherwise show them the line. Outside the install steps, the only file you edit is `~/.config/nowplaying-viz/config.json`.
 
 ## Pick the path
 
@@ -16,25 +16,25 @@ Run each verification command and read its output before the next step.
 
 ### Install, Hyprland (Arch)
 
-1. Dependencies and package. From the AUR (once published; use `now-playing-visualizer-git` for the latest commit):
+1. Dependencies and package. The AUR package may not be published yet: check first with `yay -Si now-playing-visualizer` (or `pacman -Si`). If it exists (`now-playing-visualizer-git` is the latest commit):
    ```bash
    yay -S now-playing-visualizer      # or paru -S, or makepkg -si in a clone of the AUR repo
    pacman -Q now-playing-visualizer   # prints the version
    ```
-   AUR not available, or not Arch: install from git (the package list is `cava pipewire wireplumber python gettext quickshell`):
+   If it does not exist, or the system is not Arch, install from git (packages: `sudo pacman -S cava pipewire wireplumber python gettext quickshell`):
    ```bash
    git clone https://github.com/MobaiLC/now-playing-visualizer.git
    cd now-playing-visualizer
    tools/install.sh --systemd
    ```
-   The script prints an `exec-once = quickshell -p ...` line. Keep it for step 3. Make sure `~/.local/bin` is in `PATH` (`command -v nowplaying-viz` must print a path).
+   The script prints an `exec-once = quickshell -p ...` line. Keep it for step 3. If it printed none (it only does that when `kpackagetool6` is absent), build it from the install path in step 3. Make sure `~/.local/bin` is in `PATH` (`command -v nowplaying-viz` must print a path).
 2. Start the helper as a service:
    ```bash
    systemctl --user enable --now nowplaying-viz
    systemctl --user is-active nowplaying-viz    # must print: active
    ```
    (`tools/install.sh --systemd` already did this.)
-3. Add the card to Hyprland. Ask the user to put one line in `~/.config/hypr/hyprland.conf`, or do it only if they ask you to:
+3. Add the card to Hyprland: show the user this one line for `~/.config/hypr/hyprland.conf` (see the rule at the top about when you may add it yourself):
    - AUR install: `exec-once = quickshell -p /usr/share/now-playing-visualizer/quickshell`
    - git install: `exec-once = quickshell -p ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/quickshell`
 
@@ -48,12 +48,12 @@ Run each verification command and read its output before the next step.
 
 ### Install, Plasma
 
-1. Package or git:
+1. Package or git. Check the AUR first: `yay -Si now-playing-visualizer`. If it exists:
    ```bash
-   yay -S now-playing-visualizer                 # once on the AUR
+   yay -S now-playing-visualizer
    pacman -Q now-playing-visualizer              # prints the version
    ```
-   Or from git: `git clone https://github.com/MobaiLC/now-playing-visualizer.git && cd now-playing-visualizer && tools/install.sh --systemd`.
+   If not, from git: `git clone https://github.com/MobaiLC/now-playing-visualizer.git && cd now-playing-visualizer && tools/install.sh --systemd`.
 2. Helper service (optional, the widget starts the helper by itself without it):
    ```bash
    systemctl --user enable --now nowplaying-viz
@@ -64,18 +64,24 @@ Run each verification command and read its output before the next step.
 
 ## Change the look
 
-The config file is `~/.config/nowplaying-viz/config.json`:
+The config file is `~/.config/nowplaying-viz/config.json`. If it does not exist yet (the helper creates it on first start), create the folder and this minimal valid file, then add `overrides`:
+
+```json
+{ "version": 2, "preset": "lookas", "audio": { "apps": [] }, "overrides": {}, "presets": {} }
+```
+
+Example with one override (the default corner is `bottomRight`, this moves it):
 
 ```json
 { "version": 2, "preset": "lookas", "audio": { "apps": [] },
   "overrides": { "desktop": { "anchor": "topLeft" } }, "presets": {} }
 ```
 
-- `preset` picks a built-in look. The presets are the files in `contents/code/presets/` next to `helper.py` (for example `lookas`).
+- `preset` picks a built-in look: circle, cover, lookas, minimal, mirror, neon, rainbow, retro, teal, wave.
 - `overrides` holds only what differs from the preset. Put as little as possible there, nested like the option names: option `bars.glow.enabled` is `{"overrides": {"bars": {"glow": {"enabled": true}}}}`.
 - Keep the rest of the file (`version`, `audio`, `presets`) as it is. Read the file before you edit it, and keep it valid JSON.
 - The helper reloads the file within about a second; no restart.
-- **Always run `nowplaying-viz check` after editing.** Exit 0 means valid. Fix every issue it prints (codes: `config_parse`, `preset_missing`, `invalid_option`, `out_of_range`, `unknown_option`, `unknown_monitor`) and run it again.
+- **Always run `nowplaying-viz check` after editing.** Exit 0 means valid; a clean run prints `config OK`. Fix every issue it prints (codes: `config_parse`, `preset_missing`, `invalid_option`, `out_of_range`, `unknown_option`, `unknown_monitor`) and run it again.
 - The full list of options, types and ranges: `/usr/share/doc/now-playing-visualizer/CONFIG.md` (AUR) or `docs/CONFIG.md` in the git clone.
 
 Recipes (each goes under `overrides`):
@@ -84,8 +90,8 @@ Recipes (each goes under `overrides`):
   ```json
   { "panel": { "color": "#1e1e2eE6" }, "bars": { "colorMode": "gradient", "colors": ["#89b4fa", "#cba6f7"] } }
   ```
-  `bars.colors` is a list and is used when `bars.colorMode` is `gradient` or `perBar`. Other modes: `hue`, `cover`, `accent`.
-- **Smaller or bigger card (Hyprland).** `desktop.width` (default 540, 200-3000) and `desktop.height` (default 162, 80-2000), in pixels:
+  `bars.colors` is a list and is used when `bars.colorMode` is `gradient` or `perBar`. Other modes: `hue`, `cover`, and `accent` (Plasma only: it uses the Plasma accent colour).
+- **Smaller or bigger card (Hyprland).** `desktop.width` (default 540, 200-3000) and `desktop.height` (default 162, 80-2000), in pixels. For "smaller" keep the 10:3 ratio of the default (about 3.3:1), e.g. 400x120 or 360x108:
   ```json
   { "desktop": { "width": 400, "height": 120 } }
   ```
@@ -120,4 +126,4 @@ Common situations:
 
 - Do not edit files inside the installed package (`/usr/share/...`, or the plasmoid folder): they are overwritten on update. Settings live in `config.json`.
 - Do not start a second helper by hand (port 47811 is shared); use the systemd service.
-- Do not write outside `~/.config/nowplaying-viz/` unless the user asks.
+- Outside the install steps, do not write anywhere except `~/.config/nowplaying-viz/config.json` unless the user asks.

@@ -70,7 +70,7 @@ rm -r ~/.config/nowplaying-viz   # tus ajustes y presets
 
 ### Hyprland
 
-En Hyprland (sin Plasma) el mismo helper alimenta una tarjeta dibujada con [quickshell](https://quickshell.org). `tools/install.sh --systemd` copia todo a `~/.local/share/plasma/plasmoids/…` e imprime la línea que debes añadir a tu configuración de Hyprland:
+En Hyprland (sin Plasma) el mismo helper alimenta una tarjeta dibujada con [quickshell](https://quickshell.org), que debe estar instalado (`sudo pacman -S quickshell`). `tools/install.sh --systemd` copia todo a `~/.local/share/plasma/plasmoids/…` e imprime la línea que debes añadir a tu configuración de Hyprland:
 
 ```
 exec-once = quickshell -p ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/quickshell
@@ -82,6 +82,8 @@ Con el paquete de AUR la ruta es `/usr/share/now-playing-visualizer/quickshell`.
 nowplaying-viz check    # valida config.json (salida 0 = bien)
 nowplaying-viz doctor   # revisa programas, servicio, helper, reproductores y configuración
 ```
+
+Para quitarlo: borra la línea `exec-once`, luego `systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path` y `rm -r ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer ~/.local/bin/nowplaying-viz ~/.config/systemd/user/nowplaying-viz*`.
 
 ### Usarlo con un agente de IA
 
@@ -173,7 +175,7 @@ Empieza por [CONTRIBUTING.md](CONTRIBUTING.md), en inglés: cómo preparar el en
 
 ```
 package/            el plasmoide (se instala tal cual)
-  contents/ui/        QML: main, Card, Bars, páginas Diseño y Audio, MprisSource
+  contents/ui/        QML: main, NowPlaying, Card, Bars, páginas Diseño y Audio, MprisSource
   contents/ui/renderers/  un archivo JS por estilo de barras, colores, geometría común
   contents/code/      helper.py, cli.py, schema.json, presets/*.json
 packaging/          unidades de systemd, PKGBUILD de AUR

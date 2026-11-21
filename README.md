@@ -70,7 +70,7 @@ rm -r ~/.config/nowplaying-viz   # your settings and presets
 
 ### Hyprland
 
-On Hyprland (no Plasma) the same helper drives a card drawn by [quickshell](https://quickshell.org). `tools/install.sh --systemd` copies everything under `~/.local/share/plasma/plasmoids/…` and prints the line to add to your Hyprland config:
+On Hyprland (no Plasma) the same helper drives a card drawn by [quickshell](https://quickshell.org), which must be installed (`sudo pacman -S quickshell`). `tools/install.sh --systemd` copies everything under `~/.local/share/plasma/plasmoids/…` and prints the line to add to your Hyprland config:
 
 ```
 exec-once = quickshell -p ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/quickshell
@@ -82,6 +82,8 @@ With the AUR package the path is `/usr/share/now-playing-visualizer/quickshell`.
 nowplaying-viz check    # validates config.json (exit 0 = fine)
 nowplaying-viz doctor   # checks programs, service, helper, players and config
 ```
+
+To remove it: delete the `exec-once` line, then `systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path`, `rm -r ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer ~/.local/bin/nowplaying-viz ~/.config/systemd/user/nowplaying-viz*`.
 
 ### Using it with an AI agent
 
