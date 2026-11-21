@@ -12,67 +12,23 @@ import "players.js" as Players
 PlasmoidItem {
     id: root
 
-    property var cfg: ({})
-    property var issues: []
-    readonly property var shownIssues: helper.outdatedService ? issues.concat([{ code: "helper_outdated" }]) : issues
-    property var barValues: []
-    // every key is present once the helper has sent the first config
-    readonly property bool ready: cfg.panel !== undefined
-
-    readonly property var panelCfg: cfg.panel || {}
-
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
     preferredRepresentation: fullRepresentation
 
-    Helper {
-        id: helper
-        onConfigReceived: (data, issues) => {
-            root.cfg = data;
-            root.issues = issues;
-        }
-        onBarsReceived: values => root.barValues = values
-        onMediaReceived: data => root.fallbackMedia = data
-        onPlayersReceived: list => root.fallbackPlayers = list
-    }
-
-    // ---- media source -------------------------------------------------------
-    // Plasma's MPRIS module is loaded in isolation; if it fails (or is turned
-    // off with "advanced.forceDbusMedia") the helper reads MPRIS over D-Bus.
-    Loader {
-        id: mprisLoader
-        active: !root.forceFallback
-        source: "MprisSource.qml"
-    }
-    Binding {
-        target: mprisLoader.item
-        property: "preferred"
-        value: root.panelCfg.preferredPlayers || []
-        when: mprisLoader.item !== null
-    }
-    Binding {
-        target: mprisLoader.item
-        property: "pinned"
-        value: root.pinnedPlayer
-        when: mprisLoader.item !== null
+    NowPlaying {
+        id: nowPlaying
+        pinnedPlayer: Plasmoid.configuration.pinnedPlayer
     }
 
     // ---- player menu ----------------------------------------------------------
     // Right-click > pick a player: the widget then shows that one while it is
-    // open (automatic otherwise). Saved per widget; the helper is told too,
+    // open (automatic otherwise). Saved per widget; NowPlaying tells the helper,
     // so the D-Bus fallback and "Follow the player" pick the same one.
-    readonly property string pinnedPlayer: Plasmoid.configuration.pinnedPlayer
-    property var fallbackPlayers: []
-    readonly property var openPlayers: useFallback ? fallbackPlayers : (mprisLoader.item ? mprisLoader.item.playerList : [])
-    readonly property var playerMenu: Players.menu(openPlayers, pinnedPlayer)
+    readonly property var playerMenu: Players.menu(nowPlaying.openPlayers, nowPlaying.pinnedPlayer)
 
     function pinPlayer(identity) {
         Plasmoid.configuration.pinnedPlayer = identity;
     }
-    function sendPin() {
-        helper.send({ type: "pinPlayer", identity: pinnedPlayer });
-    }
-    onPinnedPlayerChanged: sendPin()
-
     PlasmaCore.Action {
         id: playerHeading
         text: i18n("Show the player")
@@ -82,7 +38,7 @@ PlasmoidItem {
         id: autoPlayer
         text: i18n("Automatic (the one playing)")
         checkable: true
-        checked: root.pinnedPlayer === ""
+        checked: nowPlaying.pinnedPlayer === ""
         onTriggered: root.pinPlayer("")
     }
     Instantiator {
@@ -92,7 +48,7 @@ PlasmoidItem {
             required property var modelData
             text: modelData.open ? modelData.identity : i18n("%1 (not open)", modelData.identity)
             checkable: true
-            checked: root.pinnedPlayer.toLowerCase() === modelData.identity.toLowerCase()
+            checked: nowPlaying.pinnedPlayer.toLowerCase() === modelData.identity.toLowerCase()
             // clicking the checked one (or a closed one) goes back to automatic
             onTriggered: root.pinPlayer(checked ? modelData.identity : "")
         }
@@ -104,94 +60,9 @@ PlasmoidItem {
         return list;
     }
 
-    readonly property bool forceFallback: cfg.advanced?.forceDbusMedia ?? false
-    readonly property bool useFallback: forceFallback || mprisLoader.status === Loader.Error
-    property var fallbackMedia: null
-
-    function requestFallback() {
-        if (useFallback)
-            helper.send({ type: "wantMedia" });
-    }
-    onUseFallbackChanged: requestFallback()
-    Connections {
-        target: helper
-        function onConnectedChanged() {
-            root.requestFallback();
-            root.sendPin();
-        }
-    }
-
     // Apply/OK in the Design page: keep the live-edited design (see helper.py)
     readonly property string designCommit: Plasmoid.configuration.designCommit
-    onDesignCommitChanged: helper.send({ type: "commitEdit" })
-
-    readonly property var player: useFallback ? fallbackMedia : (mprisLoader.item ? mprisLoader.item.media : null)
-
-    readonly property bool hasTrack: !!player && (player.track || "") !== ""
-
-    // ---- idle state -----------------------------------------------------------
-    // Remember the last song so the card can stay visible (dimmed) between
-    // songs instead of vanishing; an invisible widget is hard to find again.
-    property var lastMedia: null
-    onPlayerChanged: {
-        if (hasTrack)
-            lastMedia = player;
-        syncedPos = playerPos;
-    }
-    readonly property string whenIdle: panelCfg.whenIdle || "last"
-    readonly property var shownMedia: hasTrack ? player : (whenIdle === "last" ? lastMedia : null)
-    readonly property bool idle: !hasTrack || !isPlaying
-    readonly property bool isPlaying: !!player && player.playing
-
-    // ---- position (MPRIS gives µs; interpolate locally between syncs) -------
-    // syncedPos is a plain value, not a binding: a seek sets it right away
-    // (the player confirms a moment later), and assigning to a bound property
-    // would cut it off from the player for good.
-    readonly property real playerPos: player ? player.position : 0
-    property real syncedPos: 0
-    onPlayerPosChanged: syncedPos = playerPos
-    property double syncedAt: Date.now()
-    property double now: Date.now()
-    onSyncedPosChanged: syncedAt = Date.now()
-    onIsPlayingChanged: syncedAt = Date.now()
-    readonly property real lengthMs: player ? player.length / 1000 : 0
-    readonly property real positionMs: {
-        let p = syncedPos / 1000;
-        if (isPlaying)
-            p += (now - syncedAt) * (player.rate || 1);
-        return Math.max(0, lengthMs > 0 ? Math.min(p, lengthMs) : p);
-    }
-
-    Timer {
-        interval: 250
-        running: root.isPlaying
-        repeat: true
-        onTriggered: root.now = Date.now()
-    }
-    Timer {
-        interval: 2000
-        running: root.isPlaying
-        repeat: true
-        onTriggered: {
-            if (!root.useFallback && mprisLoader.item)
-                mprisLoader.item.sync();
-        }
-    }
-
-    function mediaAction(name, value) {
-        // volume always goes through the helper: many players (Liner, other
-        // Chromium/Electron apps) have no MPRIS volume, so it falls back to
-        // the app's own PipeWire stream
-        if (useFallback || name === "volume")
-            helper.send({ type: "mediaAction", action: name, value: value, identity: player ? player.identity : "" });
-        else if (mprisLoader.item)
-            mprisLoader.item.act(name, value);
-        // show a seek right away instead of waiting for the next sync
-        if (name === "seek") {
-            syncedPos = value;
-            syncedAt = Date.now();
-        }
-    }
+    onDesignCommitChanged: nowPlaying.send({ type: "commitEdit" })
 
     function issueText(issue) {
         switch (issue.code) {
@@ -216,7 +87,7 @@ PlasmoidItem {
 
         Loader {
             anchors.fill: parent
-            active: root.ready
+            active: nowPlaying.ready
             sourceComponent: card
         }
 
@@ -228,7 +99,7 @@ PlasmoidItem {
             anchors.margins: 6
             width: Kirigami.Units.iconSizes.small
             height: width
-            visible: root.shownIssues.length > 0
+            visible: nowPlaying.shownIssues.length > 0
             source: "dialog-warning"
             HoverHandler {
                 id: issueHover
@@ -238,23 +109,25 @@ PlasmoidItem {
                 onTapped: Plasmoid.internalAction("configure").trigger()
             }
             QQC2.ToolTip.visible: issueHover.hovered
-            QQC2.ToolTip.text: root.shownIssues.map(root.issueText).join("\n") + "\n\n" + i18n("Click to open the settings")
+            QQC2.ToolTip.text: nowPlaying.shownIssues.map(root.issueText).join("\n") + "\n\n" + i18n("Click to open the settings")
         }
 
         Component {
             id: card
             Card {
                 anchors.fill: parent
-                cfg: root.cfg
-                media: root.shownMedia
-                showProgress: root.hasTrack
-                positionMs: root.positionMs
-                lengthMs: root.lengthMs
-                barValues: root.barValues
-                onAction: (name, value) => root.mediaAction(name, value)
-                opacity: root.hasTrack && root.isPlaying ? 1
-                    : !root.hasTrack && root.whenIdle === "hide" ? 0
-                    : root.panelCfg.idleOpacity
+                cfg: nowPlaying.cfg
+                media: nowPlaying.shownMedia
+                listeningText: i18n("Listening to {title}")
+                nothingPlayingText: i18n("Nothing playing")
+                showProgress: nowPlaying.hasTrack
+                positionMs: nowPlaying.positionMs
+                lengthMs: nowPlaying.lengthMs
+                barValues: nowPlaying.barValues
+                onAction: (name, value) => nowPlaying.mediaAction(name, value)
+                opacity: nowPlaying.hasTrack && nowPlaying.isPlaying ? 1
+                    : !nowPlaying.hasTrack && nowPlaying.whenIdle === "hide" ? 0
+                    : nowPlaying.panelCfg.idleOpacity
                 Behavior on opacity {
                     NumberAnimation { duration: 500 }
                 }

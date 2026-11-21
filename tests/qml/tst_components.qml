@@ -13,7 +13,7 @@ TestCase {
     name: "Components"
 
     function test_compiles_data() {
-        return ["main.qml", "Card.qml", "Bars.qml", "Helper.qml", "Launcher.qml", "MprisSource.qml",
+        return ["main.qml", "NowPlaying.qml", "Card.qml", "Bars.qml", "Helper.qml", "Launcher.qml", "MprisSource.qml",
                 "configDesign.qml", "configApps.qml"].map(f => ({ tag: f, file: f }));
     }
     function test_compiles(data) {

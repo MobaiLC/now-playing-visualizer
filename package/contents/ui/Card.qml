@@ -18,6 +18,8 @@ Rectangle {
     // full config as sent by the helper (Qt colour format)
     property var cfg: ({})
     // { track, artist, album, artUrl, identity, can* flags } or null for "Nothing playing"
+    property string listeningText: "Listening to {title}"
+    property string nothingPlayingText: "Nothing playing"
     property var media: null
     property bool showProgress: false
     property real positionMs: 0
@@ -318,7 +320,7 @@ Rectangle {
             Text {
                 Layout.fillWidth: true
                 visible: card.headerShown
-                text: card.fillTemplate(card.cfg.header.text || i18n("Listening to {title}"))
+                text: card.fillTemplate(card.cfg.header.text || card.listeningText)
                 textFormat: Text.PlainText
                 color: card.headerColor
                 font.family: card.fontFamily
@@ -448,7 +450,7 @@ Rectangle {
                     Item { Layout.fillHeight: true }
                     MarqueeText {
                         Layout.fillWidth: true
-                        text: card.media ? card.media.track : i18n("Nothing playing")
+                        text: card.media ? card.media.track : card.nothingPlayingText
                         color: card.titleColor
                         font.pixelSize: card.cfg.title.size
                         font.bold: card.cfg.title.bold
