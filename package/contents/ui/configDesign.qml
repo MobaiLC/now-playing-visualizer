@@ -84,6 +84,7 @@ KCM.SimpleKCM {
     }
     // error code from the helper for the last change, e.g. "preset_limit"
     property string saveError: ""
+    readonly property string configUnreadableText: i18n("config.json has an error, so nothing can be saved. Fix it, or run nowplaying-viz check to see where it is.")
 
     // ---- preset files ---------------------------------------------------------
     // The helper reads and writes the file (QML can't); it checks the path and
@@ -112,6 +113,7 @@ KCM.SimpleKCM {
         case "file_not_preset": return i18n("The file is not a Now Playing Visualizer preset.");
         case "file_unwritable": return i18n("The file could not be saved there.");
         case "preset_limit": return i18n("You have reached the limit of 100 saved presets. Delete one before importing.");
+        case "config_unreadable": return page.configUnreadableText;
         default: return r.error;
         }
     }
@@ -660,6 +662,12 @@ KCM.SimpleKCM {
             visible: page.saveError === "preset_limit"
             type: Kirigami.MessageType.Warning
             text: i18n("You have reached the limit of 100 saved presets. Delete one, or save over an existing name.")
+        }
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            visible: page.saveError === "config_unreadable"
+            type: Kirigami.MessageType.Error
+            text: page.configUnreadableText
         }
         QQC2.Label {
             Layout.fillWidth: true

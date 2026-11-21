@@ -322,6 +322,8 @@ class WebSocketTests(unittest.IsolatedAsyncioTestCase):
         snap = helper.status_snapshot()
         self.assertEqual(snap["cava"]["peak"], 455)
         self.assertLess(snap["cava"]["age"], 1)
+        helper.note_bars("B1;\u00b2;7")  # isdigit() but not int(): never raises
+        self.assertEqual(helper.status_snapshot()["cava"]["peak"], 7)
 
 
 class LocalUserTests(unittest.IsolatedAsyncioTestCase):
@@ -812,6 +814,59 @@ class ShuffleRepeatTests(unittest.TestCase):
         helper.state["media_player"] = player("Other", shuffle=False)
         cmd = self.commands("shuffle", True, shuffle=False)
         self.assertIn("org.mpris.MediaPlayer2.p", cmd[0])
+
+
+class BrokenConfigTests(unittest.IsolatedAsyncioTestCase):
+    """A config.json that does not parse is never replaced by defaults: a typo
+    must not cost the user their audio apps or presets."""
+
+    BROKEN = '{"version": 3, "audio": {"apps": ["spotify"]},, typo\n'
+
+    def setUp(self):
+        helper.CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        helper.CONFIG_FILE.write_text(self.BROKEN)
+        self.addCleanup(helper.edit.update, owner=None, snapshot=None, history=[], last_push=0.0, revert=None)
+
+    def assertUnchanged(self):
+        self.assertEqual(helper.CONFIG_FILE.read_text(), self.BROKEN)
+
+    def test_read_user_raises_on_a_broken_or_wrong_file(self):
+        with self.assertRaises(helper.ConfigUnreadable):
+            helper.read_user()
+        helper.CONFIG_FILE.write_text("[1, 2]\n")
+        with self.assertRaises(helper.ConfigUnreadable):
+            helper.read_user()
+
+    def test_missing_file_still_gives_defaults(self):
+        helper.CONFIG_FILE.unlink()
+        self.assertEqual(helper.read_user(), helper.default_user_config())
+
+    def test_writers_leave_a_broken_file_alone(self):
+        for write in (lambda: helper.restore_design({"preset": "neon", "overrides": {}, "presets": None}),
+                      lambda: helper.save_user_audio("followPlayer", True),
+                      lambda: helper.apply_design({"type": "setPreset", "name": "neon"})):
+            with self.assertRaises(helper.ConfigUnreadable):
+                write()
+            self.assertUnchanged()
+
+    async def test_closing_design_does_not_revert_over_a_broken_file(self):
+        write_user(helper.default_user_config())
+        ws = object()
+        helper.begin_edit(ws)
+        helper.CONFIG_FILE.write_text(self.BROKEN)
+        with mock.patch.object(helper, "REVERT_GRACE", 0):
+            helper.end_edit_later(ws)
+            await asyncio.sleep(0.01)
+        self.assertUnchanged()
+        self.assertIsNone(helper.edit["owner"])
+
+    async def test_handler_survives_and_replies_with_an_error(self):
+        ws = FakeWs({"type": "setDesign", "changes": {"bars.count": 40}}, {"type": "setApps", "apps": ["x"]},
+                    {"type": "beginEdit"}, {"type": "undo"}, {"type": "exportPreset", "path": "/tmp/x.json"})
+        await helper.handler(ws)
+        self.assertUnchanged()
+        self.assertEqual([r.get("error") for r in ws.replies("editState")], ["config_unreadable"] * 2)
+        self.assertEqual(ws.replies("presetFile")[-1]["error"], "config_unreadable")
 
 
 class PresetFileTests(unittest.IsolatedAsyncioTestCase):

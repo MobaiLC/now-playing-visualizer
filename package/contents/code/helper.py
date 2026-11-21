@@ -326,11 +326,22 @@ def load_config():
     return to_qml_colors(eff)
 
 
+class ConfigUnreadable(Exception):
+    """config.json exists but can't be read as an object: nothing may write it."""
+
+
 def read_user():
+    """config.json for changing it; defaults only when there is no file yet.
+    Raises ConfigUnreadable otherwise, so a typo is never overwritten."""
     try:
-        return json.loads(CONFIG_FILE.read_text())
-    except (OSError, json.JSONDecodeError):
+        user = json.loads(CONFIG_FILE.read_text())
+    except FileNotFoundError:
         return default_user_config()
+    except (OSError, ValueError) as e:
+        raise ConfigUnreadable(str(e)) from e
+    if not isinstance(user, dict):
+        raise ConfigUnreadable("not a JSON object")
+    return user
 
 
 def write_private(path, text):
@@ -582,9 +593,12 @@ def end_edit_later(ws):
         return
 
     def revert():
-        if edit["snapshot"] is not None and design_of(read_user()) != edit["snapshot"]:
-            log("settings closed without Apply: reverting the design")
-            restore_design(edit["snapshot"])
+        try:
+            if edit["snapshot"] is not None and design_of(read_user()) != edit["snapshot"]:
+                log("settings closed without Apply: reverting the design")
+                restore_design(edit["snapshot"])
+        except ConfigUnreadable as e:
+            log("settings closed without Apply, but config.json can't be read: not reverting:", e)
         edit.update(owner=None, snapshot=None, history=[], revert=None)
 
     edit["revert"] = asyncio.get_running_loop().call_later(REVERT_GRACE, revert)
@@ -1184,7 +1198,7 @@ def bar_clients():
 
 def note_bars(line):
     """What CAVA last wrote, for /status: 'B' + ';'-separated heights."""
-    state["bars_peak"] = max((int(v) for v in line[1:].split(";") if v.isdigit()), default=0)
+    state["bars_peak"] = max((int(v) for v in line[1:].split(";") if v.isascii() and v.isdigit()), default=0)
     state["bars_at"] = time.monotonic()
 
 
@@ -1464,93 +1478,113 @@ async def handler(ws):
                 continue
             if not isinstance(msg, dict):
                 continue
-            if msg.get("type") == "listApps":
-                apps = await asyncio.to_thread(lambda: list_audio_apps(pw_dump()))
-                await ws.send(json.dumps({"type": "apps", "data": apps}))
-            elif msg.get("type") == "quit" and not SERVICE:
-                log("handing over to the systemd service")
-                stop_future.done() or stop_future.set_result(None)
-            elif msg.get("type") == "subscribe":
-                ws.topics = set(msg.get("topics") or [])
-                state["last_bars"] = None
-                if "presets" in ws.topics:
-                    await ws.send(json.dumps({"type": "presets", "data": state.get("presets", [])}))
-            elif msg.get("type") == "wantMedia":
-                state["media_wanted"] = True
-            elif msg.get("type") == "pinPlayer" and isinstance(msg.get("identity"), str):
-                # the widget's choice in its menu; the audio follows the last
-                # one picked by any widget (there is only one CAVA)
-                ws.pinned = msg["identity"][:MAX_NAME]
-                if state.get("pinned_player") != ws.pinned:
-                    state["pinned_player"] = ws.pinned
-                    forget_followed_player()
-            elif msg.get("type") == "mediaAction" and msg.get("action") in (
-                    "playPause", "next", "previous", "raise", "seek", "volume", "shuffle", "loop"):
-                identity = msg.get("identity")
-                value = msg.get("value")
-                if (msg["action"] == "volume" and isinstance(identity, str) and identity
-                        and isinstance(value, (int, float)) and not isinstance(value, bool)):
-                    # sent by the widget even when it isn't in fallback mode
-                    bus = await asyncio.to_thread(find_player_bus, identity[:MAX_NAME])
-                    if bus:
-                        await asyncio.to_thread(change_volume, bus, identity[:MAX_NAME], float(value))
-                else:
-                    await asyncio.to_thread(media_action, msg["action"], value, ws.media_player)
-            elif msg.get("type") == "setApps":
-                save_user_apps(msg.get("apps"))
-            elif msg.get("type") == "setFollowPlayer" and isinstance(msg.get("value"), bool):
-                save_user_audio("followPlayer", msg["value"])
-            elif msg.get("type") == "exportPreset":
-                reply = {"type": "presetFile", "op": "export"}
-                try:
-                    reply["name"] = await asyncio.to_thread(write_preset_file, msg.get("path"), read_user())
-                except PresetFileError as e:
-                    reply["error"] = e.code
-                await ws.send(json.dumps(reply))
-            elif msg.get("type") in ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset",
-                                     "importPreset"):
-                dropped = 0
-                if msg["type"] == "importPreset":
-                    # only what was read from the file goes on, never fields of msg
-                    try:
-                        found = await asyncio.to_thread(read_preset_file, msg.get("path"))
-                    except PresetFileError as e:
-                        await ws.send(json.dumps({"type": "presetFile", "op": "import", "error": e.code}))
-                        continue
-                    dropped = clean_design(found["design"])[1]
-                    fallback = os.path.splitext(os.path.basename(msg["path"]))[0]
-                    msg = {"type": "importPreset", "design": found["design"], "name": found["name"] or fallback}
-                user = read_user()
-                if edit["owner"] is ws:
-                    push_history(msg["type"], user)
-                error = apply_design(msg, user)
-                reply = edit_state(user)
-                if error:
-                    if edit["owner"] is ws and edit["history"]:
-                        edit["history"].pop()  # nothing changed: no undo step
-                    reply["error"] = error
-                await ws.send(json.dumps(reply))
-                if msg["type"] == "importPreset":
-                    result = {"type": "presetFile", "op": "import"}
-                    if error:
-                        result["error"] = error
-                    else:
-                        result.update(name=msg["savedAs"], ignored=dropped)
-                    await ws.send(json.dumps(result))
-            elif msg.get("type") == "beginEdit":
-                begin_edit(ws)
-                await ws.send(json.dumps(edit_state()))
-            elif msg.get("type") == "commitEdit":
-                commit_edit()
-                if edit["owner"] is ws:
-                    await ws.send(json.dumps(edit_state()))
-            elif msg.get("type") == "undo" and edit["owner"] is ws and edit["history"]:
-                restore_design(edit["history"].pop())
-                await ws.send(json.dumps(edit_state()))
+            try:
+                await on_message(ws, msg)
+            except ConfigUnreadable as e:
+                # the page's change is dropped; the widget already shows config_parse
+                log(f"config.json can't be read, {msg.get('type')} not saved:", e)
+                if msg.get("type") in DESIGN_MESSAGES:
+                    await ws.send(json.dumps({"type": "editState", "dirty": False, "error": "config_unreadable",
+                                              "canUndo": edit["owner"] is ws and bool(edit["history"])}))
+                if msg.get("type") in ("exportPreset", "importPreset"):
+                    await ws.send(json.dumps({"type": "presetFile", "op": msg["type"].removesuffix("Preset"),
+                                              "error": "config_unreadable"}))
     finally:
         clients.discard(ws)
         end_edit_later(ws)
         state["last_client"] = time.monotonic()
+
+
+DESIGN_MESSAGES = ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset", "importPreset",
+                   "beginEdit", "commitEdit", "undo")
+
+
+async def on_message(ws, msg):
+    if msg.get("type") == "listApps":
+        apps = await asyncio.to_thread(lambda: list_audio_apps(pw_dump()))
+        await ws.send(json.dumps({"type": "apps", "data": apps}))
+    elif msg.get("type") == "quit" and not SERVICE:
+        log("handing over to the systemd service")
+        stop_future.done() or stop_future.set_result(None)
+    elif msg.get("type") == "subscribe":
+        ws.topics = set(msg.get("topics") or [])
+        state["last_bars"] = None
+        if "presets" in ws.topics:
+            await ws.send(json.dumps({"type": "presets", "data": state.get("presets", [])}))
+    elif msg.get("type") == "wantMedia":
+        state["media_wanted"] = True
+    elif msg.get("type") == "pinPlayer" and isinstance(msg.get("identity"), str):
+        # the widget's choice in its menu; the audio follows the last
+        # one picked by any widget (there is only one CAVA)
+        ws.pinned = msg["identity"][:MAX_NAME]
+        if state.get("pinned_player") != ws.pinned:
+            state["pinned_player"] = ws.pinned
+            forget_followed_player()
+    elif msg.get("type") == "mediaAction" and msg.get("action") in (
+            "playPause", "next", "previous", "raise", "seek", "volume", "shuffle", "loop"):
+        identity = msg.get("identity")
+        value = msg.get("value")
+        if (msg["action"] == "volume" and isinstance(identity, str) and identity
+                and isinstance(value, (int, float)) and not isinstance(value, bool)):
+            # sent by the widget even when it isn't in fallback mode
+            bus = await asyncio.to_thread(find_player_bus, identity[:MAX_NAME])
+            if bus:
+                await asyncio.to_thread(change_volume, bus, identity[:MAX_NAME], float(value))
+        else:
+            await asyncio.to_thread(media_action, msg["action"], value, ws.media_player)
+    elif msg.get("type") == "setApps":
+        save_user_apps(msg.get("apps"))
+    elif msg.get("type") == "setFollowPlayer" and isinstance(msg.get("value"), bool):
+        save_user_audio("followPlayer", msg["value"])
+    elif msg.get("type") == "exportPreset":
+        reply = {"type": "presetFile", "op": "export"}
+        try:
+            reply["name"] = await asyncio.to_thread(write_preset_file, msg.get("path"), read_user())
+        except PresetFileError as e:
+            reply["error"] = e.code
+        await ws.send(json.dumps(reply))
+    elif msg.get("type") in ("setDesign", "setPreset", "resetDesign", "savePreset", "deletePreset",
+                             "importPreset"):
+        dropped = 0
+        if msg["type"] == "importPreset":
+            # only what was read from the file goes on, never fields of msg
+            try:
+                found = await asyncio.to_thread(read_preset_file, msg.get("path"))
+            except PresetFileError as e:
+                await ws.send(json.dumps({"type": "presetFile", "op": "import", "error": e.code}))
+                return
+            dropped = clean_design(found["design"])[1]
+            fallback = os.path.splitext(os.path.basename(msg["path"]))[0]
+            msg = {"type": "importPreset", "design": found["design"], "name": found["name"] or fallback}
+        user = read_user()
+        if edit["owner"] is ws:
+            push_history(msg["type"], user)
+        error = apply_design(msg, user)
+        reply = edit_state(user)
+        if error:
+            if edit["owner"] is ws and edit["history"]:
+                edit["history"].pop()  # nothing changed: no undo step
+            reply["error"] = error
+        await ws.send(json.dumps(reply))
+        if msg["type"] == "importPreset":
+            result = {"type": "presetFile", "op": "import"}
+            if error:
+                result["error"] = error
+            else:
+                result.update(name=msg["savedAs"], ignored=dropped)
+            await ws.send(json.dumps(result))
+    elif msg.get("type") == "beginEdit":
+        begin_edit(ws)
+        await ws.send(json.dumps(edit_state()))
+    elif msg.get("type") == "commitEdit":
+        commit_edit()
+        if edit["owner"] is ws:
+            await ws.send(json.dumps(edit_state()))
+    elif msg.get("type") == "undo" and edit["owner"] is ws and edit["history"]:
+        restore_design(edit["history"][-1])
+        edit["history"].pop()  # only once it is back: a failed write keeps the step
+        await ws.send(json.dumps(edit_state()))
+
 
 
 async def ask_to_quit():
