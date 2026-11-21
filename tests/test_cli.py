@@ -208,6 +208,40 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(self.by_id(self.run_doctor(host="quickshell")[1])["qml_modules"]["status"], "fail")
         self.assertEqual(self.by_id(self.run_doctor(host="plasma")[1])["qml_modules"]["status"], "ok")
 
+    def test_quickshell_host_no_notification_without_plasma_workspace(self):
+        self.missing_qml = set(PLASMA_ONLY) | {"org.kde.plasma.private.mpris", "org.kde.plasma.plasma5support"}
+        code, rep = self.run_doctor(host="quickshell", notify=True)
+        self.assertEqual((code, self.by_id(rep)["qml_modules"]["status"]), (0, "ok"))
+        self.assertEqual(self.notified(), [])
+
+    def test_audio_not_checked_messages(self):
+        self.status = dict(self.status, barClients=0)
+        audio = self.by_id(self.run_doctor()[1])["audio"]
+        self.assertEqual(audio["message"], "not checked: no card or widget is running")
+        self.assertIn("doctor again", audio["hint"])
+        self.status = ConnectionRefusedError()
+        audio = self.by_id(self.run_doctor()[1])["audio"]
+        self.assertEqual((audio["status"], audio["message"]), ("skip", "not checked: the helper is not reachable"))
+        self.assertIn("doctor again", audio["hint"])
+
+    def test_broken_install_fails_without_crashing(self):
+        tmp = Path(self.file).parent
+        bad = tmp / "schema.json"
+        bad.write_text("{ not json")
+        with mock.patch.object(cli.helper, "SCHEMA_FILE", bad):
+            code, rep = self.run_doctor(notify=True)
+        self.assertEqual((code, self.by_id(rep)["config"]["status"]), (1, "fail"))
+        self.assertIn("critical", self.notified()[0])
+        presets = tmp / "presets"
+        presets.mkdir()
+        (presets / "x.json").write_text("[")
+        with mock.patch.object(cli.helper, "PRESETS_DIR", presets):
+            code, rep = self.run_doctor()
+        self.assertEqual((code, self.by_id(rep)["config"]["status"]), (1, "fail"))
+        bad.write_text("{}")  # valid JSON, wrong shape
+        with mock.patch.object(cli.helper, "SCHEMA_FILE", bad):
+            self.assertEqual(self.run_doctor()[0], 1)
+
     def test_plasma_host_requires_plasmoid_module(self):
         self.missing_qml = {"org.kde.plasma.plasmoid"}
         code, rep = self.run_doctor(host="plasma", notify=True)

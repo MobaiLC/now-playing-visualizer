@@ -46,7 +46,8 @@ QML_MODULES = {
     "org.kde.kirigami": (_("the whole widget"), False, "all"),
     "org.kde.kcmutils": (_("settings pages"), False, "plasma"),
     "QtQuick.Dialogs": (_("color picker in Design"), False, "plasma"),
-    "org.kde.plasma.private.mpris": (_("reading the song (D-Bus is used instead)"), True, "all"),
+    # the card falls back to D-Bus without it; Hyprland rarely has plasma-workspace
+    "org.kde.plasma.private.mpris": (_("reading the song (D-Bus is used instead)"), True, "plasma"),
     "org.kde.plasma.plasma5support": (_("starting the helper from the widget (systemd starts it)"), True, "plasma"),
     "Quickshell": (_("the whole desktop card"), False, "quickshell"),
     "Quickshell.Wayland": (_("the whole desktop card"), False, "quickshell"),
@@ -196,15 +197,17 @@ def list_players():
 
 
 def effective_config():
-    """The config the helper would use, read-only; defaults when the file is missing or broken."""
+    """The config the helper would use, read-only; defaults when the file is broken,
+    {} when schema.json or a preset is (the config check reports both)."""
     user = helper.read_user()
-    try:
-        user = copy.deepcopy(user) if isinstance(user, dict) else helper.default_user_config()
-        helper.migrate(user)
-        return helper.resolve_config(user, helper.load_schema(), helper.load_builtin_presets())[0]
-    except (AttributeError, TypeError, ValueError):  # check reports what is wrong with it
-        return helper.resolve_config(helper.default_user_config(), helper.load_schema(),
-                                     helper.load_builtin_presets())[0]
+    for u in (user, helper.default_user_config()):
+        try:
+            u = copy.deepcopy(u)
+            helper.migrate(u)
+            return helper.resolve_config(u, helper.load_schema(), helper.load_builtin_presets())[0]
+        except (OSError, AttributeError, KeyError, TypeError, ValueError):
+            pass
+    return {}
 
 
 def links_check():
@@ -284,8 +287,16 @@ def doctor(notify):
         else:
             add("qml_modules", "ok", _("QML modules for {host} found").format(host=host))
 
-    code, rep = check(helper.CONFIG_FILE)
-    if code == 0:
+    try:  # a broken update: schema.json or a preset that does not parse (helper.py compiled, it is imported)
+        if not isinstance(helper.load_schema().get("options"), dict) or not helper.load_builtin_presets():
+            raise ValueError("schema.json has no options or there are no presets")
+        code, rep = check(helper.CONFIG_FILE)
+    except (OSError, AttributeError, KeyError, TypeError, ValueError) as e:
+        code, rep = None, str(e)
+    if code is None:
+        add("config", "fail", _("schema.json or a preset is broken: {error}").format(error=rep),
+            _("reinstall Now Playing Visualizer"))
+    elif code == 0:
         add("config", "ok", _("config OK") if rep["exists"] else _("no config file yet, defaults are used"))
     elif code == 1:
         add("config", "warn", _("{n} config issue(s), defaults are used for them").format(n=len(rep["issues"])),
@@ -340,9 +351,11 @@ def doctor(notify):
 
     cava = (status or {}).get("cava") or {}
     if status is None:
-        add("audio", "skip", _("the helper is not reachable"))
+        add("audio", "skip", _("not checked: the helper is not reachable"),
+            _("start the helper, then run nowplaying-viz doctor again"))
     elif not status.get("barClients"):
-        add("audio", "skip", _("no card or widget is running"))
+        add("audio", "skip", _("not checked: no card or widget is running"),
+            _("open the card or widget, then run nowplaying-viz doctor again"))
     elif not cava.get("running"):
         add("audio", "fail", _("CAVA is not running"), "journalctl --user -u nowplaying-viz")
     elif (cava.get("peak") or 0) > 0 and (cava.get("age") if cava.get("age") is not None else 99) < 2:
