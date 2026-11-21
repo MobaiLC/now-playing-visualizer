@@ -38,7 +38,9 @@ This page is for people changing the code or maintaining a fork. For using the w
 | `code/helper.py` | The helper (see below). Standard library only. |
 | `code/schema.json` | Every option: type, default, range, label, group, tab and visibility conditions. |
 | `code/presets/*.json` | Built-in presets, each listing only what differs from the defaults. |
-| `code/check.py` | Self-check of programs and QML modules, used after package upgrades. |
+| `code/cli.py` | `nowplaying-viz check` (validates `config.json`) and `nowplaying-viz doctor` (programs, QML modules, service, helper, players, config; also run after package upgrades). |
+| `ui/NowPlaying.qml` | The shared state (helper connection, song, config) used by `main.qml` and by the quickshell card. |
+| `quickshell/shell.qml` | The Hyprland desktop card: a quickshell layer-shell window hosting `Card.qml`, placed by `desktop.*`. `quickshell/ui` is a symlink to `ui/`. |
 
 ## Data flow
 
@@ -83,7 +85,7 @@ The commit is sent twice: directly from the page, and through Plasma's own confi
   - It only writes options that exist in the schema, with valid values.
   - It writes files atomically, with mode 0600.
 - **Config:** `config.json` carries a `version`; `migrate()` upgrades older files one step at a time.
-- **Self-check:** `check.py` runs after every `pacman` transaction (optional systemd path unit) and notifies the user when a dependency is missing.
+- **Self-check:** `nowplaying-viz doctor --notify` runs after every `pacman` transaction (optional systemd path unit) and notifies the user when something is missing.
 
 ## Processes and lifetime
 

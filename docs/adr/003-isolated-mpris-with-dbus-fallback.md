@@ -15,5 +15,5 @@ Plasma's own media controller reads players through `org.kde.plasma.private.mpri
 ## Consequences
 
 - When Plasma's module works, the widget gets its quality and efficiency.
-- When it breaks, the widget keeps working, and `check.py` tells the user.
+- When it breaks, the widget keeps working, and `check.py` tells the user. (Note: `check.py` was later replaced by `nowplaying-viz doctor`.)
 - Two code paths exist for media, and both must offer the same fields and actions (see `media` in [PROTOCOL.md](../PROTOCOL.md)).

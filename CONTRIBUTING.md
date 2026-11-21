@@ -18,6 +18,8 @@ Useful while working:
 - `journalctl --user -u plasma-plasmashell -f | grep nowplayingvisualizer`: warnings from the installed widget.
 - `NPV_PORT=47899 XDG_CONFIG_HOME=/tmp/npv python3 package/contents/code/helper.py`: a second helper with its own port and config, so you can test without touching your real one.
 
+The user-facing `nowplaying-viz check` and `doctor` commands live in `package/contents/code/cli.py`; the agent guide is `AGENTS.md` (also shipped as a skill, with `packaging/skill-frontmatter.md` as its header). Keep that guide's commands true when you change them.
+
 ## Before sending a pull request
 
 ```bash

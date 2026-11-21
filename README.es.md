@@ -1,6 +1,6 @@
 # Now Playing Visualizer
 
-Un widget de escritorio para KDE Plasma 6 que muestra la canción que estás escuchando —portada, título, artista y progreso— junto a un visualizador de audio en tiempo real hecho con [CAVA](https://github.com/karlstav/cava). Puede escuchar **solo las aplicaciones que elijas** (tu reproductor, no el juego ni Discord), y todo su aspecto se cambia desde una página de ajustes visual.
+Un widget de escritorio para KDE Plasma 6 (y una tarjeta para Hyprland, con quickshell) que muestra la canción que estás escuchando —portada, título, artista y progreso— junto a un visualizador de audio en tiempo real hecho con [CAVA](https://github.com/karlstav/cava). Puede escuchar **solo las aplicaciones que elijas** (tu reproductor, no el juego ni Discord), y todo su aspecto se cambia desde una página de ajustes visual.
 
 [Read in English](README.md)
 
@@ -48,7 +48,7 @@ tools/install.sh --systemd  # opcional: servicio del helper + comprobación tras
 Después reinicia Plasma (`systemctl --user restart plasma-plasmashell`, o cierra sesión y vuelve a entrar), haz clic derecho en el escritorio → **Añadir elementos gráficos…** → **Now Playing Visualizer**.
 
 Otras formas, cuando estén publicadas (todavía no lo están):
-- **AUR:** `plasma6-applets-now-playing-visualizer-git`. El PKGBUILD está en [`packaging/aur/`](packaging/aur/PKGBUILD). Instala el widget para todos los usuarios, junto con las unidades de systemd, que no se activan hasta que tú lo hagas.
+- **AUR:** `now-playing-visualizer` (versiones) o `now-playing-visualizer-git` (último commit). Los PKGBUILD están en [`packaging/aur/`](packaging/aur/). Instalan el widget y la tarjeta de Hyprland para todos los usuarios, junto con las unidades de systemd, que no se activan hasta que tú lo hagas.
 - **KDE Store / archivo `.plasmoid`:** créalo con `tools/make-plasmoid.sh` e instálalo con `kpackagetool6 -t Plasma/Applet -i build/now-playing-visualizer-*.plasmoid`.
 
 `--systemd` instala dos unidades de usuario:
@@ -66,6 +66,29 @@ kpackagetool6 -t Plasma/Applet -r com.github.mobailc.nowplayingvisualizer
 systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path
 rm ~/.config/systemd/user/nowplaying-viz*
 rm -r ~/.config/nowplaying-viz   # tus ajustes y presets
+```
+
+### Hyprland
+
+En Hyprland (sin Plasma) el mismo helper alimenta una tarjeta dibujada con [quickshell](https://quickshell.org). `tools/install.sh --systemd` copia todo a `~/.local/share/plasma/plasmoids/…` e imprime la línea que debes añadir a tu configuración de Hyprland:
+
+```
+exec-once = quickshell -p ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/quickshell
+```
+
+Con el paquete de AUR la ruta es `/usr/share/now-playing-visualizer/quickshell`. El tamaño, la esquina, los márgenes y el monitor son las opciones `desktop.*` de `config.json` (mira [docs/CONFIG.md](docs/CONFIG.md)); `hyprctl monitors` lista los nombres de los monitores. Después:
+
+```bash
+nowplaying-viz check    # valida config.json (salida 0 = bien)
+nowplaying-viz doctor   # revisa programas, servicio, helper, reproductores y configuración
+```
+
+### Usarlo con un agente de IA
+
+[`AGENTS.md`](AGENTS.md) es una guía para asistentes de IA: instalar, cambiar el aspecto y arreglar problemas. Para dárselo a Claude Code como skill (el paquete de AUR la incluye; no se enlaza nada por ti):
+
+```bash
+ln -s /usr/share/now-playing-visualizer/skill ~/.claude/skills/now-playing-visualizer
 ```
 
 ## Configuración
@@ -122,10 +145,11 @@ Los botones de aleatorio y repetición solo aparecen en los reproductores que lo
 
 ## Solución de problemas
 
-- **Comprobarlo todo** — dice qué falta o está roto y a qué afecta (si lo instalaste desde AUR, usa `/usr/share/…` en vez de `~/.local/share/…`):
+- **Comprobarlo todo** — dice qué falta o está roto, a qué afecta y qué hacer (`--json` para herramientas, `--notify` para una notificación):
   ```bash
-  python3 ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer/contents/code/check.py
+  nowplaying-viz doctor
   ```
+  `nowplaying-viz check` solo valida `config.json`.
 - **Registros del helper:** `journalctl --user -u nowplaying-viz` (servicio) o `~/.cache/nowplaying-viz.log` (arrancado por el widget).
 - **Errores del widget:** `journalctl --user -u plasma-plasmashell | grep nowplayingvisualizer`.
 - **¿No hay barras?** Comprueba que la aplicación está marcada en **Audio** (o que no hay ninguna, para todo el sistema, o que **Seguir al reproductor** está activado) y que `cava` está instalado.
@@ -151,7 +175,7 @@ Empieza por [CONTRIBUTING.md](CONTRIBUTING.md), en inglés: cómo preparar el en
 package/            el plasmoide (se instala tal cual)
   contents/ui/        QML: main, Card, Bars, páginas Diseño y Audio, MprisSource
   contents/ui/renderers/  un archivo JS por estilo de barras, colores, geometría común
-  contents/code/      helper.py, schema.json, presets/*.json, check.py
+  contents/code/      helper.py, cli.py, schema.json, presets/*.json
 packaging/          unidades de systemd, PKGBUILD de AUR
 tests/              tests del helper (python3 -m unittest discover -s tests)
 tools/              instalar, crear el .plasmoid, traducciones, documentación de opciones
