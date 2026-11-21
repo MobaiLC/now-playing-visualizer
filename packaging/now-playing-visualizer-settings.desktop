@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Now Playing Visualizer Settings
+Name[es]=Ajustes de Now Playing Visualizer
+Comment=Change the look and audio of the Now Playing Visualizer
+Comment[es]=Cambia el aspecto y el audio de Now Playing Visualizer
+Exec=nowplaying-viz settings
+Icon=view-media-visualization
+Categories=AudioVideo;Audio;
+NotShowIn=KDE;

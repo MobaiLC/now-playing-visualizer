@@ -35,4 +35,5 @@ done
 
 install -Dm755 tools/nowplaying-viz "$dest/usr/bin/nowplaying-viz"
 install -Dm644 -t "$dest/usr/share/doc/now-playing-visualizer" README.md AGENTS.md docs/CONFIG.md
+install -Dm644 -t "$dest/usr/share/applications" packaging/now-playing-visualizer-settings.desktop
 install -Dm644 LICENSE "$dest/usr/share/licenses/now-playing-visualizer/LICENSE"

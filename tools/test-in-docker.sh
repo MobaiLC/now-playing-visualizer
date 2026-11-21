@@ -29,6 +29,7 @@ required_paths=(
     /usr/share/doc/now-playing-visualizer/AGENTS.md
     /usr/share/doc/now-playing-visualizer/CONFIG.md
     /usr/lib/systemd/user/nowplaying-viz.service
+    /usr/share/applications/now-playing-visualizer-settings.desktop
 )
 
 as_tester() {  # run one of the functions below as the unprivileged user
@@ -39,7 +40,7 @@ setup() {
     pacman -Syu --noconfirm --needed >/dev/null \
         python python-gobject dbus systemd mpv mpv-mpris gettext shellcheck \
         qt6-declarative qt6-websockets plasma-workspace plasma5support \
-        base-devel namcap git
+        base-devel namcap git desktop-file-utils
     # the image skips docs on install, ours must be checked
     sed -i 's|usr/share/doc/\*||' /etc/pacman.conf
     useradd -m tester
@@ -56,6 +57,7 @@ unit_tests() {
     echo ===== QML unit tests; /usr/lib/qt6/bin/qmltestrunner -input tests/qml 2>&1 | grep -E "^(SKIP|FAIL)|Totals" -A1
     echo ===== docs and translations; python3 tools/gen-config-doc.py --check
     for po in translate/*.po; do msgfmt --check -o /dev/null "$po"; done
+    echo ===== launcher entry; desktop-file-validate packaging/now-playing-visualizer-settings.desktop
     echo ===== shell scripts; shellcheck tools/*.sh tools/nowplaying-viz packaging/install.sh tests/integration/run.sh
     echo ===== MPRIS integration; tests/integration/run.sh 2>&1 | grep -vE ^PASS
 }
@@ -91,7 +93,7 @@ build_release() {
     # this one stands in for GitHub's tag tarball
     # shellcheck source=/dev/null disable=SC2154  # pkgname, pkgver come from the PKGBUILD
     (. ./PKGBUILD && git -C ~/src archive --prefix="$pkgname-$pkgver/" -o ~/build-release/"$pkgname-$pkgver.tar.gz" HEAD)
-    makepkg --noconfirm
+    makepkg --noconfirm --skipchecksums # the checksum in the PKGBUILD is for the real v0.4.0 tarball
 }
 
 verify_installed() {

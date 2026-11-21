@@ -125,6 +125,7 @@ Common situations:
 
 ## Do not
 
+- People can open `nowplaying-viz settings` (a window, also from the card's right-click). Agents keep editing `config.json` and running `nowplaying-viz check`; do not open that window.
 - Do not edit files inside the installed package (`/usr/share/...`, or the plasmoid folder): they are overwritten on update. Settings live in `config.json`.
 - Do not start a second helper by hand (port 47811 is shared); use the systemd service.
 - Outside the install steps, do not write anywhere except `~/.config/nowplaying-viz/config.json` unless the user asks.

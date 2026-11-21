@@ -103,6 +103,10 @@ Clic derecho en el widget → **Configurar…**
 - **Diseño** — vista previa en vivo arriba y, debajo, pestañas: *Presets* (clic en una tarjeta para aplicarla, o guarda los tuyos), *Estilo*, *Colores*, *Movimiento*, *Panel* y *Avanzado*. Los cambios se ven al momento; **Aplicar/Aceptar** los guarda y **Cancelar** lo deja todo como estaba.
 - **Audio** — marca las aplicaciones que debe escuchar el visualizador. Si no marcas ninguna, escucha todo el sistema. O activa **Seguir al reproductor que muestra el widget** para escuchar solo el reproductor que esté sonando, sin mantener una lista.
 
+### Ventana de ajustes (Hyprland y otros escritorios)
+
+Sin Plasma no hay **Configurar…**: ejecuta `nowplaying-viz settings`, elige *Ajustes de Now Playing Visualizer* en tu lanzador o haz clic derecho en la tarjeta del escritorio. Abre las mismas páginas de Diseño y Audio en su propia ventana.
+
 Todo se guarda en `~/.config/nowplaying-viz/config.json`, que también puedes editar a mano; el widget se actualiza al guardar el archivo:
 
 ```json

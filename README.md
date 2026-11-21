@@ -103,6 +103,10 @@ Right-click the widget → **Configure…**
 - **Design** — live preview at the top, then tabs: *Presets* (click a card to apply it, or save your own), *Style*, *Colors*, *Motion*, *Panel* and *Advanced*. Changes show immediately; **Apply/OK** keeps them and **Cancel** puts everything back.
 - **Audio** — tick the apps the visualizer should listen to. With none ticked it listens to the whole system. Or tick **Follow the player shown in the widget** to listen only to whichever player is playing, without keeping a list.
 
+### Settings window (Hyprland and other desktops)
+
+Without Plasma there is no **Configure…**: run `nowplaying-viz settings`, pick *Now Playing Visualizer Settings* in your launcher, or right-click the desktop card. It opens the same Design and Audio pages in their own window.
+
 Everything is stored in `~/.config/nowplaying-viz/config.json`, which you can also edit by hand; the widget reloads when the file is saved:
 
 ```json
