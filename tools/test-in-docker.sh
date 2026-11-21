@@ -93,7 +93,7 @@ build_release() {
     # this one stands in for GitHub's tag tarball
     # shellcheck source=/dev/null disable=SC2154  # pkgname, pkgver come from the PKGBUILD
     (. ./PKGBUILD && git -C ~/src archive --prefix="$pkgname-$pkgver/" -o ~/build-release/"$pkgname-$pkgver.tar.gz" HEAD)
-    makepkg --noconfirm --skipchecksums # the checksum in the PKGBUILD is for the real v0.4.0 tarball
+    makepkg --noconfirm --skipchecksums # the PKGBUILD checksum is for the real v0.4.0 tarball; this one is `git archive HEAD`, so the release checksum is deliberately not tested here
 }
 
 verify_installed() {

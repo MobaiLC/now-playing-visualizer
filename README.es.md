@@ -64,7 +64,7 @@ Para actualizar, haz `git pull` y vuelve a ejecutar `tools/install.sh`.
 ```bash
 kpackagetool6 -t Plasma/Applet -r com.github.mobailc.nowplayingvisualizer
 systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path
-rm ~/.config/systemd/user/nowplaying-viz*
+rm ~/.config/systemd/user/nowplaying-viz* ~/.local/share/applications/now-playing-visualizer-settings.desktop
 rm -r ~/.config/nowplaying-viz   # tus ajustes y presets
 ```
 
@@ -86,7 +86,7 @@ nowplaying-viz check    # valida config.json (salida 0 = bien)
 nowplaying-viz doctor   # revisa programas, servicio, helper, reproductores y configuración
 ```
 
-Para quitarlo: borra las dos líneas `exec-once`, luego `systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path` y `rm -r ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer ~/.local/bin/nowplaying-viz ~/.config/systemd/user/nowplaying-viz*`.
+Para quitarlo: borra las dos líneas `exec-once`, luego `systemctl --user disable --now nowplaying-viz.service nowplaying-viz-check.path` y `rm -r ~/.local/share/plasma/plasmoids/com.github.mobailc.nowplayingvisualizer ~/.local/bin/nowplaying-viz ~/.config/systemd/user/nowplaying-viz* ~/.local/share/applications/now-playing-visualizer-settings.desktop`.
 
 ### Usarlo con un agente de IA
 
