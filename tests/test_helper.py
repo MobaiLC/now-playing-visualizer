@@ -234,6 +234,55 @@ class DesignEditTests(unittest.TestCase):
         self.assertFalse(helper.edit_state()["dirty"])
 
 
+class EditOwnershipTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        write_user(helper.default_user_config())
+        helper.edit.update(owner=None, snapshot=None, history=[], last_push=0.0, revert=None)
+        self.addCleanup(lambda: helper.edit.update(owner=None, snapshot=None, history=[], revert=None))
+
+    async def test_second_editor_is_refused(self):
+        a, b = FakeWs(), FakeWs()
+        await helper.on_message(a, {"type": "beginEdit"})
+        await helper.on_message(b, {"type": "beginEdit"})
+        self.assertEqual(a.sent[-1]["type"], "editState")
+        self.assertEqual(b.sent, [{"type": "editBusy"}])
+        self.assertIs(helper.edit["owner"], a)
+
+    async def test_non_owner_design_messages_are_refused(self):
+        a, b = FakeWs(), FakeWs()
+        await helper.on_message(a, {"type": "beginEdit"})
+        before = helper.CONFIG_FILE.read_bytes()
+        for m in ({"type": "setDesign", "changes": {"bars.count": 40}}, {"type": "setPreset", "name": "neon"},
+                  {"type": "resetDesign"}, {"type": "savePreset", "name": "x"}, {"type": "deletePreset", "name": "x"},
+                  {"type": "importPreset", "path": "/nonexistent"}, {"type": "undo"}):
+            await helper.on_message(b, m)
+        self.assertEqual(b.sent, [{"type": "editBusy"}] * 7)
+        self.assertEqual(helper.CONFIG_FILE.read_bytes(), before)
+
+    async def test_commit_is_accepted_from_any_client(self):
+        a, b = FakeWs(), FakeWs()
+        await helper.on_message(a, {"type": "beginEdit"})
+        await helper.on_message(b, {"type": "commitEdit"})
+        self.assertEqual(b.sent, [])
+        self.assertIsNotNone(helper.edit["owner"])  # commit keeps the session open
+
+    async def test_edit_freed_on_disconnect(self):
+        a, b = FakeWs({"type": "beginEdit"}), FakeWs()
+        with mock.patch.object(helper, "REVERT_GRACE", 0):
+            await helper.handler(a)
+            await asyncio.sleep(0.01)
+        await helper.on_message(b, {"type": "beginEdit"})
+        self.assertEqual(b.sent[-1]["type"], "editState")
+        self.assertIs(helper.edit["owner"], b)
+
+    async def test_owner_disconnect_reverts(self):
+        a = FakeWs({"type": "beginEdit"}, {"type": "setPreset", "name": "neon"})
+        with mock.patch.object(helper, "REVERT_GRACE", 0):
+            await helper.handler(a)
+            await asyncio.sleep(0.01)
+        self.assertEqual(read_user()["preset"], "lookas")
+
+
 class WebSocketTests(unittest.IsolatedAsyncioTestCase):
     """The helper must talk to the widget and refuse web pages."""
 

@@ -1500,7 +1500,11 @@ DESIGN_MESSAGES = ("setDesign", "setPreset", "resetDesign", "savePreset", "delet
 
 
 async def on_message(ws, msg):
-    if msg.get("type") == "listApps":
+    if (msg.get("type") in DESIGN_MESSAGES and msg["type"] != "commitEdit"
+            and edit["owner"] is not None and edit["owner"] is not ws):
+        # one editor at a time; the owner is cleared once it is gone and its revert ran
+        await ws.send(json.dumps({"type": "editBusy"}))
+    elif msg.get("type") == "listApps":
         apps = await asyncio.to_thread(lambda: list_audio_apps(pw_dump()))
         await ws.send(json.dumps({"type": "apps", "data": apps}))
     elif msg.get("type") == "quit" and not SERVICE:
