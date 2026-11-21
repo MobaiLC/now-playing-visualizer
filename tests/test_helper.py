@@ -173,6 +173,12 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(user["overrides"]["panel"], {"whenIdle": "last"})
         self.assertEqual(user["presets"]["mine"]["panel"], {})
 
+    def test_malformed_sections_do_not_crash(self):
+        for user in ({"overrides": [1]}, {"presets": [1]}, {"presets": {"x": 5}},
+                     {"overrides": {"panel": 3}}, {"presets": {"x": {"panel": [1]}}}):
+            self.assertTrue(helper.migrate(user))
+            self.assertEqual(user["version"], helper.CONFIG_VERSION)
+
     def test_current_version_is_left_alone(self):
         self.assertFalse(helper.migrate({"version": helper.CONFIG_VERSION}))
 

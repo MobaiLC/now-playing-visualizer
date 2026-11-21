@@ -65,6 +65,14 @@ class CheckTests(unittest.TestCase):
         self.assertEqual([(i["code"], i["option"]) for i in rep["issues"]],
                          [("invalid_option", "presets.mine")])
 
+    def test_wrong_sections_without_version_do_not_crash(self):
+        for user, option in (({"overrides": [1]}, "overrides"), ({"presets": [1]}, "presets"),
+                             ({"presets": {"x": 5}}, "presets.x")):
+            code, rep = self.run_check(user)
+            self.assertEqual(code, 1, user)
+            self.assertEqual([(i["code"], i["option"]) for i in rep["issues"]],
+                             [("invalid_option", option)])
+
     def test_leaf_where_section_expected_is_one_issue(self):
         code, rep = self.run_check(self.user(overrides={"bars": 5}))
         self.assertEqual(code, 1)

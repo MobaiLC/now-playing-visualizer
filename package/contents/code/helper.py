@@ -234,9 +234,12 @@ def migrate(user):
     if version < 2:
         # panel.hideWhenNoPlayer (bool) became panel.whenIdle (enum). true was
         # the old default, so only an explicit false is carried over.
-        sections = [user.get("overrides", {})] + list(user.get("presets", {}).values())
+        presets = user.get("presets", {})
+        sections = [user.get("overrides", {})] + (list(presets.values()) if isinstance(presets, dict) else [])
         for sec in sections:
-            panel = sec.get("panel", {})
+            panel = sec.get("panel", {}) if isinstance(sec, dict) else None
+            if not isinstance(panel, dict):
+                continue  # malformed section: left for validation to report
             if panel.pop("hideWhenNoPlayer", True) is False:
                 panel["whenIdle"] = "last"
     user["version"] = CONFIG_VERSION
