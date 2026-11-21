@@ -216,10 +216,11 @@ def validate(eff, schema, issues):
         value = get_path(eff, key)
         fixed = coerce(value, spec)
         if fixed is _INVALID:
-            issues.append({"code": "invalid_option", "detail": key})
-            set_path(eff, key, copy.deepcopy(spec["default"]))
+            used = copy.deepcopy(spec["default"])
+            issues.append({"code": "invalid_option", "detail": key, "value": value, "used": used})
+            set_path(eff, key, used)
         elif fixed != value:
-            issues.append({"code": "out_of_range", "detail": key})
+            issues.append({"code": "out_of_range", "detail": key, "value": value, "used": fixed})
             set_path(eff, key, fixed)
 
 
@@ -267,6 +268,22 @@ def to_qml_colors(v):
     return v
 
 
+def resolve_config(user, schema, builtin):
+    """Pure: the effective config for an already migrated user config (before
+    presetName and QML colours) and the issues found in it."""
+    issues = []
+    presets = deep_merge(builtin, user.get("presets", {}))
+    name = user.get("preset", "lookas")
+    if name not in presets:
+        issues.append({"code": "preset_missing", "detail": name})
+        name = "lookas"
+    eff = deep_merge(schema_defaults(schema), presets[name])
+    eff = deep_merge(eff, user.get("overrides", {}))
+    eff["audio"] = deep_merge(eff.get("audio", {}), user.get("audio", {}))
+    validate(eff, schema, issues)
+    return eff, issues
+
+
 def load_config():
     schema = load_schema()
     builtin = load_builtin_presets()
@@ -281,17 +298,12 @@ def load_config():
         return None
     if migrate(user):
         write_user(user)
-    issues = []
+    eff, issues = resolve_config(user, schema, builtin)
     presets = deep_merge(builtin, user.get("presets", {}))
     name = user.get("preset", "lookas")
     if name not in presets:
-        issues.append({"code": "preset_missing", "detail": name})
         name = "lookas"
     defaults = schema_defaults(schema)
-    eff = deep_merge(defaults, presets[name])
-    eff = deep_merge(eff, user.get("overrides", {}))
-    eff["audio"] = deep_merge(eff.get("audio", {}), user.get("audio", {}))
-    validate(eff, schema, issues)
     eff["presetName"] = name
     eff["presetList"] = sorted(presets)
     eff["userPresets"] = sorted(user.get("presets", {}))
