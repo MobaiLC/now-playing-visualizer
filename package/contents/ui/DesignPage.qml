@@ -29,6 +29,7 @@ Item {
     property var edit: Edit.initial()
     // another window owns the edit: read-only until it lets go
     readonly property bool busy: edit.busy
+    readonly property bool connected: helper.connected
     signal committed()
 
     function apply() {

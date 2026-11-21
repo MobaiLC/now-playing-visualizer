@@ -41,6 +41,13 @@ TestCase {
         compare(Net.parsePort(47899), 47811);
     }
 
+    function test_port_argument() {
+        compare(Net.parsePort(Net.portArgument(["qml", "settings.qml", "--", "--port", "50123"])), 50123);
+        compare(Net.parsePort(Net.portArgument(["qml", "settings.qml", "--port", "abc"])), 47811);
+        compare(Net.portArgument(["qml", "settings.qml"]), "");
+        compare(Net.portArgument(["qml", "--port"]), "");
+    }
+
     function test_url_is_always_loopback() {
         compare(Net.helperUrl(Net.parsePort("47899")), "ws://127.0.0.1:47899");
         compare(Net.helperUrl(Net.parsePort("evil.example:80")), "ws://127.0.0.1:47811");

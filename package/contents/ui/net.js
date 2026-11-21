@@ -32,6 +32,13 @@ function parsePort(text) {
     return port >= MIN_PORT && port <= MAX_PORT ? port : DEFAULT_PORT;
 }
 
+// the text after "--port" in a command line (the standalone settings window's
+// `qml settings.qml -- --port N`), or "" without one; parsePort validates it
+function portArgument(args) {
+    const i = args.indexOf("--port");
+    return i >= 0 && i + 1 < args.length ? String(args[i + 1]) : "";
+}
+
 function helperUrl(port) {
     return "ws://127.0.0.1:" + port;
 }

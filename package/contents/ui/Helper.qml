@@ -53,21 +53,27 @@ Item {
             socket.sendTextMessage(JSON.stringify(obj));
     }
 
-    function usePort(text) {
+    function usePort(text, source = "NPV_PORT") {
         if (portKnown)
             return;
         port = Net.parsePort(text);
         if (text !== "" && String(port) !== text)
-            console.warn(`nowplayingvisualizer: ignoring NPV_PORT, not a port between ${Net.MIN_PORT} and ${Net.MAX_PORT}; using ${port}`);
+            console.warn(`nowplayingvisualizer: ignoring ${source}, not a port between ${Net.MIN_PORT} and ${Net.MAX_PORT}; using ${port}`);
         portKnown = true;
         portTimeout.stop();
         socket.active = true;
     }
 
+    // `--port N` (the standalone settings window) wins over NPV_PORT: outside
+    // plasmashell Launcher.qml can still load and would read the default port
+    readonly property string portArgument: Net.portArgument(Qt.application.arguments)
+
     function findPort() {
         if (portKnown || portAsked)
             return;
-        if (launcher.status === Loader.Ready) {
+        if (portArgument !== "") {
+            usePort(portArgument, "--port");
+        } else if (launcher.status === Loader.Ready) {
             portAsked = true;
             portTimeout.start();
             launcher.item.readPort();
@@ -77,7 +83,8 @@ Item {
     }
 
     function launch() {
-        if (launcher.item)
+        // a helper started here would not get that port
+        if (launcher.item && portArgument === "")
             launcher.item.launch(helperPath);
     }
 
