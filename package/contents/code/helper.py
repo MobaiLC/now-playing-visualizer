@@ -599,7 +599,8 @@ def end_edit_later(ws):
                 restore_design(edit["snapshot"])
         except ConfigUnreadable as e:
             log("settings closed without Apply, but config.json can't be read: not reverting:", e)
-        edit.update(owner=None, snapshot=None, history=[], revert=None)
+        finally:  # even if the write failed: never leave a dead owner behind
+            edit.update(owner=None, snapshot=None, history=[], revert=None)
 
     edit["revert"] = asyncio.get_running_loop().call_later(REVERT_GRACE, revert)
 
@@ -1500,9 +1501,10 @@ DESIGN_MESSAGES = ("setDesign", "setPreset", "resetDesign", "savePreset", "delet
 
 
 async def on_message(ws, msg):
+    # commitEdit is exempt: Plasma's Apply sends it from the widget's connection, not the owner's.
+    # A pending revert means the owner's connection is gone: a new editor may take over.
     if (msg.get("type") in DESIGN_MESSAGES and msg["type"] != "commitEdit"
-            and edit["owner"] is not None and edit["owner"] is not ws):
-        # one editor at a time; the owner is cleared once it is gone and its revert ran
+            and edit["owner"] is not None and edit["owner"] is not ws and edit["revert"] is None):
         await ws.send(json.dumps({"type": "editBusy"}))
     elif msg.get("type") == "listApps":
         apps = await asyncio.to_thread(lambda: list_audio_apps(pw_dump()))

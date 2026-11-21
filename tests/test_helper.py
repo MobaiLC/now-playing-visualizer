@@ -282,6 +282,26 @@ class EditOwnershipTests(unittest.IsolatedAsyncioTestCase):
             await asyncio.sleep(0.01)
         self.assertEqual(read_user()["preset"], "lookas")
 
+    async def test_reopen_within_grace_takes_over_and_keeps_design(self):
+        a, b = FakeWs({"type": "beginEdit"}, {"type": "setPreset", "name": "neon"}), FakeWs()
+        with mock.patch.object(helper, "REVERT_GRACE", 30):
+            await helper.handler(a)
+            self.assertIsNotNone(helper.edit["revert"])
+            await helper.on_message(b, {"type": "beginEdit"})
+        self.assertEqual(b.sent[-1]["type"], "editState")
+        self.assertIs(helper.edit["owner"], b)
+        self.assertIsNone(helper.edit["revert"])
+        self.assertEqual(read_user()["preset"], "neon")
+
+    async def test_failed_revert_write_still_frees_the_edit(self):
+        a, b = FakeWs({"type": "beginEdit"}, {"type": "setPreset", "name": "neon"}), FakeWs()
+        with mock.patch.object(helper, "REVERT_GRACE", 0), \
+                mock.patch.object(helper, "restore_design", side_effect=OSError("disk full")):
+            await helper.handler(a)
+            await asyncio.sleep(0.01)
+        await helper.on_message(b, {"type": "beginEdit"})
+        self.assertEqual(b.sent[-1]["type"], "editState")
+
 
 class WebSocketTests(unittest.IsolatedAsyncioTestCase):
     """The helper must talk to the widget and refuse web pages."""
