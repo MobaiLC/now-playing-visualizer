@@ -396,6 +396,20 @@ class FollowPlayerTests(unittest.TestCase):
             self.assertEqual(ask.call_count, 2)
         helper.forget_followed_player()
 
+    def test_stereo_stream_links_into_mono_capture(self):
+        # CAVA 1.0 with channels=mono opens a single MONO input port
+        node = lambda i, p: {"id": i, "type": "PipeWire:Interface:Node", "info": {"props": p}}
+        port = lambda i, d, n, ch: {"id": i, "type": "PipeWire:Interface:Port",
+                                    "info": {"direction": d, "props": {"node.id": n, "audio.channel": ch}}}
+        dump = [node(87, {"target.object": helper.CAPTURE_TARGET}), port(89, "input", 87, "MONO"),
+                node(112, {"media.class": "Stream/Output/Audio", "application.process.binary": "liner"}),
+                port(120, "output", 112, "FL"), port(121, "output", 112, "FR")]
+        with mock.patch.object(helper, "pw_dump", return_value=dump), \
+                mock.patch.object(helper, "run") as run:
+            helper.sync_links(lambda p: True)
+        self.assertCountEqual([c.args[0] for c in run.call_args_list],
+                              [["pw-link", "120", "89"], ["pw-link", "121", "89"]])
+
     def test_capture_mode_when_following(self):
         cfg = {"audio": {"apps": [], "followPlayer": True}, "bars": {}}
         self.assertIn("source=" + helper.CAPTURE_TARGET, helper.cava_config(cfg))

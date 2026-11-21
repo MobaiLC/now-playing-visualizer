@@ -843,6 +843,9 @@ def sync_links(wanted):
             targets = cava_in[ch]
         elif ch == "MONO":
             targets = [t for ts in cava_in.values() for t in ts]
+        elif "MONO" in cava_in:
+            # CAVA with a mono input (channels=mono): PipeWire mixes every channel linked into it
+            targets = cava_in["MONO"]
         else:
             targets = []
         for t in targets:

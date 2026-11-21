@@ -4,6 +4,9 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Fixed
+- The bars stayed flat with *Follow the player* or an app list: CAVA 1.0 opens a single mono input, and stereo streams were never linked into it. Every channel is now linked into a mono input, and PipeWire mixes them.
+
 ## [0.3.0] - 2026-11-01
 
 ### Fixed
