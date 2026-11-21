@@ -1,16 +1,13 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# Spanish translation of Now Playing Visualizer.
 # This file is distributed under the same license as the Now Playing Visualizer package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: Now Playing Visualizer\n"
 "Report-Msgid-Bugs-To: https://github.com/MobaiLC/now-playing-visualizer/"
 "issues\n"
-"POT-Creation-Date: 2026-11-01 15:55+0100\n"
-"PO-Revision-Date: 2026-10-31 22:30+0100\n"
+"POT-Creation-Date: 2026-11-21 18:08+0100\n"
+"PO-Revision-Date: 2026-11-21 18:08+0100\n"
 "Last-Translator: MobaiLC\n"
 "Language-Team: Spanish\n"
 "Language: es\n"
@@ -26,14 +23,6 @@ msgstr "Diseño"
 #: package/contents/config/config.qml:14
 msgid "Audio"
 msgstr "Audio"
-
-#: package/contents/ui/Card.qml:321
-msgid "Listening to {title}"
-msgstr "Escuchando {title}"
-
-#: package/contents/ui/Card.qml:451
-msgid "Nothing playing"
-msgstr "Nada sonando"
 
 #: package/contents/ui/configApps.qml:66
 msgid ""
@@ -222,725 +211,968 @@ msgstr ""
 msgid "config.json:"
 msgstr "config.json:"
 
-#: package/contents/ui/main.qml:78
+#: package/contents/ui/main.qml:34
 msgid "Show the player"
 msgstr "Mostrar el reproductor"
 
-#: package/contents/ui/main.qml:83
+#: package/contents/ui/main.qml:39
 msgid "Automatic (the one playing)"
 msgstr "Automático (el que esté sonando)"
 
-#: package/contents/ui/main.qml:93
+#: package/contents/ui/main.qml:49
 msgid "%1 (not open)"
 msgstr "%1 (no está abierto)"
 
-#: package/contents/ui/main.qml:198
+#: package/contents/ui/main.qml:69
 msgid "config.json has an error, the last valid settings are kept: %1"
 msgstr ""
 "config.json tiene un error, se mantiene la última configuración válida: %1"
 
-#: package/contents/ui/main.qml:199
+#: package/contents/ui/main.qml:70
 msgid "The preset \"%1\" does not exist, using lookas"
 msgstr "El preset «%1» no existe, se usa lookas"
 
-#: package/contents/ui/main.qml:200
+#: package/contents/ui/main.qml:71
 msgid "Invalid value for %1, using the default"
 msgstr "Valor no válido en %1, se usa el predeterminado"
 
-#: package/contents/ui/main.qml:201
+#: package/contents/ui/main.qml:72
 msgid "%1 is out of range and was adjusted"
 msgstr "%1 está fuera de rango y se ha ajustado"
 
-#: package/contents/ui/main.qml:202
+#: package/contents/ui/main.qml:73
 msgid "CAVA is not installed (sudo pacman -S cava)"
 msgstr "CAVA no está instalado (sudo pacman -S cava)"
 
-#: package/contents/ui/main.qml:203
+#: package/contents/ui/main.qml:74
 msgid "CAVA failed: %1"
 msgstr "CAVA ha fallado: %1"
 
-#: package/contents/ui/main.qml:204
+#: package/contents/ui/main.qml:75
 msgid "Could not create the virtual audio output: %1"
 msgstr "No se pudo crear la salida de audio virtual: %1"
 
-#: package/contents/ui/main.qml:205
+#: package/contents/ui/main.qml:76
 msgid ""
 "The helper service is from an older version. Restart it: systemctl --user "
 "restart nowplaying-viz"
 msgstr ""
-"El servicio del helper es de una versión anterior. Reinícialo: systemctl "
-"--user restart nowplaying-viz"
+"El servicio del helper es de una versión anterior. Reinícialo: systemctl --"
+"user restart nowplaying-viz"
 
-#: package/contents/ui/main.qml:241
+#: package/contents/ui/main.qml:112
 msgid "Click to open the settings"
 msgstr "Haz clic para abrir los ajustes"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:1
+#: package/contents/ui/main.qml:121
+msgid "Listening to {title}"
+msgstr "Escuchando {title}"
+
+#: package/contents/ui/main.qml:122
+msgid "Nothing playing"
+msgstr "Nada sonando"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:1
 msgid "Bars"
 msgstr "Barras"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:2
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:2
 msgid "Blocks"
 msgstr "Bloques"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:3
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:3
 msgid "Wave"
 msgstr "Onda"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:4
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:4
 msgid "Bar colors"
 msgstr "Color de las barras"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:5
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:5
 msgid "Peaks"
 msgstr "Picos"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:6
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:6
 msgid "Glow"
 msgstr "Brillo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:7
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:7
 msgid "Motion"
 msgstr "Movimiento"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:8
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:8
 msgid "Panel and song"
 msgstr "Panel y canción"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:9
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:9
 msgid "Layout and controls"
 msgstr "Diseño y controles"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:10
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:10
+msgid "Desktop card (Hyprland)"
+msgstr "Tarjeta de escritorio (Hyprland)"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:11
 msgid "Audio analysis"
 msgstr "Análisis de audio"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:11
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:12
 msgid "Advanced"
 msgstr "Avanzado"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:12
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:13
 msgid "Show bars"
 msgstr "Mostrar barras"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:13
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:14
 msgid "Style"
 msgstr "Estilo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:14
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:15
 msgid "Side"
 msgstr "Lado"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:15
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:16
 msgid "Right"
 msgstr "Derecha"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:16
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:17
 msgid "Left"
 msgstr "Izquierda"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:17
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:18
 msgid "Circular"
 msgstr "Circular"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:18
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:19
 msgid "Center hole"
 msgstr "Hueco central"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:19
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:20
 msgid "Rotation"
 msgstr "Rotación"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:20
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:21
 msgid "Number of bars"
 msgstr "Número de barras"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:21
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:22
 msgid "Width of the bar area"
 msgstr "Ancho de la zona de barras"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:22
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:23
 msgid "Bar width (0 = automatic)"
 msgstr "Ancho de barra (0 = automático)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:23
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:24
 msgid "Gap"
 msgstr "Separación"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:24
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:25
 msgid "Corner radius"
 msgstr "Redondeo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:25
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:26
 msgid "Alignment"
 msgstr "Alineación"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:26
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:27
 msgid "Bottom"
 msgstr "Abajo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:27
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:28
 msgid "Center (mirrored)"
 msgstr "Centro (espejo)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:28
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:29
 msgid "Top"
 msgstr "Arriba"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:29
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:30
 msgid "Reverse order"
 msgstr "Invertir orden"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:30
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:31
 msgid "Symmetric (bass in the middle)"
 msgstr "Simétrico (graves al centro)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:31
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:32
 msgid "Minimum height"
 msgstr "Altura mínima"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:32
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:33
 msgid "Height"
 msgstr "Altura"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:33
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:34
 msgid "Opacity"
 msgstr "Opacidad"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:34
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:35
 msgid "Block height"
 msgstr "Alto de bloque"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:35
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:36
 msgid "Block gap"
 msgstr "Separación de bloques"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:36
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:37
 msgid "Show unlit blocks"
 msgstr "Mostrar bloques apagados"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:37
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:38
 msgid "Unlit block color"
 msgstr "Color de bloques apagados"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:38
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:39
 msgid "Wave shape"
 msgstr "Forma de onda"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:39
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:40
 msgid "Curve"
 msgstr "Curva"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:40
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:41
 msgid "Square"
 msgstr "Cuadrada"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:41
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:42
 msgid "Triangle"
 msgstr "Triangular"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:42
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:43
 msgid "Line width"
 msgstr "Grosor de línea"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:43
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:44
 msgid "Fill"
 msgstr "Relleno"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:44
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:45
 msgid "Fill opacity"
 msgstr "Opacidad del relleno"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:45
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:46
 msgid "Fill colors (empty = same as line)"
 msgstr "Colores del relleno (vacío = como la línea)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:46
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:47
 msgid "Mode"
 msgstr "Modo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:47
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:48
 msgid "Gradient / solid"
 msgstr "Degradado / sólido"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:48
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:49
 msgid "One color per bar"
 msgstr "Un color por barra"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:49
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:50
 msgid "Rainbow"
 msgstr "Arcoíris"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:50
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:51
 msgid "Cover art colors"
 msgstr "Colores de la portada"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:51
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:52
 msgid "Plasma accent color"
 msgstr "Color de acento de Plasma"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:52
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:53
 msgid "Colors"
 msgstr "Colores"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:53
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:54
 msgid "Gradient direction"
 msgstr "Dirección del degradado"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:54
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:55
 msgid "Vertical (outward when circular)"
 msgstr "Vertical (hacia fuera en modo circular)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:55
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:56
 msgid "Horizontal (around the ring when circular)"
 msgstr "Horizontal (alrededor del círculo en modo circular)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:56
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:57
 msgid "Radial (outward when circular)"
 msgstr "Radial (hacia fuera en modo circular)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:57
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:58
 msgid "Smooth gradient"
 msgstr "Degradado suave"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:58
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:59
 msgid "Reverse colors"
 msgstr "Invertir colores"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:59
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:60
 msgid "Cover colors to use"
 msgstr "Colores de la portada a usar"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:60
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:61
 msgid "Start hue"
 msgstr "Tono inicial"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:61
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:62
 msgid "End hue"
 msgstr "Tono final"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:62
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:63
 msgid "Saturation"
 msgstr "Saturación"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:63
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:64
 msgid "Lightness"
 msgstr "Luminosidad"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:64
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:65
 msgid "Rotation speed"
 msgstr "Velocidad de giro"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:65
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:66
 msgid "Peak markers"
 msgstr "Marcas de pico"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:66
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:67
 msgid "Peak color"
 msgstr "Color del pico"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:67
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:68
 msgid "Same as the bar"
 msgstr "Igual que la barra"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:68
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:69
 msgid "Peak thickness"
 msgstr "Grosor del pico"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:69
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:70
 msgid "Hold time"
 msgstr "Tiempo de espera"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:70
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:71
 msgid "Peak fall speed"
 msgstr "Velocidad de caída del pico"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:71
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:72
 msgid "Glow color"
 msgstr "Color del brillo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:72
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:73
 msgid "Automatic"
 msgstr "Automático"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:73
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:74
 msgid "Strength"
 msgstr "Intensidad"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:74
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:75
 msgid "Blur"
 msgstr "Difuminado"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:75
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:76
 msgid "Rise speed"
 msgstr "Rapidez de subida"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:76
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:77
 msgid "Drop speed"
 msgstr "Rapidez de bajada"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:77
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:78
 msgid "Frame rate"
 msgstr "Fotogramas por segundo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:78
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:79
 msgid "Monstercat smoothing"
 msgstr "Suavizado Monstercat"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:79
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:80
 msgid "Stereo (left and right channels)"
 msgstr "Estéreo (canal izquierdo y derecho)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:80
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:81
 msgid "Hide when silent"
 msgstr "Ocultar en silencio"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:81
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:82
 msgid "Seconds of silence"
 msgstr "Segundos de silencio"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:82
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:83
 msgid "Layout"
 msgstr "Disposición"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:83
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:84
 msgid "Automatic (follows the widget's shape)"
 msgstr "Automática (según la forma del widget)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:84
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:85
 msgid "Horizontal"
 msgstr "Horizontal"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:85
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:86
 msgid "Vertical (bars below)"
 msgstr "Vertical (barras debajo)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:86
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:87
 msgid "Compact (cover, title and bars)"
 msgstr "Compacta (portada, título y barras)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:87
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:88
 msgid "Player controls"
 msgstr "Controles del reproductor"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:88
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:89
 msgid "On hover"
 msgstr "Al pasar el ratón"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:89
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:90
 msgid "Always"
 msgstr "Siempre"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:90
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:91
 msgid "Never"
 msgstr "Nunca"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:91
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:92
 msgid "Shuffle and repeat buttons (only for players that have them)"
 msgstr ""
 "Botones de aleatorio y repetición (solo en reproductores que los tienen)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:92
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:93
 msgid "Scroll to change the volume"
 msgstr "Rueda del ratón para el volumen"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:93
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:94
 msgid "Scroll long titles"
 msgstr "Desplazar títulos largos"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:94
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:95
 msgid "Never (cut with …)"
 msgstr "Nunca (cortar con …)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:95
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:96
 msgid "Card colors"
 msgstr "Colores de la tarjeta"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:96
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:97
 msgid "The ones chosen below"
 msgstr "Los que elijas abajo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:97
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:98
 msgid "From the cover art (readable, the ones below when there is none)"
 msgstr "Sacados de la portada (legibles; los de abajo si no hay portada)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:98
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:99
 msgid "Background"
 msgstr "Fondo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:99
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:100
 msgid "Background opacity"
 msgstr "Opacidad del fondo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:100
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:101
 msgid "Blurred cover art as the background"
 msgstr "Portada difuminada de fondo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:101
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:102
 msgid "Cover blur"
 msgstr "Desenfoque de la portada"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:102
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:103
 msgid "Background color over the cover"
 msgstr "Color de fondo sobre la portada"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:103
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:104
 msgid "Border"
 msgstr "Borde"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:104
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:105
 msgid "Border width"
 msgstr "Grosor del borde"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:105
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:106
 msgid "Panel corner radius"
 msgstr "Redondeo del panel"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:106
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:107
 msgid "Inner margin"
 msgstr "Margen interior"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:107
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:108
 msgid "Spacing between song and bars"
 msgstr "Espacio entre canción y barras"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:108
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:109
 msgid "When nothing is playing"
 msgstr "Cuando no suena nada"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:109
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:110
 msgid "Show the last song, dimmed"
 msgstr "Mostrar la última canción, atenuada"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:110
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:111
 msgid "Show \"Nothing playing\""
 msgstr "Mostrar «Nada sonando»"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:111
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:112
 msgid "Hide the widget"
 msgstr "Ocultar el widget"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:112
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:113
 msgid "Opacity when idle"
 msgstr "Opacidad en reposo"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:113
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:114
 msgid "Preferred players"
 msgstr "Reproductores preferidos"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:114
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:115
 msgid "Font (empty = system font)"
 msgstr "Fuente (vacío = la del sistema)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:115
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:116
 msgid "Header text"
 msgstr "Texto de cabecera"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:116
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:117
 msgid "Header template (empty = \"Listening to {title}\")"
 msgstr "Plantilla de cabecera (vacío = «Escuchando {title}»)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:117
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:118
 msgid "Header color"
 msgstr "Color de la cabecera"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:118
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:119
 msgid "Header size"
 msgstr "Tamaño de la cabecera"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:119
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:120
 msgid "Cover art"
 msgstr "Portada"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:120
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:121
 msgid "Cover corner radius"
 msgstr "Redondeo de la portada"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:121
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:122
 msgid "Title color"
 msgstr "Color del título"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:122
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:123
 msgid "Title size"
 msgstr "Tamaño del título"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:123
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:124
 msgid "Bold title"
 msgstr "Título en negrita"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:124
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:125
 msgid "Text color"
 msgstr "Color del texto"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:125
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:126
 msgid "Text size"
 msgstr "Tamaño del texto"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:126
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:127
 msgid "Show album / source"
 msgstr "Mostrar álbum / origen"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:127
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:128
 msgid "Progress bar"
 msgstr "Barra de progreso"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:128
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:129
 msgid "Progress color"
 msgstr "Color del progreso"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:129
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:130
 msgid "Progress background"
 msgstr "Fondo del progreso"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:130
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:131
 msgid "Progress thickness"
 msgstr "Grosor del progreso"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:131
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:132
 msgid "Show times"
 msgstr "Mostrar tiempos"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:132
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:133
 msgid "Time color"
 msgstr "Color de los tiempos"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:133
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:134
 msgid "Time size"
 msgstr "Tamaño de los tiempos"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:134
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:135
+msgid "Monitor name, e.g. DP-1 (empty = first screen) (Hyprland card)"
+msgstr ""
+"Nombre del monitor, p. ej. DP-1 (vacío = primera pantalla) (tarjeta de "
+"Hyprland)"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:136
+msgid "Corner (Hyprland card)"
+msgstr "Esquina (tarjeta de Hyprland)"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:137
+msgid "Top left"
+msgstr "Arriba a la izquierda"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:138
+msgid "Top right"
+msgstr "Arriba a la derecha"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:139
+msgid "Bottom left"
+msgstr "Abajo a la izquierda"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:140
+msgid "Bottom right"
+msgstr "Abajo a la derecha"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:141
+msgid "Horizontal margin (Hyprland card)"
+msgstr "Margen horizontal (tarjeta de Hyprland)"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:142
+msgid "Vertical margin (Hyprland card)"
+msgstr "Margen vertical (tarjeta de Hyprland)"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:143
+msgid "Width (Hyprland card)"
+msgstr "Ancho (tarjeta de Hyprland)"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:144
+msgid "Height (Hyprland card)"
+msgstr "Alto (tarjeta de Hyprland)"
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:145
 msgid "Automatic sensitivity (adapts to the volume)"
 msgstr "Sensibilidad automática (se adapta al volumen)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:135
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:146
 msgid "Sensitivity"
 msgstr "Sensibilidad"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:136
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:147
 msgid "Bass"
 msgstr "Graves"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:137
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:148
 msgid "Mids"
 msgstr "Medios"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:138
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:149
 msgid "Treble"
 msgstr "Agudos"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:139
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:150
 msgid "Noise reduction"
 msgstr "Reducción de ruido"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:140
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:151
 msgid "Lowest frequency"
 msgstr "Frecuencia mínima"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:141
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:152
 msgid "Highest frequency"
 msgstr "Frecuencia máxima"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:142
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:153
 msgid "Apps to listen to (empty = whole system)"
 msgstr "Aplicaciones a escuchar (vacío = todo el sistema)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:143
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:154
 msgid "Listen only to the player shown in the widget (overrides audio.apps)"
 msgstr "Escuchar solo el reproductor que muestra el widget (anula audio.apps)"
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:144
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:155
 msgid "Read the song over D-Bus instead of Plasma's module"
 msgstr "Leer la canción por D-Bus en vez de con el módulo de Plasma"
 
-#: package/contents/code/check.py:31 package/contents/code/check.py:32
-#: package/contents/code/check.py:35 package/contents/code/check.py:36
-#: package/contents/code/check.py:37
+#: package/contents/code/cli.py:39 package/contents/code/cli.py:40
+#: package/contents/code/cli.py:43 package/contents/code/cli.py:44
+#: package/contents/code/cli.py:46
 msgid "the whole widget"
 msgstr "todo el widget"
 
-#: package/contents/code/check.py:33
+#: package/contents/code/cli.py:41
 msgid "rounded cover art and glow"
 msgstr "portada redondeada y brillo"
 
-#: package/contents/code/check.py:34
+#: package/contents/code/cli.py:42
 msgid "connection to the helper (no bars)"
 msgstr "conexión con el helper (sin barras)"
 
-#: package/contents/code/check.py:38
+#: package/contents/code/cli.py:47
 msgid "settings pages"
 msgstr "páginas de ajustes"
 
-#: package/contents/code/check.py:39
+#: package/contents/code/cli.py:48
 msgid "color picker in Design"
 msgstr "selector de color de «Diseño»"
 
-#: package/contents/code/check.py:40
+#: package/contents/code/cli.py:50
 msgid "reading the song (D-Bus is used instead)"
 msgstr "lectura de la canción (se usa D-Bus como alternativa)"
 
-#: package/contents/code/check.py:41
+#: package/contents/code/cli.py:51
 msgid "starting the helper from the widget (systemd starts it)"
 msgstr "arranque del helper desde el widget (lo arranca systemd)"
 
-#: package/contents/code/check.py:45
+#: package/contents/code/cli.py:52 package/contents/code/cli.py:53
+msgid "the whole desktop card"
+msgstr "toda la tarjeta de escritorio"
+
+#: package/contents/code/cli.py:57
 msgid "audio bars"
 msgstr "barras de audio"
 
-#: package/contents/code/check.py:46
+#: package/contents/code/cli.py:58
 msgid "list of audio apps"
 msgstr "lista de aplicaciones de audio"
 
-#: package/contents/code/check.py:47
+#: package/contents/code/cli.py:59
 msgid "per-app audio"
 msgstr "audio por aplicación"
 
-#: package/contents/code/check.py:48
+#: package/contents/code/cli.py:60
 msgid "reading the song over D-Bus"
 msgstr "lectura de la canción por D-Bus"
 
-#: package/contents/code/check.py:49
+#: package/contents/code/cli.py:61
 msgid "volume for players without MPRIS volume"
 msgstr "volumen de reproductores sin volumen MPRIS"
 
-#: package/contents/code/check.py:73
+#: package/contents/code/cli.py:135
+#, python-brace-format
+msgid "config.json is not valid JSON (line {line}, column {column}): {value}"
+msgstr ""
+"config.json no es un JSON válido (línea {line}, columna {column}): {value}"
+
+#: package/contents/code/cli.py:137
+#, python-brace-format
+msgid "preset {value} does not exist, using {used}"
+msgstr "el preset {value} no existe, se usa {used}"
+
+#: package/contents/code/cli.py:139
+#, python-brace-format
+msgid "{option}: not an option, ignored"
+msgstr "{option}: no es una opción, se ignora"
+
+#: package/contents/code/cli.py:141
+#, python-brace-format
+msgid "{option}: {value} is not a connected monitor, using the first one"
+msgstr "{option}: {value} no es un monitor conectado, se usa el primero"
+
+#: package/contents/code/cli.py:143
+#, python-brace-format
+msgid "{option}: {value} is out of range, using {used}"
+msgstr "{option}: {value} está fuera de rango, se usa {used}"
+
+#: package/contents/code/cli.py:144
+#, python-brace-format
+msgid "{option}: {value} is not valid, using {used}"
+msgstr "{option}: {value} no es válido, se usa {used}"
+
+#: package/contents/code/cli.py:218
+msgid "all system audio is captured (no per-app links needed)"
+msgstr "se captura todo el audio del sistema (no hacen falta enlaces por app)"
+
+#: package/contents/code/cli.py:231
+msgid "CAVA is not capturing (no card or widget is running)"
+msgstr "CAVA no está capturando (no hay ninguna tarjeta ni widget en marcha)"
+
+#: package/contents/code/cli.py:238
+msgid "the followed player or selected apps have no audio stream right now"
+msgstr ""
+"el reproductor seguido o las apps elegidas no tienen ahora ningún flujo de "
+"audio"
+
+#: package/contents/code/cli.py:241
+#, python-brace-format
+msgid "{n} channel(s) linked into CAVA"
+msgstr "{n} canal(es) enlazados a CAVA"
+
+#: package/contents/code/cli.py:242
+#, python-brace-format
+msgid "not linked into CAVA: stream channels {out}, CAVA input channels {inp}"
+msgstr ""
+"no enlazado a CAVA: canales del flujo {out}, canales de entrada de CAVA {inp}"
+
+#: package/contents/code/cli.py:256
 #, python-brace-format
 msgid "Missing «{cmd}» → {what}"
 msgstr "Falta «{cmd}» → {what}"
 
-#: package/contents/code/check.py:84
+#: package/contents/code/cli.py:257
+msgid "install the missing programs"
+msgstr "instala los programas que faltan"
+
+#: package/contents/code/cli.py:259
+#, python-brace-format
+msgid "all programs found: {list}"
+msgstr "todos los programas encontrados: {list}"
+
+#: package/contents/code/cli.py:262
+msgid "cava is not installed"
+msgstr "cava no está instalado"
+
+#: package/contents/code/cli.py:272
+msgid "could not read the cava version"
+msgstr "no se pudo leer la versión de cava"
+
+#: package/contents/code/cli.py:275
 msgid "Qt 6 «qml» tool not found; QML modules could not be checked"
 msgstr ""
 "No se encontró la herramienta «qml» de Qt 6; no se pudieron comprobar los "
 "módulos QML"
 
-#: package/contents/code/check.py:89
+#: package/contents/code/cli.py:276
+msgid "install qt6-declarative"
+msgstr "instala qt6-declarative"
+
+#: package/contents/code/cli.py:282
 #, python-brace-format
 msgid "QML module {module} → {what}"
 msgstr "Módulo QML {module} → {what}"
 
-#: package/contents/code/check.py:94
-msgid ""
-"The nowplaying-viz service is not running (systemctl --user status "
-"nowplaying-viz)"
+#: package/contents/code/cli.py:284
+msgid "install the packages that provide them"
+msgstr "instala los paquetes que los incluyen"
+
+#: package/contents/code/cli.py:288
+#, python-brace-format
+msgid "QML modules for {host} found"
+msgstr "módulos QML para {host} encontrados"
+
+#: package/contents/code/cli.py:297
+#, python-brace-format
+msgid "schema.json or a preset is broken: {error}"
+msgstr "schema.json o un preset está roto: {error}"
+
+#: package/contents/code/cli.py:298
+msgid "reinstall Now Playing Visualizer"
+msgstr "reinstala Now Playing Visualizer"
+
+#: package/contents/code/cli.py:300 package/contents/code/cli.py:397
+msgid "config OK"
+msgstr "configuración correcta"
+
+#: package/contents/code/cli.py:300 package/contents/code/cli.py:397
+msgid "no config file yet, defaults are used"
 msgstr ""
-"El servicio nowplaying-viz no está activo (systemctl --user status "
-"nowplaying-viz)"
+"todavía no hay archivo de configuración, se usan los valores por defecto"
 
-#: package/contents/code/check.py:101
-msgid "OK: everything the widget uses is still available."
-msgstr "OK: todo lo que usa el widget sigue disponible."
+#: package/contents/code/cli.py:302
+#, python-brace-format
+msgid "{n} config issue(s), defaults are used for them"
+msgstr ""
+"{n} problema(s) de configuración, se usan los valores por defecto para ellos"
 
-#: package/contents/code/check.py:104
+#: package/contents/code/cli.py:313
+msgid "the nowplaying-viz service is running"
+msgstr "el servicio nowplaying-viz está activo"
+
+#: package/contents/code/cli.py:315
+msgid "the nowplaying-viz service is not running"
+msgstr "el servicio nowplaying-viz no está activo"
+
+#: package/contents/code/cli.py:318
+msgid ""
+"the nowplaying-viz service is not running (the widget starts the helper "
+"itself)"
+msgstr ""
+"el servicio nowplaying-viz no está activo (el widget arranca el ayudante él "
+"mismo)"
+
+#: package/contents/code/cli.py:326
+#, python-brace-format
+msgid "helper answers on port {port}"
+msgstr "el ayudante responde en el puerto {port}"
+
+#: package/contents/code/cli.py:329
+#, python-brace-format
+msgid "the helper is not running (nothing on port {port})"
+msgstr "el ayudante no está en marcha (no hay nada en el puerto {port})"
+
+#: package/contents/code/cli.py:333
+#, python-brace-format
+msgid "an outdated helper is running on port {port}"
+msgstr "hay un ayudante desactualizado en el puerto {port}"
+
+#: package/contents/code/cli.py:340
+msgid "no MPRIS player is running"
+msgstr "no hay ningún reproductor MPRIS en marcha"
+
+#: package/contents/code/cli.py:343
+#, python-brace-format
+msgid "players: {list}; shown: {followed}"
+msgstr "reproductores: {list}; mostrado: {followed}"
+
+#: package/contents/code/cli.py:348
+msgid "pw-dump or busctl is not installed"
+msgstr "pw-dump o busctl no está instalado"
+
+#: package/contents/code/cli.py:354
+msgid "not checked: the helper is not reachable"
+msgstr "sin comprobar: no se llega al ayudante"
+
+#: package/contents/code/cli.py:355
+msgid "start the helper, then run nowplaying-viz doctor again"
+msgstr "arranca el ayudante y vuelve a ejecutar nowplaying-viz doctor"
+
+#: package/contents/code/cli.py:357
+msgid "not checked: no card or widget is running"
+msgstr "sin comprobar: no hay ninguna tarjeta ni widget en marcha"
+
+#: package/contents/code/cli.py:358
+msgid "open the card or widget, then run nowplaying-viz doctor again"
+msgstr "abre la tarjeta o el widget y vuelve a ejecutar nowplaying-viz doctor"
+
+#: package/contents/code/cli.py:360
+msgid "CAVA is not running"
+msgstr "CAVA no está en marcha"
+
+#: package/contents/code/cli.py:362
+msgid "CAVA hears sound"
+msgstr "CAVA oye sonido"
+
+#: package/contents/code/cli.py:364
+msgid "CAVA hears silence"
+msgstr "CAVA oye silencio"
+
+#: package/contents/code/cli.py:365
+msgid "see the links check"
+msgstr "mira la comprobación de enlaces"
+
+#: package/contents/code/cli.py:367
+msgid "nothing is playing"
+msgstr "no suena nada"
+
+#: package/contents/code/cli.py:372
 msgid "Now Playing Visualizer: something broke"
 msgstr "Now Playing Visualizer: algo se ha roto"
 
-#: package/contents/code/check.py:104
+#: package/contents/code/cli.py:372
 msgid "Now Playing Visualizer: compatibility mode"
 msgstr "Now Playing Visualizer: modo compatible"
 
-#: package/contents/code/check.py:107
+#: package/contents/code/cli.py:375
 msgid "Details:"
 msgstr "Detalles:"
+
+#: package/contents/code/cli.py:409
+msgid "usage: nowplaying-viz check [--json] | doctor [--json] [--notify]"
+msgstr "uso: nowplaying-viz check [--json] | doctor [--json] [--notify]"
+
+#~ msgid "OK: everything the widget uses is still available."
+#~ msgstr "OK: todo lo que usa el widget sigue disponible."
 
 #~ msgid "Vertical"
 #~ msgstr "Vertical"

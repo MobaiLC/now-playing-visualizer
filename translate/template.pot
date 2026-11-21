@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Now Playing Visualizer\n"
 "Report-Msgid-Bugs-To: https://github.com/MobaiLC/now-playing-visualizer/"
 "issues\n"
-"POT-Creation-Date: 2026-11-01 15:55+0100\n"
+"POT-Creation-Date: 2026-11-21 18:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,14 +25,6 @@ msgstr ""
 
 #: package/contents/config/config.qml:14
 msgid "Audio"
-msgstr ""
-
-#: package/contents/ui/Card.qml:321
-msgid "Listening to {title}"
-msgstr ""
-
-#: package/contents/ui/Card.qml:451
-msgid "Nothing playing"
 msgstr ""
 
 #: package/contents/ui/configApps.qml:66
@@ -209,714 +201,946 @@ msgstr ""
 msgid "config.json:"
 msgstr ""
 
-#: package/contents/ui/main.qml:78
+#: package/contents/ui/main.qml:34
 msgid "Show the player"
 msgstr ""
 
-#: package/contents/ui/main.qml:83
+#: package/contents/ui/main.qml:39
 msgid "Automatic (the one playing)"
 msgstr ""
 
-#: package/contents/ui/main.qml:93
+#: package/contents/ui/main.qml:49
 msgid "%1 (not open)"
 msgstr ""
 
-#: package/contents/ui/main.qml:198
+#: package/contents/ui/main.qml:69
 msgid "config.json has an error, the last valid settings are kept: %1"
 msgstr ""
 
-#: package/contents/ui/main.qml:199
+#: package/contents/ui/main.qml:70
 msgid "The preset \"%1\" does not exist, using lookas"
 msgstr ""
 
-#: package/contents/ui/main.qml:200
+#: package/contents/ui/main.qml:71
 msgid "Invalid value for %1, using the default"
 msgstr ""
 
-#: package/contents/ui/main.qml:201
+#: package/contents/ui/main.qml:72
 msgid "%1 is out of range and was adjusted"
 msgstr ""
 
-#: package/contents/ui/main.qml:202
+#: package/contents/ui/main.qml:73
 msgid "CAVA is not installed (sudo pacman -S cava)"
 msgstr ""
 
-#: package/contents/ui/main.qml:203
+#: package/contents/ui/main.qml:74
 msgid "CAVA failed: %1"
 msgstr ""
 
-#: package/contents/ui/main.qml:204
+#: package/contents/ui/main.qml:75
 msgid "Could not create the virtual audio output: %1"
 msgstr ""
 
-#: package/contents/ui/main.qml:205
+#: package/contents/ui/main.qml:76
 msgid ""
 "The helper service is from an older version. Restart it: systemctl --user "
 "restart nowplaying-viz"
 msgstr ""
 
-#: package/contents/ui/main.qml:241
+#: package/contents/ui/main.qml:112
 msgid "Click to open the settings"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:1
+#: package/contents/ui/main.qml:121
+msgid "Listening to {title}"
+msgstr ""
+
+#: package/contents/ui/main.qml:122
+msgid "Nothing playing"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:1
 msgid "Bars"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:2
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:2
 msgid "Blocks"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:3
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:3
 msgid "Wave"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:4
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:4
 msgid "Bar colors"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:5
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:5
 msgid "Peaks"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:6
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:6
 msgid "Glow"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:7
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:7
 msgid "Motion"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:8
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:8
 msgid "Panel and song"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:9
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:9
 msgid "Layout and controls"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:10
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:10
+msgid "Desktop card (Hyprland)"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:11
 msgid "Audio analysis"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:11
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:12
 msgid "Advanced"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:12
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:13
 msgid "Show bars"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:13
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:14
 msgid "Style"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:14
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:15
 msgid "Side"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:15
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:16
 msgid "Right"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:16
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:17
 msgid "Left"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:17
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:18
 msgid "Circular"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:18
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:19
 msgid "Center hole"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:19
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:20
 msgid "Rotation"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:20
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:21
 msgid "Number of bars"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:21
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:22
 msgid "Width of the bar area"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:22
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:23
 msgid "Bar width (0 = automatic)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:23
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:24
 msgid "Gap"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:24
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:25
 msgid "Corner radius"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:25
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:26
 msgid "Alignment"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:26
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:27
 msgid "Bottom"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:27
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:28
 msgid "Center (mirrored)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:28
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:29
 msgid "Top"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:29
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:30
 msgid "Reverse order"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:30
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:31
 msgid "Symmetric (bass in the middle)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:31
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:32
 msgid "Minimum height"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:32
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:33
 msgid "Height"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:33
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:34
 msgid "Opacity"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:34
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:35
 msgid "Block height"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:35
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:36
 msgid "Block gap"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:36
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:37
 msgid "Show unlit blocks"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:37
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:38
 msgid "Unlit block color"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:38
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:39
 msgid "Wave shape"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:39
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:40
 msgid "Curve"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:40
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:41
 msgid "Square"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:41
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:42
 msgid "Triangle"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:42
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:43
 msgid "Line width"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:43
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:44
 msgid "Fill"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:44
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:45
 msgid "Fill opacity"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:45
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:46
 msgid "Fill colors (empty = same as line)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:46
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:47
 msgid "Mode"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:47
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:48
 msgid "Gradient / solid"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:48
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:49
 msgid "One color per bar"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:49
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:50
 msgid "Rainbow"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:50
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:51
 msgid "Cover art colors"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:51
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:52
 msgid "Plasma accent color"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:52
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:53
 msgid "Colors"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:53
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:54
 msgid "Gradient direction"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:54
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:55
 msgid "Vertical (outward when circular)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:55
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:56
 msgid "Horizontal (around the ring when circular)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:56
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:57
 msgid "Radial (outward when circular)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:57
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:58
 msgid "Smooth gradient"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:58
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:59
 msgid "Reverse colors"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:59
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:60
 msgid "Cover colors to use"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:60
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:61
 msgid "Start hue"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:61
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:62
 msgid "End hue"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:62
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:63
 msgid "Saturation"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:63
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:64
 msgid "Lightness"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:64
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:65
 msgid "Rotation speed"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:65
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:66
 msgid "Peak markers"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:66
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:67
 msgid "Peak color"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:67
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:68
 msgid "Same as the bar"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:68
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:69
 msgid "Peak thickness"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:69
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:70
 msgid "Hold time"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:70
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:71
 msgid "Peak fall speed"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:71
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:72
 msgid "Glow color"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:72
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:73
 msgid "Automatic"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:73
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:74
 msgid "Strength"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:74
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:75
 msgid "Blur"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:75
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:76
 msgid "Rise speed"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:76
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:77
 msgid "Drop speed"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:77
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:78
 msgid "Frame rate"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:78
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:79
 msgid "Monstercat smoothing"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:79
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:80
 msgid "Stereo (left and right channels)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:80
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:81
 msgid "Hide when silent"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:81
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:82
 msgid "Seconds of silence"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:82
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:83
 msgid "Layout"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:83
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:84
 msgid "Automatic (follows the widget's shape)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:84
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:85
 msgid "Horizontal"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:85
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:86
 msgid "Vertical (bars below)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:86
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:87
 msgid "Compact (cover, title and bars)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:87
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:88
 msgid "Player controls"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:88
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:89
 msgid "On hover"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:89
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:90
 msgid "Always"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:90
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:91
 msgid "Never"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:91
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:92
 msgid "Shuffle and repeat buttons (only for players that have them)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:92
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:93
 msgid "Scroll to change the volume"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:93
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:94
 msgid "Scroll long titles"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:94
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:95
 msgid "Never (cut with …)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:95
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:96
 msgid "Card colors"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:96
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:97
 msgid "The ones chosen below"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:97
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:98
 msgid "From the cover art (readable, the ones below when there is none)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:98
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:99
 msgid "Background"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:99
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:100
 msgid "Background opacity"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:100
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:101
 msgid "Blurred cover art as the background"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:101
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:102
 msgid "Cover blur"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:102
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:103
 msgid "Background color over the cover"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:103
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:104
 msgid "Border"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:104
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:105
 msgid "Border width"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:105
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:106
 msgid "Panel corner radius"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:106
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:107
 msgid "Inner margin"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:107
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:108
 msgid "Spacing between song and bars"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:108
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:109
 msgid "When nothing is playing"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:109
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:110
 msgid "Show the last song, dimmed"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:110
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:111
 msgid "Show \"Nothing playing\""
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:111
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:112
 msgid "Hide the widget"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:112
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:113
 msgid "Opacity when idle"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:113
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:114
 msgid "Preferred players"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:114
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:115
 msgid "Font (empty = system font)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:115
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:116
 msgid "Header text"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:116
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:117
 msgid "Header template (empty = \"Listening to {title}\")"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:117
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:118
 msgid "Header color"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:118
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:119
 msgid "Header size"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:119
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:120
 msgid "Cover art"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:120
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:121
 msgid "Cover corner radius"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:121
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:122
 msgid "Title color"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:122
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:123
 msgid "Title size"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:123
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:124
 msgid "Bold title"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:124
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:125
 msgid "Text color"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:125
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:126
 msgid "Text size"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:126
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:127
 msgid "Show album / source"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:127
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:128
 msgid "Progress bar"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:128
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:129
 msgid "Progress color"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:129
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:130
 msgid "Progress background"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:130
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:131
 msgid "Progress thickness"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:131
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:132
 msgid "Show times"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:132
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:133
 msgid "Time color"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:133
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:134
 msgid "Time size"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:134
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:135
+msgid "Monitor name, e.g. DP-1 (empty = first screen) (Hyprland card)"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:136
+msgid "Corner (Hyprland card)"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:137
+msgid "Top left"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:138
+msgid "Top right"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:139
+msgid "Bottom left"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:140
+msgid "Bottom right"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:141
+msgid "Horizontal margin (Hyprland card)"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:142
+msgid "Vertical margin (Hyprland card)"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:143
+msgid "Width (Hyprland card)"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:144
+msgid "Height (Hyprland card)"
+msgstr ""
+
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:145
 msgid "Automatic sensitivity (adapts to the volume)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:135
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:146
 msgid "Sensitivity"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:136
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:147
 msgid "Bass"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:137
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:148
 msgid "Mids"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:138
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:149
 msgid "Treble"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:139
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:150
 msgid "Noise reduction"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:140
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:151
 msgid "Lowest frequency"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:141
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:152
 msgid "Highest frequency"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:142
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:153
 msgid "Apps to listen to (empty = whole system)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:143
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:154
 msgid "Listen only to the player shown in the widget (overrides audio.apps)"
 msgstr ""
 
-#: /tmp/tmp.AzWC3UZmZZ/schema-strings.js:144
+#: /tmp/tmp.SjX6co6jm8/schema-strings.js:155
 msgid "Read the song over D-Bus instead of Plasma's module"
 msgstr ""
 
-#: package/contents/code/check.py:31 package/contents/code/check.py:32
-#: package/contents/code/check.py:35 package/contents/code/check.py:36
-#: package/contents/code/check.py:37
+#: package/contents/code/cli.py:39 package/contents/code/cli.py:40
+#: package/contents/code/cli.py:43 package/contents/code/cli.py:44
+#: package/contents/code/cli.py:46
 msgid "the whole widget"
 msgstr ""
 
-#: package/contents/code/check.py:33
+#: package/contents/code/cli.py:41
 msgid "rounded cover art and glow"
 msgstr ""
 
-#: package/contents/code/check.py:34
+#: package/contents/code/cli.py:42
 msgid "connection to the helper (no bars)"
 msgstr ""
 
-#: package/contents/code/check.py:38
+#: package/contents/code/cli.py:47
 msgid "settings pages"
 msgstr ""
 
-#: package/contents/code/check.py:39
+#: package/contents/code/cli.py:48
 msgid "color picker in Design"
 msgstr ""
 
-#: package/contents/code/check.py:40
+#: package/contents/code/cli.py:50
 msgid "reading the song (D-Bus is used instead)"
 msgstr ""
 
-#: package/contents/code/check.py:41
+#: package/contents/code/cli.py:51
 msgid "starting the helper from the widget (systemd starts it)"
 msgstr ""
 
-#: package/contents/code/check.py:45
+#: package/contents/code/cli.py:52 package/contents/code/cli.py:53
+msgid "the whole desktop card"
+msgstr ""
+
+#: package/contents/code/cli.py:57
 msgid "audio bars"
 msgstr ""
 
-#: package/contents/code/check.py:46
+#: package/contents/code/cli.py:58
 msgid "list of audio apps"
 msgstr ""
 
-#: package/contents/code/check.py:47
+#: package/contents/code/cli.py:59
 msgid "per-app audio"
 msgstr ""
 
-#: package/contents/code/check.py:48
+#: package/contents/code/cli.py:60
 msgid "reading the song over D-Bus"
 msgstr ""
 
-#: package/contents/code/check.py:49
+#: package/contents/code/cli.py:61
 msgid "volume for players without MPRIS volume"
 msgstr ""
 
-#: package/contents/code/check.py:73
+#: package/contents/code/cli.py:135
+#, python-brace-format
+msgid "config.json is not valid JSON (line {line}, column {column}): {value}"
+msgstr ""
+
+#: package/contents/code/cli.py:137
+#, python-brace-format
+msgid "preset {value} does not exist, using {used}"
+msgstr ""
+
+#: package/contents/code/cli.py:139
+#, python-brace-format
+msgid "{option}: not an option, ignored"
+msgstr ""
+
+#: package/contents/code/cli.py:141
+#, python-brace-format
+msgid "{option}: {value} is not a connected monitor, using the first one"
+msgstr ""
+
+#: package/contents/code/cli.py:143
+#, python-brace-format
+msgid "{option}: {value} is out of range, using {used}"
+msgstr ""
+
+#: package/contents/code/cli.py:144
+#, python-brace-format
+msgid "{option}: {value} is not valid, using {used}"
+msgstr ""
+
+#: package/contents/code/cli.py:218
+msgid "all system audio is captured (no per-app links needed)"
+msgstr ""
+
+#: package/contents/code/cli.py:231
+msgid "CAVA is not capturing (no card or widget is running)"
+msgstr ""
+
+#: package/contents/code/cli.py:238
+msgid "the followed player or selected apps have no audio stream right now"
+msgstr ""
+
+#: package/contents/code/cli.py:241
+#, python-brace-format
+msgid "{n} channel(s) linked into CAVA"
+msgstr ""
+
+#: package/contents/code/cli.py:242
+#, python-brace-format
+msgid "not linked into CAVA: stream channels {out}, CAVA input channels {inp}"
+msgstr ""
+
+#: package/contents/code/cli.py:256
 #, python-brace-format
 msgid "Missing «{cmd}» → {what}"
 msgstr ""
 
-#: package/contents/code/check.py:84
+#: package/contents/code/cli.py:257
+msgid "install the missing programs"
+msgstr ""
+
+#: package/contents/code/cli.py:259
+#, python-brace-format
+msgid "all programs found: {list}"
+msgstr ""
+
+#: package/contents/code/cli.py:262
+msgid "cava is not installed"
+msgstr ""
+
+#: package/contents/code/cli.py:272
+msgid "could not read the cava version"
+msgstr ""
+
+#: package/contents/code/cli.py:275
 msgid "Qt 6 «qml» tool not found; QML modules could not be checked"
 msgstr ""
 
-#: package/contents/code/check.py:89
+#: package/contents/code/cli.py:276
+msgid "install qt6-declarative"
+msgstr ""
+
+#: package/contents/code/cli.py:282
 #, python-brace-format
 msgid "QML module {module} → {what}"
 msgstr ""
 
-#: package/contents/code/check.py:94
+#: package/contents/code/cli.py:284
+msgid "install the packages that provide them"
+msgstr ""
+
+#: package/contents/code/cli.py:288
+#, python-brace-format
+msgid "QML modules for {host} found"
+msgstr ""
+
+#: package/contents/code/cli.py:297
+#, python-brace-format
+msgid "schema.json or a preset is broken: {error}"
+msgstr ""
+
+#: package/contents/code/cli.py:298
+msgid "reinstall Now Playing Visualizer"
+msgstr ""
+
+#: package/contents/code/cli.py:300 package/contents/code/cli.py:397
+msgid "config OK"
+msgstr ""
+
+#: package/contents/code/cli.py:300 package/contents/code/cli.py:397
+msgid "no config file yet, defaults are used"
+msgstr ""
+
+#: package/contents/code/cli.py:302
+#, python-brace-format
+msgid "{n} config issue(s), defaults are used for them"
+msgstr ""
+
+#: package/contents/code/cli.py:313
+msgid "the nowplaying-viz service is running"
+msgstr ""
+
+#: package/contents/code/cli.py:315
+msgid "the nowplaying-viz service is not running"
+msgstr ""
+
+#: package/contents/code/cli.py:318
 msgid ""
-"The nowplaying-viz service is not running (systemctl --user status "
-"nowplaying-viz)"
+"the nowplaying-viz service is not running (the widget starts the helper "
+"itself)"
 msgstr ""
 
-#: package/contents/code/check.py:101
-msgid "OK: everything the widget uses is still available."
+#: package/contents/code/cli.py:326
+#, python-brace-format
+msgid "helper answers on port {port}"
 msgstr ""
 
-#: package/contents/code/check.py:104
+#: package/contents/code/cli.py:329
+#, python-brace-format
+msgid "the helper is not running (nothing on port {port})"
+msgstr ""
+
+#: package/contents/code/cli.py:333
+#, python-brace-format
+msgid "an outdated helper is running on port {port}"
+msgstr ""
+
+#: package/contents/code/cli.py:340
+msgid "no MPRIS player is running"
+msgstr ""
+
+#: package/contents/code/cli.py:343
+#, python-brace-format
+msgid "players: {list}; shown: {followed}"
+msgstr ""
+
+#: package/contents/code/cli.py:348
+msgid "pw-dump or busctl is not installed"
+msgstr ""
+
+#: package/contents/code/cli.py:354
+msgid "not checked: the helper is not reachable"
+msgstr ""
+
+#: package/contents/code/cli.py:355
+msgid "start the helper, then run nowplaying-viz doctor again"
+msgstr ""
+
+#: package/contents/code/cli.py:357
+msgid "not checked: no card or widget is running"
+msgstr ""
+
+#: package/contents/code/cli.py:358
+msgid "open the card or widget, then run nowplaying-viz doctor again"
+msgstr ""
+
+#: package/contents/code/cli.py:360
+msgid "CAVA is not running"
+msgstr ""
+
+#: package/contents/code/cli.py:362
+msgid "CAVA hears sound"
+msgstr ""
+
+#: package/contents/code/cli.py:364
+msgid "CAVA hears silence"
+msgstr ""
+
+#: package/contents/code/cli.py:365
+msgid "see the links check"
+msgstr ""
+
+#: package/contents/code/cli.py:367
+msgid "nothing is playing"
+msgstr ""
+
+#: package/contents/code/cli.py:372
 msgid "Now Playing Visualizer: something broke"
 msgstr ""
 
-#: package/contents/code/check.py:104
+#: package/contents/code/cli.py:372
 msgid "Now Playing Visualizer: compatibility mode"
 msgstr ""
 
-#: package/contents/code/check.py:107
+#: package/contents/code/cli.py:375
 msgid "Details:"
+msgstr ""
+
+#: package/contents/code/cli.py:409
+msgid "usage: nowplaying-viz check [--json] | doctor [--json] [--notify]"
 msgstr ""

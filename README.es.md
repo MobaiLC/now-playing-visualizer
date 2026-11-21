@@ -6,7 +6,7 @@ Un widget de escritorio para KDE Plasma 6 (y una tarjeta para Hyprland, con quic
 
 ![Los diez presets incluidos](docs/images/presets.png)
 
-> **Estado: versión temprana (0.3.0).** Se usa a diario en un escritorio con CachyOS y Plasma 6.8. Todavía no se ha probado en otras distribuciones; mira [Limitaciones](#limitaciones).
+> **Estado: versión temprana (0.4.0).** Se usa a diario en un escritorio con CachyOS y Plasma 6.8. La tarjeta de Hyprland y los paquetes de AUR son nuevos y todavía no están publicados: la tarjeta se ha visto en KDE Wayland, no en un Hyprland real. Todavía no se ha probado en otras distribuciones; mira [Limitaciones](#limitaciones).
 
 ## Funciones
 

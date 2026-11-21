@@ -4,8 +4,35 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-21
+
+After updating, restart the helper service (`systemctl --user restart nowplaying-viz`): the protocol went from 2 to 3, and the widget warns when the running service is older.
+
+### Added
+- **Desktop card for Hyprland**, a quickshell component that shows the same card and bars as the Plasma widget, sharing its player and helper logic (`NowPlaying.qml`). Its size, corner, margins and monitor are the new `desktop.*` options (`desktop.monitor`, `anchor`, `marginX`, `marginY`, `width`, `height`), set in `config.json` and listed in [docs/CONFIG.md](docs/CONFIG.md).
+- **`nowplaying-viz check`** validates `config.json` (JSON syntax, unknown options, wrong types, values out of range, a monitor that is not connected) and says what falls back to a default.
+- **`nowplaying-viz doctor`** checks the whole setup: programs, QML modules, config, the helper service, players, and the audio chain up to CAVA hearing sound. Each line says what is wrong and what to do; `--json` for machines and `--notify` for a desktop notification.
+- **`GET /status`** on the helper (protocol 3): `{protocol, service, clients, barClients, cava}` without starting CAVA, with the same same-user and Origin/Host checks as the websocket. `doctor` uses it.
+- **`tools/install.sh` works without Plasma** (Hyprland and other desktops): it installs the helper, the `nowplaying-viz` command and the card, and tells you what is missing.
+- **[AGENTS.md](AGENTS.md)**, a guide for AI assistants (install, change the look, fix problems), and a Claude Code skill built from it.
+- **AUR packages** `now-playing-visualizer` and `now-playing-visualizer-git` in [`packaging/aur/`](packaging/aur/). Not published to the AUR yet; the release PKGBUILD still has `sha256sums=('SKIP')`, to be filled once the tag exists.
+- Spanish translation of the new texts, including the `doctor` and `check` messages.
+
+### Changed
+- `nowplaying-viz doctor` replaces `check.py`, which is removed.
+- The widget's player and helper logic moved out of `main.qml` into `NowPlaying.qml`, shared by the widget and the card. No change for the widget's behaviour.
+- The README and the docs cover Hyprland and the AUR.
+
 ### Fixed
 - The bars stayed flat with *Follow the player* or an app list: CAVA 1.0 opens a single mono input, and stereo streams were never linked into it. Every channel is now linked into a mono input, and PipeWire mixes them.
+- A config section of the wrong type (for example a number where an object is expected) crashed `migrate` and with it the config check; it is now reported as one issue.
+
+### Security
+- `/status` follows the websocket's rules: connections from other users are refused, and requests with a foreign `Origin` or `Host` are rejected. It is read-only and starts nothing.
+
+### Tested
+- By hand on CachyOS with Plasma 6: the Plasma widget, confirmed visually, and the quickshell card, shown on KDE Wayland. The card has not been tried on a real Hyprland session yet.
+- Automatically: unit tests, QML tests, MPRIS integration tests, the AUR `-git` package built and installed, the release package built, and namcap, all in Docker on a clean Arch (`tools/test-in-docker.sh`). The AUR packages were not installed from the AUR itself.
 
 ## [0.3.0] - 2026-11-01
 
