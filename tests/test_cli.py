@@ -18,6 +18,16 @@ if "helper" not in sys.modules:  # test_helper does the same; whoever imports fi
 sys.path.insert(0, str(CODE))
 import cli  # noqa: E402  (imports helper; config paths are never used by check)
 
+_patch = mock.patch.object(cli, "_", lambda msg: msg)  # English whatever the locale or built .mo
+
+
+def setUpModule():
+    _patch.start()
+
+
+def tearDownModule():
+    _patch.stop()
+
 
 class CheckTests(unittest.TestCase):
     def setUp(self):

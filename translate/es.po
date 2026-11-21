@@ -1088,23 +1088,23 @@ msgid ""
 "the nowplaying-viz service is not running (the widget starts the helper "
 "itself)"
 msgstr ""
-"el servicio nowplaying-viz no está activo (el widget arranca el ayudante él "
+"el servicio nowplaying-viz no está activo (el widget arranca el helper él "
 "mismo)"
 
 #: package/contents/code/cli.py:326
 #, python-brace-format
 msgid "helper answers on port {port}"
-msgstr "el ayudante responde en el puerto {port}"
+msgstr "el helper responde en el puerto {port}"
 
 #: package/contents/code/cli.py:329
 #, python-brace-format
 msgid "the helper is not running (nothing on port {port})"
-msgstr "el ayudante no está en marcha (no hay nada en el puerto {port})"
+msgstr "el helper no está en marcha (no hay nada en el puerto {port})"
 
 #: package/contents/code/cli.py:333
 #, python-brace-format
 msgid "an outdated helper is running on port {port}"
-msgstr "hay un ayudante desactualizado en el puerto {port}"
+msgstr "hay un helper desactualizado en el puerto {port}"
 
 #: package/contents/code/cli.py:340
 msgid "no MPRIS player is running"
@@ -1121,11 +1121,11 @@ msgstr "pw-dump o busctl no está instalado"
 
 #: package/contents/code/cli.py:354
 msgid "not checked: the helper is not reachable"
-msgstr "sin comprobar: no se llega al ayudante"
+msgstr "sin comprobar: no se llega al helper"
 
 #: package/contents/code/cli.py:355
 msgid "start the helper, then run nowplaying-viz doctor again"
-msgstr "arranca el ayudante y vuelve a ejecutar nowplaying-viz doctor"
+msgstr "arranca el helper y vuelve a ejecutar nowplaying-viz doctor"
 
 #: package/contents/code/cli.py:357
 msgid "not checked: no card or widget is running"
