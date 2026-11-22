@@ -6,7 +6,7 @@ A KDE Plasma 6 desktop widget (and a desktop card for Hyprland, through quickshe
 
 ![The ten built-in presets](docs/images/presets.png)
 
-> **Status: early (0.4.0).** It works daily on one CachyOS + Plasma 6.8 desktop. The Hyprland card and the AUR packages are new and not published yet: the card has been seen on KDE Wayland, not on real Hyprland. It has not been tested on other distributions yet; see [Limitations](#limitations).
+> **Status: early (0.4.1).** It works daily on one CachyOS + Plasma 6.8 desktop. The Hyprland card and the AUR packages are new and not published yet: the card has been seen on KDE Wayland, not on real Hyprland. It has not been tested on other distributions yet; see [Limitations](#limitations).
 
 ## Features
 

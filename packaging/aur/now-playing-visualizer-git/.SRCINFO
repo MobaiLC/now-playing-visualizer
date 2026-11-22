@@ -1,6 +1,6 @@
 pkgbase = now-playing-visualizer-git
 	pkgdesc = Now playing card with cover art, progress and a CAVA audio visualizer, for KDE Plasma and Hyprland (quickshell)
-	pkgver = 0.4.0
+	pkgver = 0.4.1
 	pkgrel = 1
 	url = https://github.com/MobaiLC/now-playing-visualizer
 	arch = any

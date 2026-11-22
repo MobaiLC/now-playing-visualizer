@@ -4,6 +4,10 @@ All notable changes to this project. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-22
+
+After updating, restart the helper service (`systemctl --user restart nowplaying-viz`): the settings window needs the new helper (one design editor at a time). The protocol stays 3.
+
 ### Added
 - **Settings window** for desktops without Plasma: `nowplaying-viz settings`, also opened by right-clicking the desktop card, and a "Now Playing Visualizer Settings" launcher entry (hidden in Plasma, which has Configure…). It has the same Design and Audio pages as the widget.
 
